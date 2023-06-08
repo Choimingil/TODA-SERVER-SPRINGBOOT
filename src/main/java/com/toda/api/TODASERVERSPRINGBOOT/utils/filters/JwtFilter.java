@@ -5,6 +5,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.utils.interfaces.ExceptionHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dto.responses.DefaultResponseDTO;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.ValidationException;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.UriProvider;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -22,6 +23,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter implements ExceptionHandler {
     public static final String HEADER_NAME = "x-access-token";
+    private final UriProvider uriProvider = new UriProvider();
     private final TokenProvider tokenProvider;
 
     // Jwt 유효성 검사 필터
@@ -34,12 +36,17 @@ public class JwtFilter extends OncePerRequestFilter implements ExceptionHandler 
         try{
             // 2. 헤더의 토큰이 존재하는지 체크
             logger.info("2. 토큰 유효성 검사");
-            String jwt = tokenProvider.resolveToken(httpServletRequest, JwtFilter.HEADER_NAME);
 
-            // 토큰 유효성 검증 후 SecurityContext에 저장
-            Claims claims = tokenProvider.validateToken(jwt);
-            Authentication authentication = tokenProvider.getAuthentication(jwt, claims);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            // 토큰이 필요 없는 API는 패스
+            String uri = uriProvider.getURI(httpServletRequest);
+            if(!uriProvider.nonTokenUris.contains(uri)){
+                String jwt = tokenProvider.resolveToken(httpServletRequest, JwtFilter.HEADER_NAME);
+
+                // 토큰 유효성 검증 후 SecurityContext에 저장
+                Claims claims = tokenProvider.validateToken(jwt);
+                Authentication authentication = tokenProvider.getAuthentication(jwt, claims);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
 
             filterChain.doFilter(httpServletRequest,httpServletResponse);
         }

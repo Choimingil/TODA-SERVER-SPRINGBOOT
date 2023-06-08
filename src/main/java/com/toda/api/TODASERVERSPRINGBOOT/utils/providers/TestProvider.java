@@ -30,6 +30,7 @@ public class TestProvider {
                         .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
+//                .andExpect(status().is4xxClientError())
                 .andDo(print())
                 .andReturn();
     }

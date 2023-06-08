@@ -92,7 +92,7 @@ public class TokenProvider implements InitializingBean {
         else throw new ValidationException(102,"헤더값이 인식되지 않습니다.");
     }
 
-    // 토큰의 유효성 검증 수행
+//     토큰의 유효성 검증 수행
     public Claims validateToken(String token){
         // tokenProvider에 key가 할당되기 전에 인증 과정으로 넘어가는 경우 방지하기 위해 key가 초기화되지 않으면 초기화 함수 실행
         if(key == null) afterPropertiesSet();

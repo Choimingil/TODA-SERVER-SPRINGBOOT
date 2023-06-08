@@ -7,6 +7,7 @@ import java.util.HashSet;
 
 public class UriProvider {
     public HashSet<String> uris;
+    public HashSet<String> nonTokenUris;
 
     public UriProvider(){
         this.uris = new HashSet<>();
@@ -23,6 +24,10 @@ public class UriProvider {
         //1-4. 토큰 유효성 검사 API
         uris.add("POST /token");
 
+
+        this.nonTokenUris = new HashSet<>();
+        nonTokenUris.add("POST /login");
+        nonTokenUris.add("POST /email/valid");
 
 //        $r->addRoute('GET', '/update', ['LoginController', 'checkUpdate']);                                                     //1-6. 강제 업데이트 API
 //        $r->addRoute('GET', '/popup/{version}', ['LoginController', 'getPopupRead']);                                           //1-9. 업데이트 공지 읽었는지 확인 API
@@ -100,13 +105,11 @@ public class UriProvider {
 //        $r->addRoute('GET', '/announcement/check', ['LoginController', 'getAnnouncementCheck']);
     }
 
-    public String checkURI(HttpServletRequest request){
-        StringBuilder sb = new StringBuilder();
-        sb.append(request.getMethod());
-        sb.append(" ");
-        sb.append(request.getRequestURI());
+    public String getURI(HttpServletRequest request){
+        return request.getMethod() + " " + request.getRequestURI();
+    }
 
-        if(this.uris.contains(sb.toString())) return request.getRequestURI();
-        else throw new ValidationException(101,"존재하지 않는 API입니다.");
+    public void checkURI(String uri){
+        if(!this.uris.contains(uri)) throw new ValidationException(101,"존재하지 않는 API입니다.");
     }
 }
