@@ -15,7 +15,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 public class UriFilter extends OncePerRequestFilter implements ExceptionHandler {
-    private final UriProvider uriProvider = new UriProvider();
+    // Singleton Pattern
+    private static UriFilter uriFilter = null;
+    public static UriFilter getInstance(){
+        if(uriFilter == null){
+            uriFilter = new UriFilter();
+        }
+        return uriFilter;
+    }
 
     @Override
     protected void doFilterInternal(
@@ -27,8 +34,8 @@ public class UriFilter extends OncePerRequestFilter implements ExceptionHandler 
             // 1. URI가 유효한지, 각 URI의 request값이 무엇인지 체크
             logger.info("1. URI 유효성 검사");
 
-            String uri = uriProvider.getURI(request);
-            uriProvider.checkURI(uri);
+            String uri = UriProvider.getURI(request);
+            UriProvider.checkURI(uri);
 
             // Body, PathVariable, QueryString : 각 Model 또는 Controller에서 벨리데이션 진행
 

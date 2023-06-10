@@ -32,31 +32,36 @@ import java.util.stream.Collectors;
 public class TokenProvider implements InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(TokenProvider.class);
     private static final String AUTHORITIES_KEY = "auth";
-    public Key key;
-    public final String secret;
-    private final long tokenValidityInMilliseconds;
+    public static final String HEADER_NAME = "x-access-token";
+    public static Key key;
+    private static String secret;
+    private static long tokenValidityInMilliseconds;
 
-    // 의존성 주입
-    public TokenProvider(
-            @Value("${jwt.secret}") String secret,
-            @Value("${jwt.token-validity-in-seconds}") long tokenValidityInMilliseconds
-    ){
-        this.secret = secret;
-        this.tokenValidityInMilliseconds = tokenValidityInMilliseconds;
+    // @Value 값 static 변수에 할당
+    @Value("${jwt.secret}")
+    private void setSecret(String value) {
+        secret = value;
+    }
+    @Value("${jwt.token-validity-in-seconds}")
+    private void setTokenValidityInMilliseconds(long value) {
+        tokenValidityInMilliseconds = value;
     }
 
     // Bean이 생성이 되고 주입을 받은 후에 secret값을 Base64로 Decode 해서 key 변수에 할당
     @Override
     public void afterPropertiesSet() {
+        setKey();
+    }
+
+    private static void setKey(){
+        logger.info("setKey pass");
         byte[] keyBytes = Decoders.BASE64.decode(secret);
-        this.key = Keys.hmacShaKeyFor(keyBytes);
+        logger.info("set keyBytes pass");
+        key = Keys.hmacShaKeyFor(keyBytes);
+        logger.info("set Keys.hmacShaKeyFor(keyBytes) pass");
     }
 
-    public Key getKey(){
-        return this.key;
-    }
-
-    public String createToken(
+    public static String createToken(
             Authentication authentication,
             UserInfoAllDAO userInfoAllDAO
     ){
@@ -70,7 +75,7 @@ public class TokenProvider implements InitializingBean {
 
         // 토큰 만료 시간 설정
         long now = (new Date()).getTime();
-        Date validity = new Date(now + this.tokenValidityInMilliseconds);
+        Date validity = new Date(now + tokenValidityInMilliseconds);
 
         return Jwts.builder()
                 // subject : email
@@ -86,16 +91,16 @@ public class TokenProvider implements InitializingBean {
                 .compact();
     }
 
-    public String resolveToken(HttpServletRequest request, String headerName){
+    public static String resolveToken(HttpServletRequest request, String headerName){
         String token = request.getHeader(headerName);
         if(StringUtils.hasText(token)) return token;
         else throw new ValidationException(102,"헤더값이 인식되지 않습니다.");
     }
 
 //     토큰의 유효성 검증 수행
-    public Claims validateToken(String token){
+    public static Claims validateToken(String token){
         // tokenProvider에 key가 할당되기 전에 인증 과정으로 넘어가는 경우 방지하기 위해 key가 초기화되지 않으면 초기화 함수 실행
-        if(key == null) afterPropertiesSet();
+        if(key == null) setKey();
 
         JwtParser jwtParser = Jwts.parserBuilder()
                 .setSigningKey(key)
@@ -118,7 +123,7 @@ public class TokenProvider implements InitializingBean {
     }
 
     // 토큰에 담겨있는 정보를 이용해 Authentication 객체 리턴
-    public Authentication getAuthentication(String token, Claims claims){
+    public static Authentication getAuthentication(String token, Claims claims){
         // claim을 이용하여 authorities 생성
         Collection<? extends GrantedAuthority> authorities =
                 Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))

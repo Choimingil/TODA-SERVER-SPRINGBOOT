@@ -38,7 +38,7 @@ public class TestProvider {
 
     public MvcResult doGetTestWithHeader(MockMvc mvc, String uri, String header) throws Exception {
         return mvc.perform(get(uri)
-                        .header(JwtFilter.HEADER_NAME,header)
+                        .header(TokenProvider.HEADER_NAME,header)
                         // 받을 데이터 타입 설정 --> JSON으로 받기 때문에 해당 설정 ON
                         .contentType(MediaType.APPLICATION_JSON)
                 )
@@ -49,7 +49,7 @@ public class TestProvider {
 
     public MvcResult doPostTestWithOnlyHeader(MockMvc mvc, String uri, String header) throws Exception {
         return mvc.perform(post(uri)
-                        .header(JwtFilter.HEADER_NAME,header)
+                        .header(TokenProvider.HEADER_NAME,header)
                         // 받을 데이터 타입 설정 --> JSON으로 받기 때문에 해당 설정 ON
                         .contentType(MediaType.APPLICATION_JSON)
                 )
@@ -69,7 +69,7 @@ public class TestProvider {
 
     public MvcResult doPostTestWithHeaderAndBody(MockMvc mvc, String uri, String header, String body) throws Exception {
         return mvc.perform(post(uri)
-                        .header(JwtFilter.HEADER_NAME,header)
+                        .header(TokenProvider.HEADER_NAME,header)
                         .content(body)
                         // 받을 데이터 타입 설정 --> JSON으로 받기 때문에 해당 설정 ON
                         .contentType(MediaType.APPLICATION_JSON)

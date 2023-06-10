@@ -22,7 +22,6 @@ import java.security.Key;
 @Component("authService")
 @RequiredArgsConstructor
 public class AuthService {
-    private final TokenProvider tokenProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final AuthRepository authRepository;
     private final RedisTemplate<String, Object> redisTemplate;
@@ -40,14 +39,14 @@ public class AuthService {
 
         // CustomUserDetailsService에서 데이터 Redis로 저장해서 Redis로 접근
         UserInfoAllDAO userInfoAllDAO = authRepository.getUserInfoAll(loginRequestDTO.getId());
-        return tokenProvider.createToken(authentication, userInfoAllDAO);
+        return TokenProvider.createToken(authentication, userInfoAllDAO);
     }
 
 
     //1-3. 토큰 데이터 추출 API
     public DecodeTokenResponseDTO decodeToken(String token){
         // 토큰 데이터 추출
-        Key key = tokenProvider.getKey();
+        Key key = TokenProvider.key;
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()

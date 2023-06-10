@@ -6,11 +6,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashSet;
 
 public class UriProvider {
-    public HashSet<String> uris;
-    public HashSet<String> nonTokenUris;
+//    private static HashSet<String> uris;
+//    private static HashSet<String> nonTokenUris;
 
-    public UriProvider(){
-        this.uris = new HashSet<>();
+    private static HashSet<String> uris() {
+        HashSet<String> uris = new HashSet<>();
 
         //1. 자체 로그인 API
         uris.add("POST /login");
@@ -24,12 +24,7 @@ public class UriProvider {
         //1-4. 토큰 유효성 검사 API
         uris.add("POST /token");
 
-
-        this.nonTokenUris = new HashSet<>();
-        nonTokenUris.add("POST /login");
-        nonTokenUris.add("POST /email/valid");
-
-//        $r->addRoute('GET', '/update', ['LoginController', 'checkUpdate']);                                                     //1-6. 강제 업데이트 API
+        //        $r->addRoute('GET', '/update', ['LoginController', 'checkUpdate']);                                                     //1-6. 강제 업데이트 API
 //        $r->addRoute('GET', '/popup/{version}', ['LoginController', 'getPopupRead']);                                           //1-9. 업데이트 공지 읽었는지 확인 API
 //        $r->addRoute('PATCH', '/popup/{version}', ['LoginController', 'updatePopupRead']);                                      //1-10. 업데이트 공지 읽기 API
 //        $r->addRoute('POST', '/email/check', ['LoginController', 'isMyEmail']);                                                 //1-11. 자신의 이메일인지 확인 API
@@ -103,13 +98,28 @@ public class UriProvider {
 //        $r->addRoute('GET', '/announcement', ['LoginController', 'getAnnouncement']);                                           //38. 공지사항 리스트 조회 API
 //        $r->addRoute('GET', '/announcement/{announcementID:\d+}', ['LoginController', 'getAnnouncementDetail']);                //39. 공지사항 상세 조회 API
 //        $r->addRoute('GET', '/announcement/check', ['LoginController', 'getAnnouncementCheck']);
+
+        return uris;
+    }
+    private static HashSet<String> nonTokenUris(){
+        HashSet<String> nonTokenUris = new HashSet<>();
+
+        nonTokenUris.add("POST /login");
+        nonTokenUris.add("POST /email/valid");
+
+        return nonTokenUris;
     }
 
-    public String getURI(HttpServletRequest request){
+
+    public static String getURI(HttpServletRequest request){
         return request.getMethod() + " " + request.getRequestURI();
     }
 
-    public void checkURI(String uri){
-        if(!this.uris.contains(uri)) throw new ValidationException(101,"존재하지 않는 API입니다.");
+    public static void checkURI(String uri){
+        if(!uris().contains(uri)) throw new ValidationException(101,"존재하지 않는 API입니다.");
+    }
+
+    public static boolean isValidationPass(String uri){
+        return nonTokenUris().contains(uri);
     }
 }

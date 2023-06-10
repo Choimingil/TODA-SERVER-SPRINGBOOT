@@ -1,4 +1,4 @@
-package com.toda.api.TODASERVERSPRINGBOOT.config;
+package com.toda.api.TODASERVERSPRINGBOOT.utils.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

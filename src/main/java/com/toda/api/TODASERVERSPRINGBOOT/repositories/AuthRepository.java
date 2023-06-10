@@ -1,6 +1,8 @@
 package com.toda.api.TODASERVERSPRINGBOOT.repositories;
 
 import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDAO;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.config.SecurityConfig;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.filters.JwtFilter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AuthRepository {
     private final JdbcTemplate jdbcTemplate;
+
+//    // Singleton Pattern
+//    private static AuthRepository authRepository = null;
+//    public static AuthRepository getInstance(){
+//        if(authRepository == null){
+//            authRepository = new AuthRepository();
+//        }
+//        return authRepository;
+//    }
 
     public UserInfoAllDAO getUserInfoAll(String email) {
         List<UserInfoAllDAO> results = jdbcTemplate.query(

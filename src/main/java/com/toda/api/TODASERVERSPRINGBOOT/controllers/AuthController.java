@@ -7,6 +7,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.dto.responses.DefaultResponseDTO
 import com.toda.api.TODASERVERSPRINGBOOT.models.dto.responses.LoginResponseDTO;
 import com.toda.api.TODASERVERSPRINGBOOT.services.AuthService;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.filters.JwtFilter;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.TokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
@@ -25,14 +26,14 @@ public class AuthController {
 
     //1-3. 토큰 데이터 추출 API
     @GetMapping("/token")
-    public DecodeTokenResponseDTO decodeToken(@RequestHeader(JwtFilter.HEADER_NAME) String token) {
+    public DecodeTokenResponseDTO decodeToken(@RequestHeader(TokenProvider.HEADER_NAME) String token) {
         return authService.decodeToken(token);
     }
 
     //1-4. 토큰 암호 유효성 검사 API
     @PostMapping("/token")
     public DefaultResponseDTO checkToken(
-            @RequestHeader(JwtFilter.HEADER_NAME) String token,
+            @RequestHeader(TokenProvider.HEADER_NAME) String token,
             @RequestBody CheckTokenDTO checkTokenDTO
     ) {
         DecodeTokenResponseDTO checkTokenResult = authService.decodeToken(token);

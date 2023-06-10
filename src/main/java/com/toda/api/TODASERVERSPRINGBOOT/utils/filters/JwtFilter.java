@@ -20,17 +20,21 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-@RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter implements ExceptionHandler {
-    public static final String HEADER_NAME = "x-access-token";
-    private final UriProvider uriProvider = new UriProvider();
-    private final TokenProvider tokenProvider;
+    // Singleton Pattern
+    private static JwtFilter jwtFilter = null;
+    public static JwtFilter getInstance(){
+        if(jwtFilter == null){
+            jwtFilter = new JwtFilter();
+        }
+        return jwtFilter;
+    }
 
     // Jwt 유효성 검사 필터
     @Override
     protected void doFilterInternal(
-            @NonNull HttpServletRequest httpServletRequest,
-            @NonNull HttpServletResponse httpServletResponse,
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws IOException, ServletException {
         try{
@@ -38,21 +42,21 @@ public class JwtFilter extends OncePerRequestFilter implements ExceptionHandler 
             logger.info("2. 토큰 유효성 검사");
 
             // 토큰이 필요 없는 API는 패스
-            String uri = uriProvider.getURI(httpServletRequest);
-            if(!uriProvider.nonTokenUris.contains(uri)){
-                String jwt = tokenProvider.resolveToken(httpServletRequest, JwtFilter.HEADER_NAME);
+            String uri = UriProvider.getURI(request);
+            if(!UriProvider.isValidationPass(uri)){
+                String jwt = TokenProvider.resolveToken(request, TokenProvider.HEADER_NAME);
 
                 // 토큰 유효성 검증 후 SecurityContext에 저장
-                Claims claims = tokenProvider.validateToken(jwt);
-                Authentication authentication = tokenProvider.getAuthentication(jwt, claims);
+                Claims claims = TokenProvider.validateToken(jwt);
+                Authentication authentication = TokenProvider.getAuthentication(jwt, claims);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
 
-            filterChain.doFilter(httpServletRequest,httpServletResponse);
+            filterChain.doFilter(request,response);
         }
         catch(ValidationException e){
             logger.error(e.getMessage());
-            setErrorResponse(e.getCode(),e.getMessage(),httpServletResponse);
+            setErrorResponse(e.getCode(),e.getMessage(),response);
         }
     }
 
