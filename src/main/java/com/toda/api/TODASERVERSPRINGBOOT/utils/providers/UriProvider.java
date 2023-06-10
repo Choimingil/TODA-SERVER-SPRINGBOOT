@@ -2,16 +2,32 @@ package com.toda.api.TODASERVERSPRINGBOOT.utils.providers;
 
 import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.ValidationException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
 
-public class UriProvider {
-//    private static HashSet<String> uris;
-//    private static HashSet<String> nonTokenUris;
+@Component
+public class UriProvider implements InitializingBean {
+    private static final HashSet<String> uris = new HashSet<>();
+    private static final HashSet<String> validPassUris = new HashSet<>();
 
-    private static HashSet<String> uris() {
-        HashSet<String> uris = new HashSet<>();
+    // Singleton Pattern
+    private static UriProvider uriProvider = null;
+    public static UriProvider getInstance(){
+        if(uriProvider == null){
+            uriProvider = new UriProvider();
+        }
+        return uriProvider;
+    }
 
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        setUris();
+        setValidPassUris();
+    }
+
+    private void setUris(){
         //1. 자체 로그인 API
         uris.add("POST /login");
 
@@ -98,28 +114,24 @@ public class UriProvider {
 //        $r->addRoute('GET', '/announcement', ['LoginController', 'getAnnouncement']);                                           //38. 공지사항 리스트 조회 API
 //        $r->addRoute('GET', '/announcement/{announcementID:\d+}', ['LoginController', 'getAnnouncementDetail']);                //39. 공지사항 상세 조회 API
 //        $r->addRoute('GET', '/announcement/check', ['LoginController', 'getAnnouncementCheck']);
-
-        return uris;
-    }
-    private static HashSet<String> nonTokenUris(){
-        HashSet<String> nonTokenUris = new HashSet<>();
-
-        nonTokenUris.add("POST /login");
-        nonTokenUris.add("POST /email/valid");
-
-        return nonTokenUris;
     }
 
+    private void setValidPassUris(){
+        validPassUris.add("POST /login");
+        validPassUris.add("POST /email/valid");
+    }
 
-    public static String getURI(HttpServletRequest request){
+    public String getURI(HttpServletRequest request){
         return request.getMethod() + " " + request.getRequestURI();
     }
 
-    public static void checkURI(String uri){
-        if(!uris().contains(uri)) throw new ValidationException(101,"존재하지 않는 API입니다.");
+    public void checkURI(String uri){
+        if(!uris.contains(uri)) throw new ValidationException(101,"존재하지 않는 API입니다.");
     }
 
-    public static boolean isValidationPass(String uri){
-        return nonTokenUris().contains(uri);
+    public boolean isValidationPass(String uri){
+        return validPassUris.contains(uri);
     }
+
+
 }

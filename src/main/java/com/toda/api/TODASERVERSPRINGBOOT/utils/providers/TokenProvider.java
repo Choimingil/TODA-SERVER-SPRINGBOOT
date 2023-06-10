@@ -47,21 +47,29 @@ public class TokenProvider implements InitializingBean {
         tokenValidityInMilliseconds = value;
     }
 
+
+    // Singleton Pattern
+    private static TokenProvider tokenProvider = null;
+    public static TokenProvider getInstance(){
+        if(tokenProvider == null){
+            tokenProvider = new TokenProvider();
+        }
+        return tokenProvider;
+    }
+
+
     // Bean이 생성이 되고 주입을 받은 후에 secret값을 Base64로 Decode 해서 key 변수에 할당
     @Override
     public void afterPropertiesSet() {
         setKey();
     }
 
-    private static void setKey(){
-        logger.info("setKey pass");
+    private void setKey(){
         byte[] keyBytes = Decoders.BASE64.decode(secret);
-        logger.info("set keyBytes pass");
         key = Keys.hmacShaKeyFor(keyBytes);
-        logger.info("set Keys.hmacShaKeyFor(keyBytes) pass");
     }
 
-    public static String createToken(
+    public String createToken(
             Authentication authentication,
             UserInfoAllDAO userInfoAllDAO
     ){
@@ -91,14 +99,14 @@ public class TokenProvider implements InitializingBean {
                 .compact();
     }
 
-    public static String resolveToken(HttpServletRequest request, String headerName){
+    public String resolveToken(HttpServletRequest request, String headerName){
         String token = request.getHeader(headerName);
         if(StringUtils.hasText(token)) return token;
         else throw new ValidationException(102,"헤더값이 인식되지 않습니다.");
     }
 
 //     토큰의 유효성 검증 수행
-    public static Claims validateToken(String token){
+    public Claims validateToken(String token){
         // tokenProvider에 key가 할당되기 전에 인증 과정으로 넘어가는 경우 방지하기 위해 key가 초기화되지 않으면 초기화 함수 실행
         if(key == null) setKey();
 
@@ -123,7 +131,7 @@ public class TokenProvider implements InitializingBean {
     }
 
     // 토큰에 담겨있는 정보를 이용해 Authentication 객체 리턴
-    public static Authentication getAuthentication(String token, Claims claims){
+    public Authentication getAuthentication(String token, Claims claims){
         // claim을 이용하여 authorities 생성
         Collection<? extends GrantedAuthority> authorities =
                 Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))

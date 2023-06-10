@@ -13,15 +13,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 public class TestProvider {
-    public final String secret;
-    public final long tokenValidityInMilliseconds;
-
-    public TestProvider(
-            @Value("${jwt.secret}") String secret,
-            @Value("${jwt.token-validity-in-seconds}") long tokenValidityInMilliseconds
-    ){
-        this.secret = secret;
-        this.tokenValidityInMilliseconds = tokenValidityInMilliseconds;
+    // Singleton Pattern
+    private static TestProvider testProvider = null;
+    public static TestProvider getInstance(){
+        if(testProvider == null){
+            testProvider = new TestProvider();
+        }
+        return testProvider;
     }
 
     public MvcResult doGetTestWithNoHeader(MockMvc mvc, String uri) throws Exception {

@@ -40,15 +40,17 @@ public class JwtFilter extends OncePerRequestFilter implements ExceptionHandler 
         try{
             // 2. 헤더의 토큰이 존재하는지 체크
             logger.info("2. 토큰 유효성 검사");
+            UriProvider uriProvider = UriProvider.getInstance();
+            TokenProvider tokenProvider = TokenProvider.getInstance();
 
             // 토큰이 필요 없는 API는 패스
-            String uri = UriProvider.getURI(request);
-            if(!UriProvider.isValidationPass(uri)){
-                String jwt = TokenProvider.resolveToken(request, TokenProvider.HEADER_NAME);
+            String uri = uriProvider.getURI(request);
+            if(!uriProvider.isValidationPass(uri)){
+                String jwt = tokenProvider.resolveToken(request, TokenProvider.HEADER_NAME);
 
                 // 토큰 유효성 검증 후 SecurityContext에 저장
-                Claims claims = TokenProvider.validateToken(jwt);
-                Authentication authentication = TokenProvider.getAuthentication(jwt, claims);
+                Claims claims = tokenProvider.validateToken(jwt);
+                Authentication authentication = tokenProvider.getAuthentication(jwt, claims);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
 

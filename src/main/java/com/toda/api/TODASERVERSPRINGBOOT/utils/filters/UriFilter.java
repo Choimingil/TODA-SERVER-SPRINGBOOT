@@ -33,9 +33,10 @@ public class UriFilter extends OncePerRequestFilter implements ExceptionHandler 
         try{
             // 1. URI가 유효한지, 각 URI의 request값이 무엇인지 체크
             logger.info("1. URI 유효성 검사");
+            UriProvider uriProvider = UriProvider.getInstance();
 
-            String uri = UriProvider.getURI(request);
-            UriProvider.checkURI(uri);
+            String uri = uriProvider.getURI(request);
+            uriProvider.checkURI(uri);
 
             // Body, PathVariable, QueryString : 각 Model 또는 Controller에서 벨리데이션 진행
 

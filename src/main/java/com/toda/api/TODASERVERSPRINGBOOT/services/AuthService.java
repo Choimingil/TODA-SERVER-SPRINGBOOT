@@ -39,7 +39,7 @@ public class AuthService {
 
         // CustomUserDetailsService에서 데이터 Redis로 저장해서 Redis로 접근
         UserInfoAllDAO userInfoAllDAO = authRepository.getUserInfoAll(loginRequestDTO.getId());
-        return TokenProvider.createToken(authentication, userInfoAllDAO);
+        return TokenProvider.getInstance().createToken(authentication, userInfoAllDAO);
     }
 
 
