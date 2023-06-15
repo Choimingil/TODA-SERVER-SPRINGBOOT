@@ -1,4 +1,4 @@
-package com.toda.api.TODASERVERSPRINGBOOT.models.dto.requests;
+package com.toda.api.TODASERVERSPRINGBOOT.models.requests;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

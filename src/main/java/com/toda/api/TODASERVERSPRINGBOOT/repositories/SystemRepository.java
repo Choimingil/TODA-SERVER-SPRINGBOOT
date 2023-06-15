@@ -1,7 +1,5 @@
 package com.toda.api.TODASERVERSPRINGBOOT.repositories;
 
-import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDAO;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dto.requests.ValidateEmailDTO;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;

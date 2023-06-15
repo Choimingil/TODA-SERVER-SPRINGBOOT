@@ -1,12 +1,15 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
-import com.toda.api.TODASERVERSPRINGBOOT.models.dto.requests.ValidateEmailDTO;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dto.responses.DefaultResponseDTO;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.requests.ValidateEmailDTO;
 import com.toda.api.TODASERVERSPRINGBOOT.services.SystemService;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.HashMap;
 
 @RestController
 @RequiredArgsConstructor
@@ -15,8 +18,12 @@ public class SystemController {
  
     // 1-2. 이메일 중복 확인 API
     @PostMapping("/email/valid")
-    public DefaultResponseDTO validateEmail(@RequestBody ValidateEmailDTO validateEmailDTO) {
-        return systemService.validateEmail(validateEmailDTO);
+    public HashMap<String, Object> validateEmail(@RequestBody ValidateEmailDTO validateEmailDTO) {
+        if(systemService.isValidEmail(validateEmailDTO.getEmail())){
+            SuccessResponse response = new SuccessResponse.Builder(100,"사용 가능한 이메일입니다.").build();
+            return response.info;
+        }
+        else throw new ValidationException(404, "유효한 이메일이 아닙니다.");
     }
 
     // $r->addRoute('GET', '/update', ['LoginController', 'checkUpdate']);                                                     //1-6. 강제 업데이트 API

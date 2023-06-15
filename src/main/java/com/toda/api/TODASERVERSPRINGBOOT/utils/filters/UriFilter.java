@@ -1,7 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.utils.filters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dto.responses.DefaultResponseDTO;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.ErrorResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.ValidationException;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.interfaces.ExceptionHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.UriProvider;
@@ -55,7 +55,8 @@ public class UriFilter extends OncePerRequestFilter implements ExceptionHandler 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        String json = new ObjectMapper().writeValueAsString(new DefaultResponseDTO(code,message));
+        ErrorResponse errorResponse = new ErrorResponse.Builder(code,message).build();
+        String json = new ObjectMapper().writeValueAsString(errorResponse.info);
         response.getWriter().write(json);
     }
 }

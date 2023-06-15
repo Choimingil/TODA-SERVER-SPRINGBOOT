@@ -1,7 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dto.responses.DefaultResponseDTO;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.ErrorResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.interfaces.ExceptionHandler;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,7 +35,8 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler, ExceptionHan
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        String json = new ObjectMapper().writeValueAsString(new DefaultResponseDTO(code,message));
+        ErrorResponse errorResponse = new ErrorResponse.Builder(code,message).build();
+        String json = new ObjectMapper().writeValueAsString(errorResponse.info);
         response.getWriter().write(json);
     }
 }

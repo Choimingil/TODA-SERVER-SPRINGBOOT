@@ -1,17 +1,16 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
-import com.toda.api.TODASERVERSPRINGBOOT.utils.filters.JwtFilter;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.ValidationException;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDAO;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dto.requests.LoginRequestDTO;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dto.responses.DecodeTokenResponseDTO;
+import com.toda.api.TODASERVERSPRINGBOOT.models.requests.LoginRequestDTO;
+import com.toda.api.TODASERVERSPRINGBOOT.models.dto.DecodeTokenResponseDTO;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.AuthRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
@@ -23,8 +22,8 @@ import java.security.Key;
 @RequiredArgsConstructor
 public class AuthService {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
-    private final AuthRepository authRepository;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final AuthRepository authRepository;
 
     //1. 자체 로그인 API
     public String createJwt(LoginRequestDTO loginRequestDTO){
@@ -66,21 +65,14 @@ public class AuthService {
 
         // 토큰 내용과 유저 정보가 같다면 값 리턴
         if(userID == userInfoAllDAO.getUserID() && appPassword.equals(userInfoAllDAO.getAppPassword())){
-            return new DecodeTokenResponseDTO(
-                    100,
-                    "자체 로그인 성공",
-                    userID,
-                    userInfoAllDAO.getPassword(),
-                    Integer.parseInt(appPassword)
-            );
+            DecodeTokenResponseDTO responseDTO = new DecodeTokenResponseDTO();
+            responseDTO.setId(userID);
+            responseDTO.setPw(userInfoAllDAO.getPassword());
+            responseDTO.setAppPw(Integer.parseInt(appPassword));
+
+            return responseDTO;
         }
-        else return new DecodeTokenResponseDTO(
-                400,
-                "토큰과 유저 정보가 일치하지 않습니다.",
-                userID,
-                userInfoAllDAO.getPassword(),
-                Integer.parseInt(appPassword)
-        );
+        else throw new ValidationException(400,"토큰과 유저 정보가 일치하지 않습니다.");
     }
 
 }

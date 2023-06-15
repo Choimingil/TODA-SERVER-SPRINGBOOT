@@ -6,6 +6,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.utils.filters.JwtFilter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.RowMapper;
@@ -13,7 +14,9 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -21,34 +24,21 @@ import java.util.List;
 public class AuthRepository {
     private final JdbcTemplate jdbcTemplate;
 
-//    // Singleton Pattern
-//    private static AuthRepository authRepository = null;
-//    public static AuthRepository getInstance(){
-//        if(authRepository == null){
-//            authRepository = new AuthRepository();
-//        }
-//        return authRepository;
-//    }
-
     public UserInfoAllDAO getUserInfoAll(String email) {
-        List<UserInfoAllDAO> results = jdbcTemplate.query(
-                "SELECT ID as userID, code as userCode, email, password, name as userName, status as appPassword FROM User WHERE email = ?;",
-                new RowMapper<UserInfoAllDAO>() {
-                    @Override
-                    public UserInfoAllDAO mapRow(@NonNull ResultSet rs, int rowNum) throws SQLException{
-                        UserInfoAllDAO userInfoAllDAO = new UserInfoAllDAO();
+        Object[] res = {email};
+        return (UserInfoAllDAO) jdbcTemplate.queryForObject(
+                "SELECT ID as userID, code as userCode, email, password, name as userName, status as appPassword FROM User WHERE email like ?;"
+                ,new BeanPropertyRowMapper<>(UserInfoAllDAO.class)
+                ,res
+        );
 
-                        userInfoAllDAO.setUserID(rs.getLong("userID"));
-                        userInfoAllDAO.setUserCode(rs.getString("userCode"));
-                        userInfoAllDAO.setEmail(rs.getString("email"));
-                        userInfoAllDAO.setPassword(rs.getString("password"));
-                        userInfoAllDAO.setUserName(rs.getString("username"));
-                        userInfoAllDAO.setAppPassword(rs.getString("appPassword"));
-
-                        return userInfoAllDAO;
-                    }
-                }, email);
-        return results.get(0);
+//        Object[] res = {email};
+//        List<UserInfoAllDAO> results = jdbcTemplate.query(
+//                "SELECT ID as userID, code as userCode, email, password, name as userName, status as appPassword FROM User WHERE email like ?;"
+//                ,new BeanPropertyRowMapper<>(UserInfoAllDAO.class)
+//                ,res
+//        );
+//        return results.get(0);
     }
 
     public String setUserPasswordEncoded(String email, String encodedPassword) {
