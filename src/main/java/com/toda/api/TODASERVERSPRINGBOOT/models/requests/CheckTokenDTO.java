@@ -5,7 +5,7 @@ import lombok.*;
 @Getter
 @Setter
 @RequiredArgsConstructor
-public class CheckTokenDTO extends DefaultRequestDTO{
+public class CheckTokenDTO {
     public String appPW;
 
     // 테스트 시 비교를 위한 코드 추가

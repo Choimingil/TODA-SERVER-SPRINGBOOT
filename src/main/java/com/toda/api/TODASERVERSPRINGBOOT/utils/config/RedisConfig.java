@@ -14,9 +14,10 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 public class RedisConfig {
     @Value("${spring.data.redis.port}")
-    public int port;
+    private int port;
+
     @Value("${spring.data.redis.host}")
-    public String host;
+    private String host;
 
     // TCP 통신
     @Bean
@@ -51,7 +52,7 @@ public class RedisConfig {
 
     // 문자열에 특화한 메소드 제공
     @Bean
-    StringRedisTemplate stringRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
+    public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
         StringRedisTemplate template = new StringRedisTemplate();
         template.setConnectionFactory(redisConnectionFactory);
         return template;

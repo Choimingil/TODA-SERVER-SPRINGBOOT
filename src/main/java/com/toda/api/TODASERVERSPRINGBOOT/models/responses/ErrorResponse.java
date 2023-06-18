@@ -27,6 +27,4 @@ public class ErrorResponse extends Response {
             return this;
         }
     }
-
-
 }

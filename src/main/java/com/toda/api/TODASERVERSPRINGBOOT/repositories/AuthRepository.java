@@ -1,23 +1,13 @@
 package com.toda.api.TODASERVERSPRINGBOOT.repositories;
 
 import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDAO;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.config.SecurityConfig;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.filters.JwtFilter;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 @Repository
 @RequiredArgsConstructor

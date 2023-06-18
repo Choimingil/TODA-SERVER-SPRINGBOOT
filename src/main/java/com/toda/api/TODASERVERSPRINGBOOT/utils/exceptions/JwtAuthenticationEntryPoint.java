@@ -1,8 +1,5 @@
 package com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.toda.api.TODASERVERSPRINGBOOT.models.responses.ErrorResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.interfaces.ExceptionHandler;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,8 +11,9 @@ import java.io.IOException;
 
 // 401 에러, 즉 토큰 인증이 되지 않을 경우 예외 처리
 @Component
-public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint, ExceptionHandler {
+public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     // Singleton Pattern
+    private JwtAuthenticationEntryPoint(){}
     private static JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint = null;
     public static JwtAuthenticationEntryPoint getInstance(){
         if(jwtAuthenticationEntryPoint == null){
@@ -26,18 +24,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint, Ex
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-        setErrorResponse(401,"토큰 인증에 실패하였습니다.", response);
-    }
-
-    @Override
-    public void setErrorResponse(int code, String message, HttpServletResponse response) throws IOException {
-        response.setStatus(200);
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-
-        ErrorResponse errorResponse = new ErrorResponse.Builder(code,message).build();
-        String json = new ObjectMapper().writeValueAsString(errorResponse.info);
-        response.getWriter().write(json);
+        FilterExceptionHandler.getInstance().setErrorResponse(403,"현재 API의 사용 권한이 존재하지 않습니다.", response);
     }
 }
 

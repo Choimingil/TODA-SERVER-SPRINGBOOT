@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 
 @RestControllerAdvice
-public class ValidationExceptionHandler {
+public class ControllerExceptionHandler {
 
     @ExceptionHandler(ValidationException.class)
     public HashMap<String,Object> sendBadRequest(ValidationException e) {

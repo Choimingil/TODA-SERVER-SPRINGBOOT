@@ -2,9 +2,7 @@ package com.toda.api.TODASERVERSPRINGBOOT.utils.config;
 
 import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.JwtAccessDeniedHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.JwtAuthenticationEntryPoint;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.filters.JwtFilter;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.TokenProvider;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;

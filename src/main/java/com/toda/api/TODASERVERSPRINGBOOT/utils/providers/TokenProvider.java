@@ -37,7 +37,6 @@ public class TokenProvider implements InitializingBean {
     private static String secret;
     private static long tokenValidityInMilliseconds;
 
-    // @Value 값 static 변수에 할당
     @Value("${jwt.secret}")
     private void setSecret(String value) {
         secret = value;
@@ -47,8 +46,8 @@ public class TokenProvider implements InitializingBean {
         tokenValidityInMilliseconds = value;
     }
 
-
     // Singleton Pattern
+    private TokenProvider(){}
     private static TokenProvider tokenProvider = null;
     public static TokenProvider getInstance(){
         if(tokenProvider == null){

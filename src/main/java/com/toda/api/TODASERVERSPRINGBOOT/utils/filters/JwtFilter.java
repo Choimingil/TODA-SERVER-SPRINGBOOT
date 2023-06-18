@@ -1,8 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.utils.filters;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.toda.api.TODASERVERSPRINGBOOT.models.responses.ErrorResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.interfaces.ExceptionHandler;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.FilterExceptionHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.ValidationException;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.UriProvider;
@@ -18,8 +16,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-public class JwtFilter extends OncePerRequestFilter implements ExceptionHandler {
+public class JwtFilter extends OncePerRequestFilter {
     // Singleton Pattern
+    private JwtFilter(){}
     private static JwtFilter jwtFilter = null;
     public static JwtFilter getInstance(){
         if(jwtFilter == null){
@@ -56,18 +55,7 @@ public class JwtFilter extends OncePerRequestFilter implements ExceptionHandler 
         }
         catch(ValidationException e){
             logger.error(e.getMessage());
-            setErrorResponse(e.getCode(),e.getMessage(),response);
+            FilterExceptionHandler.getInstance().setErrorResponse(e.getCode(),e.getMessage(),response);
         }
-    }
-
-    @Override
-    public void setErrorResponse(int code, String message, HttpServletResponse response) throws IOException {
-        response.setStatus(200);
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-
-        ErrorResponse errorResponse = new ErrorResponse.Builder(code,message).build();
-        String json = new ObjectMapper().writeValueAsString(errorResponse.info);
-        response.getWriter().write(json);
     }
 }

@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @RequiredArgsConstructor
-public class ValidateEmailDTO extends DefaultRequestDTO{
+public class ValidateEmailDTO {
     public String email;
 
     // 테스트 시 비교를 위한 코드 추가

@@ -2,6 +2,7 @@ package com.toda.api.TODASERVERSPRINGBOOT.models.responses;
 
 import java.util.*;
 
+
 public abstract class Response {
     final HashMap<String,Object> response;
 

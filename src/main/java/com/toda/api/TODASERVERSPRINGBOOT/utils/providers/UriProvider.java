@@ -13,6 +13,7 @@ public class UriProvider implements InitializingBean {
     private static final HashSet<String> validPassUris = new HashSet<>();
 
     // Singleton Pattern
+    private UriProvider(){}
     private static UriProvider uriProvider = null;
     public static UriProvider getInstance(){
         if(uriProvider == null){

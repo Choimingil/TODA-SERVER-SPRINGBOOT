@@ -5,7 +5,7 @@ import lombok.*;
 @Getter
 @Setter
 @RequiredArgsConstructor
-public class LoginRequestDTO extends DefaultRequestDTO{
+public class LoginRequestDTO {
     public String id;
     public String pw;
 

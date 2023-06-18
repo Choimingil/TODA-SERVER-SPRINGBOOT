@@ -1,8 +1,5 @@
 package com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.toda.api.TODASERVERSPRINGBOOT.models.responses.ErrorResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.interfaces.ExceptionHandler;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,8 +11,9 @@ import java.io.IOException;
 
 // 403 에러, 즉 인가 과정에서 현재 유저가 수행 권한이 존재하지 않을 경우 예외 처리
 @Component
-public class JwtAccessDeniedHandler implements AccessDeniedHandler, ExceptionHandler {
+public class JwtAccessDeniedHandler implements AccessDeniedHandler {
     // Singleton Pattern
+    private JwtAccessDeniedHandler(){}
     private static JwtAccessDeniedHandler jwtAccessDeniedHandler = null;
     public static JwtAccessDeniedHandler getInstance(){
         if(jwtAccessDeniedHandler == null){
@@ -26,17 +24,6 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler, ExceptionHan
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
-        setErrorResponse(403,"현재 API의 사용 권한이 존재하지 않습니다.", response);
-    }
-
-    @Override
-    public void setErrorResponse(int code, String message, HttpServletResponse response) throws IOException {
-        response.setStatus(200);
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-
-        ErrorResponse errorResponse = new ErrorResponse.Builder(code,message).build();
-        String json = new ObjectMapper().writeValueAsString(errorResponse.info);
-        response.getWriter().write(json);
+        FilterExceptionHandler.getInstance().setErrorResponse(403,"현재 API의 사용 권한이 존재하지 않습니다.", response);
     }
 }
