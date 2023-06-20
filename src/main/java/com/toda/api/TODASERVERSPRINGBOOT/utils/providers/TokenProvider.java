@@ -7,6 +7,7 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -29,6 +30,7 @@ import java.util.Date;
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class TokenProvider implements InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(TokenProvider.class);
     private static final String AUTHORITIES_KEY = "auth";
@@ -47,7 +49,7 @@ public class TokenProvider implements InitializingBean {
     }
 
     // Singleton Pattern
-    private TokenProvider(){}
+//    private TokenProvider(){}
     private static TokenProvider tokenProvider = null;
     public static TokenProvider getInstance(){
         if(tokenProvider == null){

@@ -66,15 +66,28 @@ public class TestProvider {
     }
 
     public <T> T doPostTest(Class<T> c) throws Exception{
-        result = mvc.perform(post(uri)
-                        .header(TokenProvider.HEADER_NAME,header)
-                        .content(body)
-                        // 받을 데이터 타입 설정 --> JSON으로 받기 때문에 해당 설정 ON
-                        .contentType(MediaType.APPLICATION_JSON)
-                )
-                .andExpect(status().isOk())
-                .andDo(print())
-                .andReturn();
+        if(header == null){
+            result = mvc.perform(post(uri)
+                            .content(body)
+                            // 받을 데이터 타입 설정 --> JSON으로 받기 때문에 해당 설정 ON
+                            .contentType(MediaType.APPLICATION_JSON)
+                    )
+                    .andExpect(status().isOk())
+                    .andDo(print())
+                    .andReturn();
+        }
+        else{
+            result = mvc.perform(post(uri)
+                            .header(TokenProvider.HEADER_NAME,header)
+                            .content(body)
+                            // 받을 데이터 타입 설정 --> JSON으로 받기 때문에 해당 설정 ON
+                            .contentType(MediaType.APPLICATION_JSON)
+                    )
+                    .andExpect(status().isOk())
+                    .andDo(print())
+                    .andReturn();
+        }
+
         String content = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
         return mapper.readValue(content, c);
     }

@@ -1,14 +1,15 @@
-package com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions;
+package com.toda.api.TODASERVERSPRINGBOOT.utils.handlers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.ErrorResponse;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
 
+@RequiredArgsConstructor
 public class FilterExceptionHandler {
     // Singleton Pattern
-    private FilterExceptionHandler(){}
     private static FilterExceptionHandler filterExceptionHandler = null;
     public static FilterExceptionHandler getInstance(){
         if(filterExceptionHandler == null){

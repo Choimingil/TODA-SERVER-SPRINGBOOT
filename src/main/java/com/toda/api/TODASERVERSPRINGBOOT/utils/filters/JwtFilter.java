@@ -1,6 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.utils.filters;
 
-import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.FilterExceptionHandler;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.handlers.FilterExceptionHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.ValidationException;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.UriProvider;
@@ -10,15 +10,16 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
     // Singleton Pattern
-    private JwtFilter(){}
     private static JwtFilter jwtFilter = null;
     public static JwtFilter getInstance(){
         if(jwtFilter == null){

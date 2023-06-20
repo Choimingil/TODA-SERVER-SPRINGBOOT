@@ -2,18 +2,19 @@ package com.toda.api.TODASERVERSPRINGBOOT.utils.providers;
 
 import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.ValidationException;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
 
 @Component
+@RequiredArgsConstructor
 public class UriProvider implements InitializingBean {
     private static final HashSet<String> uris = new HashSet<>();
     private static final HashSet<String> validPassUris = new HashSet<>();
 
     // Singleton Pattern
-    private UriProvider(){}
     private static UriProvider uriProvider = null;
     public static UriProvider getInstance(){
         if(uriProvider == null){

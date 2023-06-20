@@ -1,6 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.utils.filters;
 
-import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.FilterExceptionHandler;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.handlers.FilterExceptionHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.ValidationException;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.UriProvider;
 import jakarta.servlet.FilterChain;
@@ -8,13 +8,14 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@RequiredArgsConstructor
 public class UriFilter extends OncePerRequestFilter {
     // Singleton Pattern
-    private UriFilter(){}
     private static UriFilter uriFilter = null;
     public static UriFilter getInstance(){
         if(uriFilter == null){

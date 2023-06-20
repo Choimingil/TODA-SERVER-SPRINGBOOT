@@ -4,7 +4,9 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.requests.ValidateEmailDTO;
 import com.toda.api.TODASERVERSPRINGBOOT.services.SystemService;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.ValidationException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,7 +20,12 @@ public class SystemController {
  
     // 1-2. 이메일 중복 확인 API
     @PostMapping("/email/valid")
-    public HashMap<String, Object> validateEmail(@RequestBody ValidateEmailDTO validateEmailDTO) {
+    public HashMap<String, Object> validateEmail(
+            @RequestBody @Valid ValidateEmailDTO validateEmailDTO,
+            BindingResult bindingResult)
+    {
+        if(bindingResult.hasErrors()) throw new ValidationException(404,"잘못된 요청값입니다.");
+
         if(systemService.isValidEmail(validateEmailDTO.getEmail())){
             SuccessResponse response = new SuccessResponse.Builder(100,"사용 가능한 이메일입니다.").build();
             return response.info;

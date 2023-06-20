@@ -55,6 +55,12 @@ dependencies {
 
 	// Redis (7.0.11)
 	implementation('org.springframework.boot:spring-boot-starter-data-redis')
+
+	// Actuator
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+	// Validator
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
 }
 
 tasks.named('test') {
