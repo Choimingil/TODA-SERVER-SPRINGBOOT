@@ -1,5 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.utils.config;
 
+import com.toda.api.TODASERVERSPRINGBOOT.utils.filters.JwtFilter;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.filters.UriFilter;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.handlers.JwtAccessDeniedHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.handlers.JwtAuthenticationEntryPoint;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.TokenProvider;
@@ -15,6 +17,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity // Spring Security 활성화 (Web)
@@ -58,7 +61,8 @@ public class SecurityConfig {
                 )
 
 //                 필터 추가
-                .apply(FilterConfig.getInstance());
+                .addFilterBefore(JwtFilter.getInstance(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(UriFilter.getInstance(), JwtFilter.class);
 
         return http.build();
     }

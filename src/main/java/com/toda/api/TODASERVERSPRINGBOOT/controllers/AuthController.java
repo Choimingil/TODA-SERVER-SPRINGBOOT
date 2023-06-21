@@ -8,6 +8,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.services.AuthService;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.ValidationException;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.TokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -19,7 +20,12 @@ public class AuthController {
 
     //1. 자체 로그인 API
     @PostMapping("/login")
-    public HashMap<String,Object> createJwt(@RequestBody LoginRequestDTO loginRequestDTO) {
+    public HashMap<String,Object> createJwt(
+            @RequestBody LoginRequestDTO loginRequestDTO,
+            BindingResult bindingResult
+    ) {
+        if(bindingResult.hasErrors()) throw new ValidationException(404,"잘못된 요청값입니다.");
+
         String jwt = authService.createJwt(loginRequestDTO);
         SuccessResponse response = new SuccessResponse.Builder(100,"성공적으로 로그인되었습니다.")
                 .add("result",jwt)
@@ -29,7 +35,9 @@ public class AuthController {
 
     //1-3. 토큰 데이터 추출 API
     @GetMapping("/token")
-    public HashMap<String,Object> decodeToken(@RequestHeader(TokenProvider.HEADER_NAME) String token) {
+    public HashMap<String,Object> decodeToken(
+            @RequestHeader(TokenProvider.HEADER_NAME) String token
+    ) {
         DecodeTokenResponseDTO checkTokenResult = authService.decodeToken(token);
         SuccessResponse response = new SuccessResponse.Builder(100,"자체 로그인 성공")
                 .add("id",checkTokenResult.id)
@@ -43,8 +51,11 @@ public class AuthController {
     @PostMapping("/token")
     public HashMap<String,Object> checkToken(
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
-            @RequestBody CheckTokenDTO checkTokenDTO
+            @RequestBody CheckTokenDTO checkTokenDTO,
+            BindingResult bindingResult
     ) {
+        if(bindingResult.hasErrors()) throw new ValidationException(404,"잘못된 요청값입니다.");
+        
         DecodeTokenResponseDTO checkTokenResult = authService.decodeToken(token);
         if(checkTokenDTO == null){
             if(checkTokenResult.appPw == 10000){

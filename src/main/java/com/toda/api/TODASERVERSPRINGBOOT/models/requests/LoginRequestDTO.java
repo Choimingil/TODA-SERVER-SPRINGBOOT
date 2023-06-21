@@ -12,4 +12,12 @@ public class LoginRequestDTO {
     public String id;
     @ValidPassword
     public String pw;
+
+    public String toString(){
+        return "id(email) : " +
+                id +
+                ", " +
+                "password : " +
+                pw;
+    }
 }

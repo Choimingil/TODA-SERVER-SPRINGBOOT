@@ -9,4 +9,16 @@ public class DecodeTokenResponseDTO {
     public Long id;
     public String pw;
     public int appPw;
+
+    public String toString(){
+        return "userID : " +
+                id +
+                ", " +
+                "password : " +
+                pw +
+                ", " +
+                "appPassword : " +
+                appPw;
+    }
+
 }

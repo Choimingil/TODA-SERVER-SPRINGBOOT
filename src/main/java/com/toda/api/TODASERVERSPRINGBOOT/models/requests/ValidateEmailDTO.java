@@ -11,4 +11,8 @@ import lombok.Setter;
 public class ValidateEmailDTO {
     @ValidEmail
     public String email;
+
+    public String toString(){
+        return "email : " + email;
+    }
 }

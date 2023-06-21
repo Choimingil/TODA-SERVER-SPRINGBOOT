@@ -14,4 +14,24 @@ public class UserInfoAllDAO {
     String password;
     String userName;
     String appPassword;
+
+    public String toString(){
+        return "userID : " +
+                userID +
+                ", " +
+                "userCode : " +
+                userCode +
+                ", " +
+                "email : " +
+                email +
+                ", " +
+                "password : " +
+                password +
+                ", " +
+                "userName : " +
+                userName +
+                ", " +
+                "appPassword : " +
+                appPassword;
+    }
 }

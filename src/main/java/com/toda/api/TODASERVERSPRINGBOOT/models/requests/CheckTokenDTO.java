@@ -9,4 +9,8 @@ import lombok.*;
 public class CheckTokenDTO {
     @ValidAppPw
     public String appPW;
+
+    public String toString(){
+        return "appPassword : " + appPW;
+    }
 }

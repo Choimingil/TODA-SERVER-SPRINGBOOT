@@ -28,7 +28,7 @@ public class AuthRepository {
 //                ,new BeanPropertyRowMapper<>(UserInfoAllDAO.class)
 //                ,res
 //        );
-//        return results.get(0);
+//        return results;
     }
 
     public String setUserPasswordEncoded(String email, String encodedPassword) {
