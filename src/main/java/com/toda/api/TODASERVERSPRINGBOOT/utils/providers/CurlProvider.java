@@ -15,7 +15,7 @@ import java.util.*;
 @Component
 @RequiredArgsConstructor
 public class CurlProvider {
-    private static final Logger logger = LoggerFactory.getLogger(CurlProvider.class);
+    private static final MdcProvider mdcProvider = MdcProvider.getInstance();
     @Autowired
     private SlackApi slackApi;
     @Autowired
@@ -42,6 +42,7 @@ public class CurlProvider {
 
         slackMessage.setAttachments(Collections.singletonList(slackAttachment));
         slackApi.call(slackMessage);
+        mdcProvider.removeMdc();
     }
 
 }
