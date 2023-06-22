@@ -1,5 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.utils.validations.validators;
 
+import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.ValidationException;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.validations.annotations.ValidEmail;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;

@@ -1,5 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.models.requests;
 
+import com.sun.istack.NotNull;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.validations.annotations.ValidEmail;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.validations.annotations.ValidPassword;
 import lombok.*;
@@ -9,8 +10,11 @@ import lombok.*;
 @RequiredArgsConstructor
 public class LoginRequestDTO {
     @ValidEmail
+    @NotNull
     public String id;
+
     @ValidPassword
+    @NotNull
     public String pw;
 
     public String toString(){

@@ -4,8 +4,12 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.requests.ValidateEmailDTO;
 import com.toda.api.TODASERVERSPRINGBOOT.services.SystemService;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.ValidationException;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.MdcProvider;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,9 +26,9 @@ public class SystemController {
     @PostMapping("/email/valid")
     public HashMap<String, Object> validateEmail(
             @RequestBody @Valid ValidateEmailDTO validateEmailDTO,
-            BindingResult bindingResult)
-    {
-        if(bindingResult.hasErrors()) throw new ValidationException(404,"잘못된 요청값입니다.");
+            BindingResult bindingResult
+    ) {
+        MdcProvider.getInstance().setBody(bindingResult);
 
         if(systemService.isValidEmail(validateEmailDTO.getEmail())){
             SuccessResponse response = new SuccessResponse.Builder(100,"사용 가능한 이메일입니다.").build();

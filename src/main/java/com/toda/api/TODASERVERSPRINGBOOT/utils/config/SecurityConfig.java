@@ -1,6 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.utils.config;
 
 import com.toda.api.TODASERVERSPRINGBOOT.utils.filters.JwtFilter;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.filters.MdcFilter;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.filters.UriFilter;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.handlers.JwtAccessDeniedHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.handlers.JwtAuthenticationEntryPoint;
@@ -61,6 +62,7 @@ public class SecurityConfig {
                 )
 
 //                 필터 추가
+                .addFilterAfter(MdcFilter.getInstance(), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(JwtFilter.getInstance(), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(UriFilter.getInstance(), JwtFilter.class);
 

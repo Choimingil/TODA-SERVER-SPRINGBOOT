@@ -49,7 +49,6 @@ public class TokenProvider implements InitializingBean {
     }
 
     // Singleton Pattern
-//    private TokenProvider(){}
     private static TokenProvider tokenProvider = null;
     public static TokenProvider getInstance(){
         if(tokenProvider == null){
@@ -57,7 +56,6 @@ public class TokenProvider implements InitializingBean {
         }
         return tokenProvider;
     }
-
 
     // Bean이 생성이 되고 주입을 받은 후에 secret값을 Base64로 Decode 해서 key 변수에 할당
     @Override

@@ -6,8 +6,13 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.requests.CheckTokenDTO;
 import com.toda.api.TODASERVERSPRINGBOOT.models.requests.LoginRequestDTO;
 import com.toda.api.TODASERVERSPRINGBOOT.services.AuthService;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.ValidationException;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.MdcProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.TokenProvider;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,7 +29,7 @@ public class AuthController {
             @RequestBody LoginRequestDTO loginRequestDTO,
             BindingResult bindingResult
     ) {
-        if(bindingResult.hasErrors()) throw new ValidationException(404,"잘못된 요청값입니다.");
+        MdcProvider.getInstance().setBody(bindingResult);
 
         String jwt = authService.createJwt(loginRequestDTO);
         SuccessResponse response = new SuccessResponse.Builder(100,"성공적으로 로그인되었습니다.")
@@ -51,11 +56,11 @@ public class AuthController {
     @PostMapping("/token")
     public HashMap<String,Object> checkToken(
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
-            @RequestBody CheckTokenDTO checkTokenDTO,
+            @RequestBody @Nullable CheckTokenDTO checkTokenDTO,
             BindingResult bindingResult
     ) {
-        if(bindingResult.hasErrors()) throw new ValidationException(404,"잘못된 요청값입니다.");
-        
+        MdcProvider.getInstance().setBody(bindingResult);
+
         DecodeTokenResponseDTO checkTokenResult = authService.decodeToken(token);
         if(checkTokenDTO == null){
             if(checkTokenResult.appPw == 10000){

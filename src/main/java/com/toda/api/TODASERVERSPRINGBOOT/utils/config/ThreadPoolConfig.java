@@ -1,11 +1,11 @@
 package com.toda.api.TODASERVERSPRINGBOOT.utils.config;
 
+import com.toda.api.TODASERVERSPRINGBOOT.utils.decorators.CustomTaskDecorator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-
 import java.util.concurrent.ThreadPoolExecutor;
 
 @Configuration
@@ -25,6 +25,8 @@ public class ThreadPoolConfig {
         executor.setCorePoolSize(CORE_POOL_SIZE);
         executor.setMaxPoolSize(MAX_POOL_SIZE);
         executor.setQueueCapacity(QUEUE_CAPACITY);
+
+        executor.setTaskDecorator(new CustomTaskDecorator());
         executor.setThreadNamePrefix("async-task-");
         executor.setThreadGroupName("async-group");
 
@@ -34,3 +36,4 @@ public class ThreadPoolConfig {
         return executor;
     }
 }
+
