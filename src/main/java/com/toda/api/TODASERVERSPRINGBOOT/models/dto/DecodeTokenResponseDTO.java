@@ -5,19 +5,16 @@ import lombok.*;
 
 @Getter
 public final class DecodeTokenResponseDTO {
-    @NotNull
-    public long id;
-    @NotNull
-    public String pw;
-    @NotNull
-    public int appPw;
+    long id;
+    @NotNull String pw;
+    int appPw;
 
     public DecodeTokenResponseDTO(){}
 
     @Builder
     public DecodeTokenResponseDTO(
             long id,
-            String pw,
+            @NotNull String pw,
             int appPw
     ){
         this.id = id;

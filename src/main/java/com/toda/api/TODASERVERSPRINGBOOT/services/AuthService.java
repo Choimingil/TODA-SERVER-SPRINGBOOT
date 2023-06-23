@@ -61,7 +61,7 @@ public final class AuthService {
         }
 
         // 토큰 내용과 유저 정보가 같다면 값 리턴
-        if(userID == userInfoAllDAO.getUserID() && appPassword.equals(userInfoAllDAO.getAppPassword())){
+        if(userInfoAllDAO.isSameTokenAttributes(claims)){
             return DecodeTokenResponseDTO.builder()
                     .id(userID)
                     .pw(userInfoAllDAO.getPassword())

@@ -43,9 +43,9 @@ public final class AuthController {
     ) {
         DecodeTokenResponseDTO checkTokenResult = authService.decodeToken(token);
         SuccessResponse response = new SuccessResponse.Builder(100,"자체 로그인 성공")
-                .add("id",checkTokenResult.id)
-                .add("pw",checkTokenResult.pw)
-                .add("appPw",checkTokenResult.appPw)
+                .add("id",checkTokenResult.getId())
+                .add("pw",checkTokenResult.getPw())
+                .add("appPw",checkTokenResult.getAppPw())
                 .build();
         return response.info;
     }
@@ -61,7 +61,7 @@ public final class AuthController {
 
         DecodeTokenResponseDTO checkTokenResult = authService.decodeToken(token);
         if(checkTokenDTO == null){
-            if(checkTokenResult.appPw == 10000){
+            if(checkTokenResult.getAppPw() == 10000){
                 SuccessResponse response = new SuccessResponse.Builder(100,"유효한 유저입니다.").build();
                 return response.info;
             }
@@ -69,7 +69,7 @@ public final class AuthController {
         }
         else{
             int appPw = Integer.parseInt(checkTokenDTO.appPW);
-            if(checkTokenResult.appPw == appPw){
+            if(checkTokenResult.getAppPw() == appPw){
                 SuccessResponse response = new SuccessResponse.Builder(100,"유효한 유저입니다.").build();
                 return response.info;
             }

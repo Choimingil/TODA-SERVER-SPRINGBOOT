@@ -88,8 +88,6 @@ public final class TokenProvider implements InitializingBean {
 
     private void validateToken(Claims claims){
         if (!isExistTokenAttributes(claims)) throw new ValidationException(103, "잘못된 헤더값입니다.");
-        long userID = Long.parseLong(String.valueOf(claims.get("userID")));
-        String appPassword = (String) claims.get("appPassword");
 
         // Redis 에 유저 정보 존재하는지 확인
         ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
@@ -100,7 +98,7 @@ public final class TokenProvider implements InitializingBean {
             userInfoAllDAO = authRepository.getUserInfoAll(claims.getSubject());
 
             // 토큰과 DB의 정보가 다르다면 예외 던지기
-            if(userID != userInfoAllDAO.getUserID() || appPassword.equals(userInfoAllDAO.getAppPassword()))
+            if(!userInfoAllDAO.isSameTokenAttributes(claims))
                 throw new ValidationException(103,"토큰과 유저 정보가 일치하지 않습니다.");
 
             // 같다면 Redis에 저장
