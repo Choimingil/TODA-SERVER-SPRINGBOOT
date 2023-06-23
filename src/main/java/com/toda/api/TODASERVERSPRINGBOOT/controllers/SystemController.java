@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,6 +22,7 @@ import java.util.HashMap;
 @RequiredArgsConstructor
 public class SystemController {
     private final SystemService systemService;
+    private final MdcProvider mdcProvider;
  
     // 1-2. 이메일 중복 확인 API
     @PostMapping("/email/valid")
@@ -28,7 +30,7 @@ public class SystemController {
             @RequestBody @Valid ValidateEmailDTO validateEmailDTO,
             BindingResult bindingResult
     ) {
-        MdcProvider.getInstance().setBody(bindingResult);
+        mdcProvider.setBody(bindingResult);
 
         if(systemService.isValidEmail(validateEmailDTO.getEmail())){
             SuccessResponse response = new SuccessResponse.Builder(100,"사용 가능한 이메일입니다.").build();

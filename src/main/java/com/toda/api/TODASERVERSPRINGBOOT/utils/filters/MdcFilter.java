@@ -8,19 +8,17 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-public class MdcFilter extends OncePerRequestFilter {
-    // Singleton Pattern
-    private static MdcFilter mdcFilter = null;
-    public static MdcFilter getInstance(){
-        if(mdcFilter == null){
-            mdcFilter = new MdcFilter();
-        }
-        return mdcFilter;
-    }
+@Component
+@RequiredArgsConstructor
+public final class MdcFilter extends OncePerRequestFilter {
+    private final FilterExceptionHandler filterExceptionHandler;
+    private final MdcProvider mdcProvider;
 
     @Override
     protected void doFilterInternal(
@@ -31,13 +29,17 @@ public class MdcFilter extends OncePerRequestFilter {
         try{
             // 3. 요청 정보 mdc에 저장
             logger.info("3. mdc 저장");
-            MdcProvider.getInstance().setMdc(request);
+            mdcProvider.setMdc(request);
 
             filterChain.doFilter(request,response);
         }
         catch(ValidationException e){
             logger.error(e.getMessage());
-            FilterExceptionHandler.getInstance().setErrorResponse(e.getCode(),e.getMessage(),response);
+            filterExceptionHandler.setErrorResponse(e.getCode(),e.getMessage(),response);
+        }
+        catch (Exception e){
+            logger.error(e.getMessage());
+            filterExceptionHandler.sendErrorToSlack(request,response,e);
         }
     }
 }

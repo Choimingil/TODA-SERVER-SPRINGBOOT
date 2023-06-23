@@ -1,11 +1,12 @@
 package com.toda.api.TODASERVERSPRINGBOOT.utils.providers;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import net.gpedro.integrations.slack.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -14,20 +15,54 @@ import java.util.*;
 
 @Component
 @RequiredArgsConstructor
-public class CurlProvider {
-    private static final MdcProvider mdcProvider = MdcProvider.getInstance();
-    @Autowired
-    private SlackApi slackApi;
-    @Autowired
-    private SlackAttachment slackAttachment;
-    @Autowired
-    private SlackMessage slackMessage;
+public class CurlProvider implements InitializingBean{
+    private final Logger logger = LoggerFactory.getLogger(CurlProvider.class);
+    private final MdcProvider mdcProvider;
+    private final SlackApi slackApi;
+    private final SlackAttachment slackAttachment;
+    private final SlackMessage slackMessage;
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        beforeSet();
+    }
+
+    private void beforeSet(){
+        slackAttachment.setFallback("Error");
+        slackAttachment.setColor("danger");
+        slackAttachment.setTitle("Error Directory");
+
+        slackMessage.setIcon(":ghost:");
+        slackMessage.setText("Error Detected");
+        slackMessage.setUsername("TODA Error Catcher");
+    }
+
+    private void send(Exception e){
+        slackAttachment.setText(Arrays.toString(e.getStackTrace()));
+        slackMessage.setAttachments(Collections.singletonList(slackAttachment));
+        slackApi.call(slackMessage);
+        mdcProvider.removeMdc();
+    }
+
+    public void sendSlackWithNoMdc(HttpServletRequest request, Exception e) {
+        slackAttachment.setTitleLink(request.getContextPath());
+        slackAttachment.setFields(
+                List.of(
+                        new SlackField().setTitle("Request URL").setValue(request.getRequestURI()),
+                        new SlackField().setTitle("Request Method").setValue(request.getMethod()),
+                        new SlackField().setTitle("Request Time").setValue(new Date().toString()),
+                        new SlackField().setTitle("Request IP").setValue(request.getRemoteAddr()),
+                        new SlackField().setTitle("Request header").setValue(request.getHeader(TokenProvider.HEADER_NAME)),
+                        new SlackField().setTitle("Request Query String").setValue(request.getQueryString())
+                )
+        );
+
+        send(e);
+    }
 
     @Async
-    public void sendSlack(Exception e) {
+    public void sendSlackWithMdc(Exception e) {
         slackAttachment.setTitleLink(MDC.get("request_context_path"));
-        slackAttachment.setText(Arrays.toString(e.getStackTrace()));
-
         slackAttachment.setFields(
                 List.of(
                         new SlackField().setTitle("Request URL").setValue(MDC.get("request_url")),
@@ -40,9 +75,10 @@ public class CurlProvider {
                 )
         );
 
-        slackMessage.setAttachments(Collections.singletonList(slackAttachment));
-        slackApi.call(slackMessage);
-        mdcProvider.removeMdc();
+        send(e);
     }
+
+
+
 
 }

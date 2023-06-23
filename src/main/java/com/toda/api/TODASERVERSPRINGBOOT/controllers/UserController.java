@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-public class UserController {
+public final class UserController {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
     //2. 자체 회원가입 API

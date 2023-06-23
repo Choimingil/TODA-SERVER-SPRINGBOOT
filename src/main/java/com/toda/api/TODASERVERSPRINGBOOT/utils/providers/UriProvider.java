@@ -10,18 +10,9 @@ import java.util.HashSet;
 
 @Component
 @RequiredArgsConstructor
-public class UriProvider implements InitializingBean {
+public final class UriProvider implements InitializingBean {
     private static final HashSet<String> uris = new HashSet<>();
     private static final HashSet<String> validPassUris = new HashSet<>();
-
-    // Singleton Pattern
-    private static UriProvider uriProvider = null;
-    public static UriProvider getInstance(){
-        if(uriProvider == null){
-            uriProvider = new UriProvider();
-        }
-        return uriProvider;
-    }
 
     @Override
     public void afterPropertiesSet() throws Exception {

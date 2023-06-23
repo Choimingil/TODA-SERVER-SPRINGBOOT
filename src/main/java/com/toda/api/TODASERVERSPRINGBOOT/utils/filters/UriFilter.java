@@ -9,32 +9,27 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@Component
 @RequiredArgsConstructor
-public class UriFilter extends OncePerRequestFilter {
-    // Singleton Pattern
-    private static UriFilter uriFilter = null;
-    public static UriFilter getInstance(){
-        if(uriFilter == null){
-            uriFilter = new UriFilter();
-        }
-        return uriFilter;
-    }
+public final class UriFilter extends OncePerRequestFilter {
+    private final FilterExceptionHandler filterExceptionHandler;
+    private final UriProvider uriProvider;
 
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
+            @NonNull FilterChain filterChain
+    ) throws IOException {
         try{
             // 1. URI가 유효한지, 각 URI의 request값이 무엇인지 체크
             logger.info("1. URI 유효성 검사");
-            UriProvider uriProvider = UriProvider.getInstance();
-
             String uri = uriProvider.getURI(request);
             uriProvider.checkURI(uri);
 
@@ -44,8 +39,11 @@ public class UriFilter extends OncePerRequestFilter {
         }
         catch (ValidationException e){
             logger.error(e.getMessage());
-            FilterExceptionHandler.getInstance().setErrorResponse(e.getCode(),e.getMessage(),response);
+            filterExceptionHandler.setErrorResponse(e.getCode(),e.getMessage(),response);
         }
-
+        catch (Exception e){
+            logger.error(e.getMessage());
+            filterExceptionHandler.sendErrorToSlack(request,response,e);
+        }
     }
 }

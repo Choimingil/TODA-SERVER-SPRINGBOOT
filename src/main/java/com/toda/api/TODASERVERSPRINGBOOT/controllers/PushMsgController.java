@@ -3,7 +3,7 @@ package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class PushMsgController {
+public final class PushMsgController {
     // $r->addRoute('POST', '/notification', ['NotificationController', 'checkNotification']);                                 //1-5. 알림 토큰 저장 API
     // $r->addRoute('GET', '/alarm', ['NotificationController', 'checkAlarm']);                                                //1-7. 알림 허용 여부 확인 API
     // $r->addRoute('PATCH', '/alarm', ['NotificationController', 'updateAlarm']);                                             //1-8. 알림 허용 여부 변경 API

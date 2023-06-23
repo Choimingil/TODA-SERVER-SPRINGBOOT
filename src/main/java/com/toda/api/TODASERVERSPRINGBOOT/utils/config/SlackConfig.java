@@ -3,7 +3,6 @@ package com.toda.api.TODASERVERSPRINGBOOT.utils.config;
 import net.gpedro.integrations.slack.SlackApi;
 import net.gpedro.integrations.slack.SlackAttachment;
 import net.gpedro.integrations.slack.SlackMessage;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,22 +19,12 @@ public class SlackConfig {
 
     @Bean
     public SlackAttachment slackAttachment(){
-        SlackAttachment slackAttachment = new SlackAttachment();
-
-        slackAttachment.setFallback("Error");
-        slackAttachment.setColor("danger");
-        slackAttachment.setTitle("Error Directory");
-
-        return slackAttachment;
+        return new SlackAttachment();
     }
 
     @Bean
     public SlackMessage slackMessage(){
-        SlackMessage slackMessage = new SlackMessage();
-
-        slackMessage.setIcon(":ghost:");
-        slackMessage.setText("Error Detected");
-        slackMessage.setUsername("TODA Error Catcher");
-        return slackMessage;
+        return new SlackMessage();
     }
+
 }

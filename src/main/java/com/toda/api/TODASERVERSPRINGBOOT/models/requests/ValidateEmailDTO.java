@@ -8,8 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 @Getter
-@Setter
-public class ValidateEmailDTO {
+public final class ValidateEmailDTO {
     @ValidEmail
     @NotNull
     public String email;

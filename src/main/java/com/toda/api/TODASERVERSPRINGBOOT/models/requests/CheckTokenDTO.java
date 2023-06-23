@@ -5,8 +5,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.utils.validations.annotations.ValidAppP
 import lombok.*;
 
 @Getter
-@Setter
-public class CheckTokenDTO {
+public final class CheckTokenDTO {
     @ValidAppPw
     @NotNull
     public String appPW;

@@ -6,10 +6,16 @@ import com.toda.api.TODASERVERSPRINGBOOT.utils.filters.UriFilter;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.handlers.JwtAccessDeniedHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.handlers.JwtAuthenticationEntryPoint;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.TokenProvider;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -20,11 +26,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import java.security.Key;
+
+@EnableWebSecurity
 @Configuration
-@EnableWebSecurity // Spring Security 활성화 (Web)
+@RequiredArgsConstructor
 public class SecurityConfig {
-    private static final Logger logger = LoggerFactory.getLogger(TokenProvider.class);
-    // 비밀번호 암호화
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
+    private final MdcFilter mdcFilter;
+    private final JwtFilter jwtFilter;
+    private final UriFilter uriFilter;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -45,8 +58,8 @@ public class SecurityConfig {
 
 //                 예외 처리 시 직접 만들었던 클래스 추가
                 .exceptionHandling((exceptionHandling) -> exceptionHandling
-                        .authenticationEntryPoint(JwtAuthenticationEntryPoint.getInstance())
-                        .accessDeniedHandler(JwtAccessDeniedHandler.getInstance())
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                        .accessDeniedHandler(jwtAccessDeniedHandler)
                 )
 
 //                 세션 사용하지 않기 때문에 세션 설정 STATELESS
@@ -62,9 +75,9 @@ public class SecurityConfig {
                 )
 
 //                 필터 추가
-                .addFilterAfter(MdcFilter.getInstance(), UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(JwtFilter.getInstance(), UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(UriFilter.getInstance(), JwtFilter.class);
+                .addFilterAfter(mdcFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(uriFilter, JwtFilter.class);
 
         return http.build();
     }

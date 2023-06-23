@@ -10,9 +10,6 @@ import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.MdcProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.TokenProvider;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,8 +17,9 @@ import java.util.HashMap;
 
 @RestController
 @RequiredArgsConstructor
-public class AuthController {
+public final class AuthController {
     private final AuthService authService;
+    private final MdcProvider mdcProvider;
 
     //1. 자체 로그인 API
     @PostMapping("/login")
@@ -29,7 +27,7 @@ public class AuthController {
             @RequestBody LoginRequestDTO loginRequestDTO,
             BindingResult bindingResult
     ) {
-        MdcProvider.getInstance().setBody(bindingResult);
+        mdcProvider.setBody(bindingResult);
 
         String jwt = authService.createJwt(loginRequestDTO);
         SuccessResponse response = new SuccessResponse.Builder(100,"성공적으로 로그인되었습니다.")
@@ -59,7 +57,7 @@ public class AuthController {
             @RequestBody @Nullable CheckTokenDTO checkTokenDTO,
             BindingResult bindingResult
     ) {
-        MdcProvider.getInstance().setBody(bindingResult);
+        mdcProvider.setBody(bindingResult);
 
         DecodeTokenResponseDTO checkTokenResult = authService.decodeToken(token);
         if(checkTokenDTO == null){

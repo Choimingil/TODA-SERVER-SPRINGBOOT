@@ -6,9 +6,8 @@ import com.toda.api.TODASERVERSPRINGBOOT.utils.validations.annotations.ValidPass
 import lombok.*;
 
 @Getter
-@Setter
 @RequiredArgsConstructor
-public class LoginRequestDTO {
+public final class LoginRequestDTO {
     @ValidEmail
     @NotNull
     public String id;

@@ -4,7 +4,7 @@ import lombok.*;
 
 @AllArgsConstructor
 @Getter
-public class ValidationException extends RuntimeException{
+public final class ValidationException extends RuntimeException{
     int code;
     String message;
 }

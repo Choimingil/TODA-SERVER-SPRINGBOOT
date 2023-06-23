@@ -3,7 +3,7 @@ package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class StickerController {
+public final class StickerController {
     // $r->addRoute('POST', '/posts/{postID:\d+}/stickers', ['StickerController', 'addSticker']);                              //22. 스티커 사용 API
     // $r->addRoute('PATCH', '/posts/{postID:\d+}/stickers', ['StickerController', 'updateSticker']);                          //23. 스티커 수정 API
     // $r->addRoute('GET', '/stickers/{stickerPackID:\d+}', ['StickerController', 'getStickerDetail']);                        //24-1. 스티커 상세 조회 API
