@@ -1,9 +1,11 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
+import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
+import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public final class PostController {
+public final class PostController extends AbstractController implements BaseController {
     // $r->addRoute('POST', '/post/ver3', ['PostController', 'addPostVer3']);                                                  //16-2. 게시물 작성 API(날짜 폰트 추가)
     // $r->addRoute('DELETE', '/post/{postID:\d+}', ['PostController', 'deletePost']);
     // $r->addRoute('PATCH', '/post/ver3', ['PostController', 'updatePostVer3']);

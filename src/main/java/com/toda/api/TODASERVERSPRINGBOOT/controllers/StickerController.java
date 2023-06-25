@@ -1,9 +1,11 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
+import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
+import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public final class StickerController {
+public final class StickerController extends AbstractController implements BaseController {
     // $r->addRoute('POST', '/posts/{postID:\d+}/stickers', ['StickerController', 'addSticker']);                              //22. 스티커 사용 API
     // $r->addRoute('PATCH', '/posts/{postID:\d+}/stickers', ['StickerController', 'updateSticker']);                          //23. 스티커 수정 API
     // $r->addRoute('GET', '/stickers/{stickerPackID:\d+}', ['StickerController', 'getStickerDetail']);                        //24-1. 스티커 상세 조회 API

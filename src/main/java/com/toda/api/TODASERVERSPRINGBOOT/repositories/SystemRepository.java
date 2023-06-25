@@ -1,34 +1,35 @@
 package com.toda.api.TODASERVERSPRINGBOOT.repositories;
 
-import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDAO;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.ValidationException;
-import lombok.NonNull;
+import com.toda.api.TODASERVERSPRINGBOOT.models.dao.CheckExistDao;
+import com.toda.api.TODASERVERSPRINGBOOT.mappers.CheckExistMapper;
+import com.toda.api.TODASERVERSPRINGBOOT.repositories.base.AbstractRepository;
+import com.toda.api.TODASERVERSPRINGBOOT.repositories.base.BaseRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
-public class SystemRepository {
+public class SystemRepository extends AbstractRepository implements BaseRepository{
     private final JdbcTemplate jdbcTemplate;
 
     public boolean isExistEmail(String email) {
-        Object[] res = {email};
-        int result = jdbcTemplate.queryForObject(
-                "SELECT EXISTS(SELECT * FROM User WHERE email= ? and status not like 99999) AS exist;"
-                ,Integer.class
-                ,res
+        List<String> params = new ArrayList<>(List.of(email));
+        CheckExistDao res = selectOneTuple(
+                "SELECT EXISTS(SELECT * FROM User WHERE email= ? and status not like 99999) as exist;",
+                CheckExistMapper.getInstance(),
+                params
         );
-
-        return result == 1;
+        logger.info(String.valueOf(res.getExist()));
+        return res.getExist()==1;
     }
 
 
+    @Override
+    public JdbcTemplate getJdbcTemplate() {
+        return jdbcTemplate;
+    }
 }

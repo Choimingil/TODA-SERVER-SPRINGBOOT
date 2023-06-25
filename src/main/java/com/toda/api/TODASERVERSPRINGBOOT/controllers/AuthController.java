@@ -1,13 +1,15 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
+import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
+import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dto.DecodeTokenResponseDTO;
-import com.toda.api.TODASERVERSPRINGBOOT.models.requests.CheckTokenDTO;
-import com.toda.api.TODASERVERSPRINGBOOT.models.requests.LoginRequestDTO;
+import com.toda.api.TODASERVERSPRINGBOOT.models.dto.DecodeTokenResponseDto;
+import com.toda.api.TODASERVERSPRINGBOOT.models.requests.CheckToken;
+import com.toda.api.TODASERVERSPRINGBOOT.models.requests.LoginRequest;
 import com.toda.api.TODASERVERSPRINGBOOT.services.AuthService;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.ValidationException;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.MdcProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.TokenProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.ValidationException;
+import com.toda.api.TODASERVERSPRINGBOOT.providers.MdcProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
@@ -17,19 +19,19 @@ import java.util.HashMap;
 
 @RestController
 @RequiredArgsConstructor
-public final class AuthController {
+public final class AuthController extends AbstractController implements BaseController {
     private final AuthService authService;
     private final MdcProvider mdcProvider;
 
     //1. 자체 로그인 API
     @PostMapping("/login")
     public HashMap<String,Object> createJwt(
-            @RequestBody LoginRequestDTO loginRequestDTO,
+            @RequestBody LoginRequest loginRequest,
             BindingResult bindingResult
     ) {
         mdcProvider.setBody(bindingResult);
 
-        String jwt = authService.createJwt(loginRequestDTO);
+        String jwt = authService.createJwt(loginRequest);
         SuccessResponse response = new SuccessResponse.Builder(100,"성공적으로 로그인되었습니다.")
                 .add("result",jwt)
                 .build();
@@ -41,7 +43,7 @@ public final class AuthController {
     public HashMap<String,Object> decodeToken(
             @RequestHeader(TokenProvider.HEADER_NAME) String token
     ) {
-        DecodeTokenResponseDTO checkTokenResult = authService.decodeToken(token);
+        DecodeTokenResponseDto checkTokenResult = authService.decodeToken(token);
         SuccessResponse response = new SuccessResponse.Builder(100,"자체 로그인 성공")
                 .add("id",checkTokenResult.getId())
                 .add("pw",checkTokenResult.getPw())
@@ -54,13 +56,13 @@ public final class AuthController {
     @PostMapping("/token")
     public HashMap<String,Object> checkToken(
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
-            @RequestBody @Nullable CheckTokenDTO checkTokenDTO,
+            @RequestBody @Nullable CheckToken checkToken,
             BindingResult bindingResult
     ) {
         mdcProvider.setBody(bindingResult);
 
-        DecodeTokenResponseDTO checkTokenResult = authService.decodeToken(token);
-        if(checkTokenDTO == null){
+        DecodeTokenResponseDto checkTokenResult = authService.decodeToken(token);
+        if(checkToken == null){
             if(checkTokenResult.getAppPw() == 10000){
                 SuccessResponse response = new SuccessResponse.Builder(100,"유효한 유저입니다.").build();
                 return response.info;
@@ -68,7 +70,7 @@ public final class AuthController {
             else throw new ValidationException(404,"앱 비밀번호가 잘못됐습니다.");
         }
         else{
-            int appPw = Integer.parseInt(checkTokenDTO.appPW);
+            int appPw = Integer.parseInt(checkToken.getAppPW());
             if(checkTokenResult.getAppPw() == appPw){
                 SuccessResponse response = new SuccessResponse.Builder(100,"유효한 유저입니다.").build();
                 return response.info;

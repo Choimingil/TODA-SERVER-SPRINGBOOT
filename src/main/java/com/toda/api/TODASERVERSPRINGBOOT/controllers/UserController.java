@@ -1,13 +1,14 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
-import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.TokenProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
+import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-public final class UserController {
+public final class UserController extends AbstractController implements BaseController {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
     //2. 자체 회원가입 API

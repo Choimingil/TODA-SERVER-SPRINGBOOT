@@ -1,9 +1,11 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
+import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
+import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public final class PushMsgController {
+public final class PushMsgController extends AbstractController implements BaseController {
     // $r->addRoute('POST', '/notification', ['NotificationController', 'checkNotification']);                                 //1-5. 알림 토큰 저장 API
     // $r->addRoute('GET', '/alarm', ['NotificationController', 'checkAlarm']);                                                //1-7. 알림 허용 여부 확인 API
     // $r->addRoute('PATCH', '/alarm', ['NotificationController', 'updateAlarm']);                                             //1-8. 알림 허용 여부 변경 API

@@ -1,16 +1,14 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
+import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
+import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.models.requests.ValidateEmailDTO;
+import com.toda.api.TODASERVERSPRINGBOOT.models.requests.ValidateEmail;
 import com.toda.api.TODASERVERSPRINGBOOT.services.SystemService;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.exceptions.ValidationException;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.providers.MdcProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.ValidationException;
+import com.toda.api.TODASERVERSPRINGBOOT.providers.MdcProvider;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,19 +18,19 @@ import java.util.HashMap;
 
 @RestController
 @RequiredArgsConstructor
-public class SystemController {
+public class SystemController extends AbstractController implements BaseController {
     private final SystemService systemService;
     private final MdcProvider mdcProvider;
  
     // 1-2. 이메일 중복 확인 API
     @PostMapping("/email/valid")
     public HashMap<String, Object> validateEmail(
-            @RequestBody @Valid ValidateEmailDTO validateEmailDTO,
+            @RequestBody @Valid ValidateEmail validateEmail,
             BindingResult bindingResult
     ) {
         mdcProvider.setBody(bindingResult);
 
-        if(systemService.isValidEmail(validateEmailDTO.getEmail())){
+        if(systemService.isValidEmail(validateEmail.getEmail())){
             SuccessResponse response = new SuccessResponse.Builder(100,"사용 가능한 이메일입니다.").build();
             return response.info;
         }
