@@ -9,7 +9,7 @@ public interface BaseExceptionHandler {
      * @param message
      * @return
      */
-    HashMap<String,Object> getErrorResponse(int code, String message);
+    HashMap<String,?> getErrorResponse(int code, String message);
 
     /**
      * 예상하지 못한 에러 발생 시 Error Message 생성 메소드

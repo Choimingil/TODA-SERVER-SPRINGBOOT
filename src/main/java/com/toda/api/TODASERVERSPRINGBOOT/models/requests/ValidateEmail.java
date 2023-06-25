@@ -1,6 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.models.requests;
 
-import com.toda.api.TODASERVERSPRINGBOOT.validations.annotations.ValidEmail;
+import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidEmail;
 import lombok.*;
 
 @Getter

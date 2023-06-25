@@ -1,17 +1,17 @@
-package com.toda.api.TODASERVERSPRINGBOOT.validations.annotations;
+package com.toda.api.TODASERVERSPRINGBOOT.annotations;
 
-import com.toda.api.TODASERVERSPRINGBOOT.validations.validators.PasswordValidator;
+import com.toda.api.TODASERVERSPRINGBOOT.validators.AppPwValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
 import java.lang.annotation.*;
 
 @Documented
-@Constraint(validatedBy = PasswordValidator.class)
+@Constraint(validatedBy = AppPwValidator.class)
 @Target({ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ValidPassword {
-    String message() default "Valid Password";
+public @interface ValidAppPw {
+    String message() default "Valid AppPw";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

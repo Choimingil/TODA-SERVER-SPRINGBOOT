@@ -8,6 +8,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDao;
 import com.toda.api.TODASERVERSPRINGBOOT.models.requests.LoginRequest;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dto.DecodeTokenResponseDto;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.AuthRepository;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.plugins.ValidateWithRedis;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -21,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Component("authService")
 @RequiredArgsConstructor
-public class AuthService extends AbstractService implements BaseService {
+public class AuthService extends AbstractService implements BaseService, ValidateWithRedis {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final TokenProvider tokenProvider;
     private final AuthRepository authRepository;
@@ -39,27 +40,17 @@ public class AuthService extends AbstractService implements BaseService {
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // Redis에 저장한 유저 정보로 접근
-        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
-        UserInfoAllDao userInfoAllDao = (UserInfoAllDao) valueOperations.get(loginRequest.getId());
-
-        if(userInfoAllDao == null) throw new ValidationException(404,"Redis에 정상적으로 등록되지 않았습니다.");
-        return tokenProvider.createToken(authentication, userInfoAllDao);
+        if(!isExistRedis(loginRequest.getId()))
+            throw new ValidationException(404,"Redis에 정상적으로 등록되지 않았습니다.");
+        return tokenProvider.createToken(authentication, getRedis(loginRequest.getId()));
     }
-
 
     //1-3. 토큰 데이터 추출 API
     @Transactional
     public DecodeTokenResponseDto decodeToken(String token){
-        Claims claims = tokenProvider.getAuthenticationClaims(token);
-        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
-        UserInfoAllDao userInfoAllDao = (UserInfoAllDao) valueOperations.get(claims.getSubject());
-
-        // 유저 정보가 없다면 DB에 접근해서 추가
-        if(userInfoAllDao == null){
-            userInfoAllDao = authRepository.getUserInfoAll(claims.getSubject());
-            valueOperations.set(claims.getSubject(),userInfoAllDao);
-        }
+        Claims claims = tokenProvider.getClaims(token);
+        if(!isExistRedis(claims)) setRedis(claims);
+        UserInfoAllDao userInfoAllDao = getRedis(claims);
 
         // 토큰 내용과 유저 정보가 같다면 값 리턴
         if(userInfoAllDao.isSameTokenAttributes(claims)){
@@ -70,5 +61,15 @@ public class AuthService extends AbstractService implements BaseService {
                     .build();
         }
         else throw new ValidationException(103,"토큰과 유저 정보가 일치하지 않습니다.");
+    }
+
+    @Override
+    public ValueOperations<String, Object> getValueOperations() {
+        return redisTemplate.opsForValue();
+    }
+
+    @Override
+    public AuthRepository getRepository() {
+        return authRepository;
     }
 }

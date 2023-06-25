@@ -1,7 +1,7 @@
-package com.toda.api.TODASERVERSPRINGBOOT.validations.validators;
+package com.toda.api.TODASERVERSPRINGBOOT.validators;
 
-import com.toda.api.TODASERVERSPRINGBOOT.utils.RegularExpression;
-import com.toda.api.TODASERVERSPRINGBOOT.validations.annotations.ValidEmail;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.RegularExpressions;
+import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidEmail;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +17,6 @@ public final class EmailValidator implements ConstraintValidator<ValidEmail,Stri
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        return RegularExpression.EMAIL.getPattern().matcher(value).matches();
+        return RegularExpressions.EMAIL.getPattern().matcher(value).matches();
     }
 }

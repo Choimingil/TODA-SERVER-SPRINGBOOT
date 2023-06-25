@@ -7,7 +7,7 @@ import java.util.*;
 
 
 public abstract class Response extends AbstractModel implements BaseModel {
-    final HashMap<String,Object> response;
+    final HashMap<String,?> response;
 
     abstract static class Builder<T extends Builder<T>>{
         HashMap<String,Object> response = new HashMap<>();

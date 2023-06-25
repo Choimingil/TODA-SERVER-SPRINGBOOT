@@ -1,8 +1,8 @@
-package com.toda.api.TODASERVERSPRINGBOOT.validations.validators;
+package com.toda.api.TODASERVERSPRINGBOOT.validators;
 
 import com.toda.api.TODASERVERSPRINGBOOT.providers.MdcProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.RegularExpression;
-import com.toda.api.TODASERVERSPRINGBOOT.validations.annotations.ValidPassword;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.RegularExpressions;
+import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidPassword;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +19,6 @@ public final class PasswordValidator implements ConstraintValidator<ValidPasswor
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        return RegularExpression.PASSWORD.getPattern().matcher(value).matches();
+        return RegularExpressions.PASSWORD.getPattern().matcher(value).matches();
     }
 }

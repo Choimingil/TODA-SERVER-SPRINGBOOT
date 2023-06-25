@@ -1,6 +1,6 @@
-package com.toda.api.TODASERVERSPRINGBOOT.validations.annotations;
+package com.toda.api.TODASERVERSPRINGBOOT.annotations;
 
-import com.toda.api.TODASERVERSPRINGBOOT.validations.validators.EmailValidator;
+import com.toda.api.TODASERVERSPRINGBOOT.validators.EmailValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 

@@ -12,15 +12,11 @@ import org.springframework.stereotype.Component;
 import java.sql.PreparedStatement;
 import java.util.List;
 
-@Component
-@RequiredArgsConstructor
 public abstract class AbstractRepository implements BaseRepository {
     protected final Logger logger = LoggerFactory.getLogger(AbstractRepository.class);
-//    private final JdbcTemplate jdbcTemplate;
 
     /**
      * SELECT 여러 tuple의 query 실행 메소드 구현
-     * @param jdbcTemplate
      * @param query
      * @param mapper
      * @param params
@@ -38,7 +34,6 @@ public abstract class AbstractRepository implements BaseRepository {
 
     /**
      * SELECT 1개의 tuple의 query 실행 메소드 구현
-     * @param jdbcTemplate
      * @param query
      * @param mapper
      * @param params
@@ -56,7 +51,6 @@ public abstract class AbstractRepository implements BaseRepository {
 
     /**
      * UPDATE query 실행 메소드 구현
-     * @param jdbcTemplate
      * @param query
      * @param params
      */

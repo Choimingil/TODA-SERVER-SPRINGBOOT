@@ -1,11 +1,10 @@
 package com.toda.api.TODASERVERSPRINGBOOT.providers;
 
-// 토큰의 생성, 토큰의 유효성 검증 등을 담당
-
 import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDao;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.AuthRepository;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.plugins.ValidateWithRedis;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -18,11 +17,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-
-import com.toda.api.TODASERVERSPRINGBOOT.exceptions.ValidationException;
 
 import java.security.Key;
 import java.util.Arrays;
@@ -32,11 +30,12 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public final class TokenProvider extends AbstractProvider implements BaseProvider {
+public final class TokenProvider extends AbstractProvider implements BaseProvider, ValidateWithRedis {
     public static final String HEADER_NAME = "x-access-token";
     private final AuthRepository authRepository;
     private final RedisTemplate<String, Object> redisTemplate;
     private final String AUTHORITIES_KEY = "auth";
+
     private Key key;
     @Value("${jwt.secret}")
     private String secret;
@@ -45,24 +44,101 @@ public final class TokenProvider extends AbstractProvider implements BaseProvide
 
     @Override
     public void afterPropertiesSet() {
-        // Bean 초기화 시 진행
         byte[] keyBytes = Decoders.BASE64.decode(secret);
         key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String createToken(
-            Authentication authentication,
-            UserInfoAllDao userInfoAllDao
-    ){
-        // authorities 설정
-        String authorities = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(","));
+    @Override
+    public ValueOperations<String, Object> getValueOperations() {
+        return redisTemplate.opsForValue();
+    }
 
-        // 토큰 만료 시간 설정
-        long now = (new Date()).getTime();
-        Date validity = new Date(now + tokenValidityInMilliseconds);
+    @Override
+    public AuthRepository getRepository() {
+        return authRepository;
+    }
 
+    /**
+     * token 생성
+     * @param request
+     * @return
+     */
+    public String getToken(HttpServletRequest request){
+        return request.getHeader(HEADER_NAME);
+    }
+
+    /**
+     * Claims 생성
+     * @param token
+     * @return
+     */
+    public Claims getClaims(String token){
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    /**
+     * 헤더값이 존재하는지 확인
+     * @param token
+     * @return
+     */
+    public boolean isExistHeader(String token){
+        return StringUtils.hasText(token);
+    }
+
+    /**
+     * 헤더값의 형식이 올바른 경우 체크
+     * @param token
+     * @return
+     */
+    public boolean isValidHeader(String token){
+        JwtParser jwtParser = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build();
+        return jwtParser.isSigned(token);
+    }
+
+    /**
+     * Authentication을 SecurityContextHolder에 저장
+     * @param token
+     * @param claims
+     */
+    public void setSecurityContextHolder(String token, Claims claims){
+        SecurityContextHolder.getContext().setAuthentication(getAuthentication(token, claims));
+    }
+
+    /**
+     * 토큰에 담겨있는 정보를 이용해 Authentication 객체 리턴
+     * @param token
+     * @param claims
+     * @return
+     */
+    private Authentication getAuthentication(String token, Claims claims){
+        // claim을 이용하여 authorities 생성
+        Collection<? extends GrantedAuthority> authorities =
+                Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(Collectors.toList());
+
+        // claim과 authorities 이용하여 User 객체 생성
+        User principal = new User(claims.getSubject(), "", authorities);
+
+        // 최종적으로 Authentication 객체 리턴
+        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
+    }
+
+    /**
+     * 토큰 생성
+     * @param authentication
+     * @param userInfoAllDao
+     * @return
+     */
+    public String createToken(Authentication authentication, UserInfoAllDao userInfoAllDao){
+        String authorities = getAuthorities(authentication);
+        Date validity = getValidity();
         return Jwts.builder()
                 // subject : email
                 .setSubject(authentication.getName())
@@ -77,63 +153,23 @@ public final class TokenProvider extends AbstractProvider implements BaseProvide
                 .compact();
     }
 
-    public String resolveToken(HttpServletRequest request, String headerName){
-        String token = request.getHeader(headerName);
-        if(StringUtils.hasText(token)) return token;
-        else throw new ValidationException(102,"헤더값이 인식되지 않습니다.");
+    /**
+     * authorities 설정
+     * @param authentication
+     * @return
+     */
+    private String getAuthorities(Authentication authentication){
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(","));
     }
 
-    private void validateToken(Claims claims){
-        if (!isExistTokenAttributes(claims)) throw new ValidationException(103, "잘못된 헤더값입니다.");
-
-        // Redis 에 유저 정보 존재하는지 확인
-        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
-        UserInfoAllDao userInfoAllDao = (UserInfoAllDao) valueOperations.get(claims.getSubject());
-
-        // 유저 정보가 없다면 DB에 접근해서 추가
-        if(userInfoAllDao == null){
-            userInfoAllDao = authRepository.getUserInfoAll(claims.getSubject());
-
-            // 토큰과 DB의 정보가 다르다면 예외 던지기
-            if(!userInfoAllDao.isSameTokenAttributes(claims))
-                throw new ValidationException(103,"토큰과 유저 정보가 일치하지 않습니다.");
-
-            // 같다면 Redis에 저장
-            valueOperations.set(claims.getSubject(),userInfoAllDao);
-        }
-    }
-
-    private boolean isExistTokenAttributes(Claims claims){
-        return claims.get("userID") != null &&
-                claims.get("userCode") != null &&
-                claims.get("email") != null &&
-                claims.get("userName") != null &&
-                claims.get("appPassword") != null;
-    }
-
-    public Claims getAuthenticationClaims(String token){
-        JwtParser jwtParser = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build();
-        if(!jwtParser.isSigned(token)) throw new ValidationException(103, "잘못된 헤더값입니다.");
-
-        Claims claims = jwtParser.parseClaimsJws(token).getBody();
-        validateToken(claims);
-        return claims;
-    }
-
-    // 토큰에 담겨있는 정보를 이용해 Authentication 객체 리턴
-    public Authentication getAuthentication(String token, Claims claims){
-        // claim을 이용하여 authorities 생성
-        Collection<? extends GrantedAuthority> authorities =
-                Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
-                        .map(SimpleGrantedAuthority::new)
-                        .collect(Collectors.toList());
-
-        // claim과 authorities 이용하여 User 객체 생성
-        User principal = new User(claims.getSubject(), "", authorities);
-
-        // 최종적으로 Authentication 객체 리턴
-        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
+    /**
+     * 토큰 만료 시간 설정
+     * @return
+     */
+    private Date getValidity(){
+        long now = (new Date()).getTime();
+        return new Date(now + tokenValidityInMilliseconds);
     }
 }

@@ -3,7 +3,7 @@ package com.toda.api.TODASERVERSPRINGBOOT.models.responses;
 import java.util.HashMap;
 
 public class ErrorResponse extends Response {
-    public HashMap<String,Object> info;
+    public HashMap<String,?> info;
 
     private ErrorResponse(Builder builder){
         super(builder);

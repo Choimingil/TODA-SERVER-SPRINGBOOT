@@ -17,17 +17,17 @@ public final class ControllerExceptionHandler extends AbstractExceptionHandler i
     private final CurlProvider curlProvider;
 
     @ExceptionHandler(ValidationException.class)
-    public HashMap<String,Object> setErrorResponse(ValidationException e) {
+    public HashMap<String,?> setErrorResponse(ValidationException e) {
         return getErrorResponse(e.getCode(),e.getMessage());
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public HashMap<String,Object> checkBodyNull(HttpMessageNotReadableException e) {
+    public HashMap<String,?> checkBodyNull(HttpMessageNotReadableException e) {
         return getErrorResponse(102,"Body가 비었습니다.");
     }
 
     @ExceptionHandler(Exception.class)
-    public HashMap<String,Object> sendErrorToSlack(Exception e) {
+    public HashMap<String,?> sendErrorToSlack(Exception e) {
         curlProvider.sendSlackWithMdc(e);
         return getErrorResponse(999,getErrorMsg(e));
     }

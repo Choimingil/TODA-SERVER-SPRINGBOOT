@@ -25,7 +25,7 @@ public final class AuthController extends AbstractController implements BaseCont
 
     //1. 자체 로그인 API
     @PostMapping("/login")
-    public HashMap<String,Object> createJwt(
+    public HashMap<String,?> createJwt(
             @RequestBody LoginRequest loginRequest,
             BindingResult bindingResult
     ) {
@@ -40,7 +40,7 @@ public final class AuthController extends AbstractController implements BaseCont
 
     //1-3. 토큰 데이터 추출 API
     @GetMapping("/token")
-    public HashMap<String,Object> decodeToken(
+    public HashMap<String,?> decodeToken(
             @RequestHeader(TokenProvider.HEADER_NAME) String token
     ) {
         DecodeTokenResponseDto checkTokenResult = authService.decodeToken(token);
@@ -54,7 +54,7 @@ public final class AuthController extends AbstractController implements BaseCont
 
     //1-4. 토큰 암호 유효성 검사 API
     @PostMapping("/token")
-    public HashMap<String,Object> checkToken(
+    public HashMap<String,?> checkToken(
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
             @RequestBody @Nullable CheckToken checkToken,
             BindingResult bindingResult
@@ -78,6 +78,4 @@ public final class AuthController extends AbstractController implements BaseCont
             else throw new ValidationException(404,"앱 비밀번호가 잘못됐습니다.");
         }
     }
-
-
 }

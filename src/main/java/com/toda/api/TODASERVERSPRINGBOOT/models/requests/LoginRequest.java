@@ -1,7 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.models.requests;
 
-import com.toda.api.TODASERVERSPRINGBOOT.validations.annotations.ValidEmail;
-import com.toda.api.TODASERVERSPRINGBOOT.validations.annotations.ValidPassword;
+import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidEmail;
+import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidPassword;
 import lombok.*;
 
 @Getter

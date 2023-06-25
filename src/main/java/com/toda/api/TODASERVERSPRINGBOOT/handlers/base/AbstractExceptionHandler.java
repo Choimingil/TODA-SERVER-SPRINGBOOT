@@ -1,10 +1,15 @@
 package com.toda.api.TODASERVERSPRINGBOOT.handlers.base;
 
+import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.ErrorResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 
 public abstract class AbstractExceptionHandler implements BaseExceptionHandler {
+    protected final Logger logger = LoggerFactory.getLogger(AbstractController.class);
+
     /**
      * ErrorResponse 생성 메소드 구현
      * @param code
@@ -12,7 +17,7 @@ public abstract class AbstractExceptionHandler implements BaseExceptionHandler {
      * @return
      */
     @Override
-    public HashMap<String,Object> getErrorResponse(int code, String message){
+    public HashMap<String,?> getErrorResponse(int code, String message){
         ErrorResponse response = new ErrorResponse.Builder(code, message).build();
         return response.info;
     }

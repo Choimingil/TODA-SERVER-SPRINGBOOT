@@ -24,7 +24,7 @@ public class SystemController extends AbstractController implements BaseControll
  
     // 1-2. 이메일 중복 확인 API
     @PostMapping("/email/valid")
-    public HashMap<String, Object> validateEmail(
+    public HashMap<String, ?> validateEmail(
             @RequestBody @Valid ValidateEmail validateEmail,
             BindingResult bindingResult
     ) {
@@ -48,5 +48,4 @@ public class SystemController extends AbstractController implements BaseControll
     // $r->addRoute('GET', '/announcement', ['LoginController', 'getAnnouncement']);                                           //38. 공지사항 리스트 조회 API
     // $r->addRoute('GET', '/announcement/{announcementID:\d+}', ['LoginController', 'getAnnouncementDetail']);                //39. 공지사항 상세 조회 API
     // $r->addRoute('GET', '/announcement/check', ['LoginController', 'getAnnouncementCheck']);
-
 }

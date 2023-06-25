@@ -4,6 +4,8 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDao;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.AuthRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.plugins.ValidateWithRedis;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -18,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Component("userDetailsService")
 @RequiredArgsConstructor
-public class CustomUserDetailsService extends AbstractService implements BaseService, UserDetailsService {
+public class CustomUserDetailsService extends AbstractService implements BaseService, UserDetailsService, ValidateWithRedis {
     private final AuthRepository authRepository;
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, Object> redisTemplate;
@@ -26,14 +28,8 @@ public class CustomUserDetailsService extends AbstractService implements BaseSer
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
-        UserInfoAllDao userInfoAllDao = (UserInfoAllDao) valueOperations.get(email);
-
-        // 유저 정보가 없다면 DB에 접근해서 추가
-        if(userInfoAllDao == null){
-            userInfoAllDao = authRepository.getUserInfoAll(email);
-            valueOperations.set(email,userInfoAllDao);
-        }
+        if(!isExistRedis(email)) setRedis(email);
+        UserInfoAllDao userInfoAllDao = getRedis(email);
 
         // 비밀번호가 해싱되어있지 않은 경우 인코딩 진행
         if(userInfoAllDao.getPassword().length() < 25){
@@ -47,5 +43,15 @@ public class CustomUserDetailsService extends AbstractService implements BaseSer
         else return (UserDetails)new User(
                 email, userInfoAllDao.getPassword(), AuthorityUtils.createAuthorityList("USER")
         );
+    }
+
+    @Override
+    public ValueOperations<String, Object> getValueOperations() {
+        return redisTemplate.opsForValue();
+    }
+
+    @Override
+    public AuthRepository getRepository() {
+        return authRepository;
     }
 }

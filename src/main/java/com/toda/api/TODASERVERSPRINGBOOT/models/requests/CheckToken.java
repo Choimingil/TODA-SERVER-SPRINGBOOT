@@ -2,7 +2,7 @@ package com.toda.api.TODASERVERSPRINGBOOT.models.requests;
 
 import com.toda.api.TODASERVERSPRINGBOOT.models.base.AbstractModel;
 import com.toda.api.TODASERVERSPRINGBOOT.models.base.BaseModel;
-import com.toda.api.TODASERVERSPRINGBOOT.validations.annotations.ValidAppPw;
+import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidAppPw;
 import lombok.*;
 
 @Getter

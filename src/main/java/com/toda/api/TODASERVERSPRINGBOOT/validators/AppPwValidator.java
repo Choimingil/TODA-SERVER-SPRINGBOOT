@@ -1,7 +1,7 @@
-package com.toda.api.TODASERVERSPRINGBOOT.validations.validators;
+package com.toda.api.TODASERVERSPRINGBOOT.validators;
 
-import com.toda.api.TODASERVERSPRINGBOOT.utils.RegularExpression;
-import com.toda.api.TODASERVERSPRINGBOOT.validations.annotations.ValidAppPw;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.RegularExpressions;
+import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidAppPw;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +18,6 @@ public final class AppPwValidator implements ConstraintValidator<ValidAppPw,Stri
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
         if(value.equals("10000")) return true;
-        else return RegularExpression.APP_PW.getPattern().matcher(value).matches();
+        else return RegularExpressions.APP_PW.getPattern().matcher(value).matches();
     }
 }

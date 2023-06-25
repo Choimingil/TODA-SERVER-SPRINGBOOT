@@ -32,5 +32,4 @@ public final class UserController extends AbstractController implements BaseCont
     // $r->addRoute('DELETE', '/lock', ['LoginController', 'deleteLock']);
 
     // $r->addRoute('GET', '/log', ['UserController', 'getLog']);                                                              //10. 알림 조회 API
-
 }

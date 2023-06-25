@@ -28,18 +28,24 @@ public final class JwtFilter extends AbstractFilter implements BaseFilter {
 
     @Override
     public void doFilterLogic(HttpServletRequest request, HttpServletResponse response) {
-        // 2. 헤더의 토큰이 존재하는지 체크
         logger.info("2. 토큰 유효성 검사");
 
         // 토큰이 필요 없는 API는 패스
-        String uri = uriProvider.getURI(request);
-        if(!uriProvider.isValidationPass(uri)){
-            String jwt = tokenProvider.resolveToken(request, TokenProvider.HEADER_NAME);
+        if(!uriProvider.isValidPass(request)){
+            String token = tokenProvider.getToken(request);
+            if(!tokenProvider.isExistHeader(token))
+                throw new ValidationException(102,"헤더값이 인식되지 않습니다.");
 
-            // 토큰 유효성 검증 후 SecurityContext에 저장
-            Claims claims = tokenProvider.getAuthenticationClaims(jwt);
-            Authentication authentication = tokenProvider.getAuthentication(jwt, claims);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            if(!tokenProvider.isValidHeader(token))
+                throw new ValidationException(103, "잘못된 헤더값입니다.");
+
+            Claims claims = tokenProvider.getClaims(token);
+            if(!tokenProvider.isExistRedis(claims)){
+                if(!tokenProvider.isEqualWithDB(claims))
+                    throw new ValidationException(103,"토큰과 유저 정보가 일치하지 않습니다.");
+            }
+
+            tokenProvider.setSecurityContextHolder(token, claims);
         }
     }
 
