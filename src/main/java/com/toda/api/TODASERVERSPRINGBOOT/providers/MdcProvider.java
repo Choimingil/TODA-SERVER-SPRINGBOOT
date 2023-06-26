@@ -16,6 +16,21 @@ import java.util.EnumSet;
 @RequiredArgsConstructor
 public final class MdcProvider extends AbstractProvider implements BaseProvider {
     private final EnumSet<MdcKeys> mdcKeys = EnumSet.allOf(MdcKeys.class);
+    private final EnumSet<MdcKeys> mandatoryKeys = EnumSet.of(
+            MdcKeys.REQUEST_ID,
+            MdcKeys.REQUEST_CONTEXT_PATH,
+            MdcKeys.REQUEST_URL,
+            MdcKeys.REQUEST_METHOD,
+            MdcKeys.REQUEST_TIME,
+            MdcKeys.REQUEST_IP
+    );
+
+    public boolean isMdcSet(){
+        for(MdcKeys keys : mandatoryKeys){
+            if(keys.get() == null) return false;
+        }
+        return true;
+    }
 
     public void setMdc(HttpServletRequest request){
         for(MdcKeys keys : mdcKeys) keys.add(request);

@@ -38,14 +38,6 @@ public final class JwtFilter extends AbstractFilter implements BaseFilter {
 
             if(!tokenProvider.isValidHeader(token))
                 throw new ValidationException(103, "잘못된 헤더값입니다.");
-
-            Claims claims = tokenProvider.getClaims(token);
-            if(!tokenProvider.isExistRedis(claims)){
-                if(!tokenProvider.isEqualWithDB(claims))
-                    throw new ValidationException(103,"토큰과 유저 정보가 일치하지 않습니다.");
-            }
-
-            tokenProvider.setSecurityContextHolder(token, claims);
         }
     }
 

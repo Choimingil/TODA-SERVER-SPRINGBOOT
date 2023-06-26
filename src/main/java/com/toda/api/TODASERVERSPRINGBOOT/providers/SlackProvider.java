@@ -14,7 +14,7 @@ import java.util.*;
 
 @Component
 @RequiredArgsConstructor
-public class CurlProvider extends AbstractProvider implements BaseProvider {
+public class SlackProvider extends AbstractProvider implements BaseProvider {
     private final MdcProvider mdcProvider;
     private final SlackApi slackApi;
     private final SlackAttachment slackAttachment;

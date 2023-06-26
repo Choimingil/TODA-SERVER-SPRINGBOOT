@@ -24,44 +24,52 @@ public enum MdcKeys implements MdcKeysExtender {
      */
 
     REQUEST_ID{
-        public void add(HttpServletRequest request){ MDC.put("request_id",UUID.randomUUID().toString()); }
-        public void remove(){ MDC.remove("request_id"); }
-        public void log(){ logger.info("request_id : " + MDC.get("request_id")); }
+        @Override public String get() { return MDC.get("request_id");}
+        @Override public void add(HttpServletRequest request){ MDC.put("request_id",UUID.randomUUID().toString()); }
+        @Override public void remove(){ MDC.remove("request_id"); }
+        @Override public void log(){ logger.info("request_id : " + MDC.get("request_id")); }
     },
     REQUEST_CONTEXT_PATH{
-        public void add(HttpServletRequest request){ MDC.put("request_context_path", request.getContextPath()); }
-        public void remove(){ MDC.remove("request_context_path"); }
-        public void log(){ logger.info("request_context_path : " + MDC.get("request_context_path")); }
+        @Override public String get() { return MDC.get("request_context_path");}
+        @Override public void add(HttpServletRequest request){ MDC.put("request_context_path", request.getContextPath()); }
+        @Override public void remove(){ MDC.remove("request_context_path"); }
+        @Override public void log(){ logger.info("request_context_path : " + MDC.get("request_context_path")); }
     },
     REQUEST_URL{
-        public void add(HttpServletRequest request){ MDC.put("request_url", request.getRequestURI()); }
-        public void remove(){ MDC.remove("request_url"); }
-        public void log(){ logger.info("request_url : " + MDC.get("request_url")); }
+        @Override public String get() { return MDC.get("request_url");}
+        @Override public void add(HttpServletRequest request){ MDC.put("request_url", request.getRequestURI()); }
+        @Override public void remove(){ MDC.remove("request_url"); }
+        @Override public void log(){ logger.info("request_url : " + MDC.get("request_url")); }
     },
     REQUEST_METHOD{
-        public void add(HttpServletRequest request){ MDC.put("request_method", request.getMethod()); }
-        public void remove(){ MDC.remove("request_method"); }
-        public void log(){ logger.info("request_method : " + MDC.get("request_method")); }
+        @Override public String get() { return MDC.get("request_method");}
+        @Override public void add(HttpServletRequest request){ MDC.put("request_method", request.getMethod()); }
+        @Override public void remove(){ MDC.remove("request_method"); }
+        @Override public void log(){ logger.info("request_method : " + MDC.get("request_method")); }
     },
     REQUEST_TIME{
-        public void add(HttpServletRequest request){ MDC.put("request_time", new Date().toString()); }
-        public void remove(){ MDC.remove("request_time"); }
-        public void log(){ logger.info("request_time : " + MDC.get("request_time")); }
+        @Override public String get() { return MDC.get("request_time");}
+        @Override public void add(HttpServletRequest request){ MDC.put("request_time", new Date().toString()); }
+        @Override public void remove(){ MDC.remove("request_time"); }
+        @Override public void log(){ logger.info("request_time : " + MDC.get("request_time")); }
     },
     REQUEST_IP{
-        public void add(HttpServletRequest request){ MDC.put("request_ip", request.getRemoteAddr()); }
-        public void remove(){ MDC.remove("request_ip"); }
-        public void log(){ logger.info("request_ip : " + MDC.get("request_ip")); }
+        @Override public String get() { return MDC.get("request_ip");}
+        @Override public void add(HttpServletRequest request){ MDC.put("request_ip", request.getRemoteAddr()); }
+        @Override public void remove(){ MDC.remove("request_ip"); }
+        @Override public void log(){ logger.info("request_ip : " + MDC.get("request_ip")); }
     },
     REQUEST_HEADER{
-        public void add(HttpServletRequest request){ MDC.put("request_header", request.getHeader(TokenProvider.HEADER_NAME)); }
-        public void remove(){ MDC.remove("request_header"); }
-        public void log(){ logger.info("request_header : " + MDC.get("request_header")); }
+        @Override public String get() { return MDC.get("request_header");}
+        @Override public void add(HttpServletRequest request){ MDC.put("request_header", request.getHeader(TokenProvider.HEADER_NAME)); }
+        @Override public void remove(){ MDC.remove("request_header"); }
+        @Override public void log(){ logger.info("request_header : " + MDC.get("request_header")); }
     },
     REQUEST_QUERY_STRING{
-        public void add(HttpServletRequest request){ MDC.put("request_query_string", request.getQueryString()); }
-        public void remove(){ MDC.remove("request_query_string"); }
-        public void log(){ logger.info("request_query_string : " + MDC.get("request_query_string")); }
+        @Override public String get() { return MDC.get("request_query_string");}
+        @Override public void add(HttpServletRequest request){ MDC.put("request_query_string", request.getQueryString()); }
+        @Override public void remove(){ MDC.remove("request_query_string"); }
+        @Override public void log(){ logger.info("request_query_string : " + MDC.get("request_query_string")); }
     };
 
     protected final Logger logger = LoggerFactory.getLogger(MdcKeys.class);

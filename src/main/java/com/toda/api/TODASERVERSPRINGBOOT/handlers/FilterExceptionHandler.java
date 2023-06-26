@@ -3,7 +3,7 @@ package com.toda.api.TODASERVERSPRINGBOOT.handlers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.toda.api.TODASERVERSPRINGBOOT.handlers.base.AbstractExceptionHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.handlers.base.BaseExceptionHandler;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.CurlProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.providers.SlackProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +14,7 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public final class FilterExceptionHandler extends AbstractExceptionHandler implements BaseExceptionHandler {
-    private final CurlProvider curlProvider;
+    private final SlackProvider slackProvider;
     private final ObjectMapper objectMapper;
 
     public void setErrorResponse(int code, String message, HttpServletResponse response) throws IOException {
@@ -26,7 +26,7 @@ public final class FilterExceptionHandler extends AbstractExceptionHandler imple
             HttpServletResponse response,
             Exception e
     ) throws IOException {
-        curlProvider.sendSlackWithNoMdc(request,e);
+        slackProvider.sendSlackWithNoMdc(request,e);
         sendResponse(response,999,getErrorMsg(e));
     }
 

@@ -8,7 +8,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDao;
 import com.toda.api.TODASERVERSPRINGBOOT.models.requests.LoginRequest;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dto.DecodeTokenResponseDto;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.AuthRepository;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.plugins.ValidateWithRedis;
+import com.toda.api.TODASERVERSPRINGBOOT.plugins.ValidateWithRedis;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;

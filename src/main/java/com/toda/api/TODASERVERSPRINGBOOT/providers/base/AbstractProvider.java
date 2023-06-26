@@ -7,4 +7,5 @@ import org.springframework.beans.factory.InitializingBean;
 public abstract class AbstractProvider implements BaseProvider, InitializingBean {
     protected final Logger logger = LoggerFactory.getLogger(AbstractProvider.class);
 
+
 }

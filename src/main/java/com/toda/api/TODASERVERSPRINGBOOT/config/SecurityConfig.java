@@ -1,7 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.config;
 
 import com.toda.api.TODASERVERSPRINGBOOT.filters.JwtFilter;
-import com.toda.api.TODASERVERSPRINGBOOT.filters.MdcFilter;
 import com.toda.api.TODASERVERSPRINGBOOT.filters.UriFilter;
 import com.toda.api.TODASERVERSPRINGBOOT.handlers.JwtAccessDeniedHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.handlers.JwtAuthenticationEntryPoint;
@@ -24,7 +23,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
-    private final MdcFilter mdcFilter;
     private final JwtFilter jwtFilter;
     private final UriFilter uriFilter;
 
@@ -65,7 +63,6 @@ public class SecurityConfig {
                 )
 
 //                 필터 추가
-                .addFilterAfter(mdcFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(uriFilter, JwtFilter.class);
 

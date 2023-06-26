@@ -1,4 +1,4 @@
-package com.toda.api.TODASERVERSPRINGBOOT.utils.plugins;
+package com.toda.api.TODASERVERSPRINGBOOT.plugins;
 
 import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDao;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.AuthRepository;

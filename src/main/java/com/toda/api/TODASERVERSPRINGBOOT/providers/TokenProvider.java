@@ -3,39 +3,25 @@ package com.toda.api.TODASERVERSPRINGBOOT.providers;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDao;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.repositories.AuthRepository;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.plugins.ValidateWithRedis;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.security.Key;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public final class TokenProvider extends AbstractProvider implements BaseProvider, ValidateWithRedis {
+public final class TokenProvider extends AbstractProvider implements BaseProvider {
     public static final String HEADER_NAME = "x-access-token";
-    private final AuthRepository authRepository;
-    private final RedisTemplate<String, Object> redisTemplate;
-    private final String AUTHORITIES_KEY = "auth";
-
     private Key key;
     @Value("${jwt.secret}")
     private String secret;
@@ -46,16 +32,6 @@ public final class TokenProvider extends AbstractProvider implements BaseProvide
     public void afterPropertiesSet() {
         byte[] keyBytes = Decoders.BASE64.decode(secret);
         key = Keys.hmacShaKeyFor(keyBytes);
-    }
-
-    @Override
-    public ValueOperations<String, Object> getValueOperations() {
-        return redisTemplate.opsForValue();
-    }
-
-    @Override
-    public AuthRepository getRepository() {
-        return authRepository;
     }
 
     /**
@@ -101,34 +77,7 @@ public final class TokenProvider extends AbstractProvider implements BaseProvide
         return jwtParser.isSigned(token);
     }
 
-    /**
-     * Authentication을 SecurityContextHolder에 저장
-     * @param token
-     * @param claims
-     */
-    public void setSecurityContextHolder(String token, Claims claims){
-        SecurityContextHolder.getContext().setAuthentication(getAuthentication(token, claims));
-    }
 
-    /**
-     * 토큰에 담겨있는 정보를 이용해 Authentication 객체 리턴
-     * @param token
-     * @param claims
-     * @return
-     */
-    private Authentication getAuthentication(String token, Claims claims){
-        // claim을 이용하여 authorities 생성
-        Collection<? extends GrantedAuthority> authorities =
-                Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
-                        .map(SimpleGrantedAuthority::new)
-                        .collect(Collectors.toList());
-
-        // claim과 authorities 이용하여 User 객체 생성
-        User principal = new User(claims.getSubject(), "", authorities);
-
-        // 최종적으로 Authentication 객체 리턴
-        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
-    }
 
     /**
      * 토큰 생성
@@ -147,7 +96,7 @@ public final class TokenProvider extends AbstractProvider implements BaseProvide
                 .claim("email",userInfoAllDao.getEmail())
                 .claim("userName",userInfoAllDao.getUserName())
                 .claim("appPassword",userInfoAllDao.getAppPassword())
-                .claim(AUTHORITIES_KEY,authorities)
+                .claim(AuthenticationProvider.AUTHORITIES_KEY,authorities)
                 .signWith(key, SignatureAlgorithm.HS512)
                 .setExpiration(validity)
                 .compact();
