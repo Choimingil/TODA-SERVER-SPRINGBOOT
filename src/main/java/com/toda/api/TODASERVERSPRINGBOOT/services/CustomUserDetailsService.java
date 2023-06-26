@@ -4,7 +4,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDao;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.AuthRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
-import com.toda.api.TODASERVERSPRINGBOOT.plugins.ValidateWithRedis;
+import com.toda.api.TODASERVERSPRINGBOOT.plugins.RedisPlugin;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Component("userDetailsService")
 @RequiredArgsConstructor
-public class CustomUserDetailsService extends AbstractService implements BaseService, UserDetailsService, ValidateWithRedis {
+public class CustomUserDetailsService extends AbstractService implements BaseService, UserDetailsService, RedisPlugin {
     private final AuthRepository authRepository;
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, Object> redisTemplate;

@@ -3,7 +3,7 @@ package com.toda.api.TODASERVERSPRINGBOOT.providers;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.AuthRepository;
-import com.toda.api.TODASERVERSPRINGBOOT.plugins.ValidateWithRedis;
+import com.toda.api.TODASERVERSPRINGBOOT.plugins.RedisPlugin;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public final class AuthenticationProvider extends AbstractProvider implements BaseProvider, ValidateWithRedis {
+public final class AuthenticationProvider extends AbstractProvider implements BaseProvider, RedisPlugin {
     public static final String AUTHORITIES_KEY = "auth";
     private final AuthRepository authRepository;
     private final LettuceConnectionFactory connectionFactory;

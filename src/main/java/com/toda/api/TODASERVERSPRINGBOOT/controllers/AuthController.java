@@ -11,6 +11,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.services.AuthService;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.ValidationException;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.MdcProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.Success;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
@@ -33,7 +34,10 @@ public class AuthController extends AbstractController implements BaseController
             BindingResult bindingResult
     ) {
         String jwt = authService.createJwt(loginRequest);
-        SuccessResponse response = new SuccessResponse.Builder(100,"성공적으로 로그인되었습니다.")
+        SuccessResponse response = new SuccessResponse.Builder(
+                Success.LOGIN_SUCCESS.code(),
+                Success.LOGIN_SUCCESS.message()
+        )
                 .add("result",jwt)
                 .build();
         return response.info;
@@ -45,7 +49,10 @@ public class AuthController extends AbstractController implements BaseController
             @RequestHeader(TokenProvider.HEADER_NAME) String token
     ) {
         DecodeTokenResponseDto checkTokenResult = authService.decodeToken(token);
-        SuccessResponse response = new SuccessResponse.Builder(100,"자체 로그인 성공")
+        SuccessResponse response = new SuccessResponse.Builder(
+                Success.DECODE_TOKEN_SUCCESS.code(),
+                Success.DECODE_TOKEN_SUCCESS.message()
+        )
                 .add("id",checkTokenResult.getId())
                 .add("pw",checkTokenResult.getPw())
                 .add("appPw",checkTokenResult.getAppPw())
@@ -64,18 +71,24 @@ public class AuthController extends AbstractController implements BaseController
         DecodeTokenResponseDto checkTokenResult = authService.decodeToken(token);
         if(checkToken == null){
             if(checkTokenResult.getAppPw() == 10000){
-                SuccessResponse response = new SuccessResponse.Builder(100,"유효한 유저입니다.").build();
+                SuccessResponse response = new SuccessResponse.Builder(
+                        Success.CHECK_TOKEN_SUCCESS.code(),
+                        Success.CHECK_TOKEN_SUCCESS.message()
+                ).build();
                 return response.info;
             }
-            else throw new ValidationException(404,"앱 비밀번호가 잘못됐습니다.");
+            else throw new ValidationException("WRONG_APP_PASSWORD_EXCEPTION");
         }
         else{
             int appPw = Integer.parseInt(checkToken.getAppPW());
             if(checkTokenResult.getAppPw() == appPw){
-                SuccessResponse response = new SuccessResponse.Builder(100,"유효한 유저입니다.").build();
+                SuccessResponse response = new SuccessResponse.Builder(
+                        Success.CHECK_TOKEN_SUCCESS.code(),
+                        Success.CHECK_TOKEN_SUCCESS.message()
+                ).build();
                 return response.info;
             }
-            else throw new ValidationException(404,"앱 비밀번호가 잘못됐습니다.");
+            else throw new ValidationException("WRONG_APP_PASSWORD_EXCEPTION");
         }
     }
 }

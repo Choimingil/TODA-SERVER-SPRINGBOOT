@@ -24,7 +24,7 @@ public final class UriFilter extends AbstractFilter implements BaseFilter {
     @Override
     public void doFilterLogic(HttpServletRequest request, HttpServletResponse response){
         logger.info("1. URI 유효성 검사");
-        if(!uriProvider.isValidUri(request)) throw new ValidationException(101,"존재하지 않는 API입니다.");
+        if(!uriProvider.isValidUri(request)) throw new ValidationException("NO_URI_EXCEPTION");
     }
 
     @Override

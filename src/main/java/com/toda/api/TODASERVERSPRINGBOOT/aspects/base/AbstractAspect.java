@@ -20,6 +20,6 @@ public abstract class AbstractAspect implements BaseAspect{
             }
         }
 
-        throw new ValidationException(500,"MDC에 Request_body를 넣는 중 오류가 발생했습니다.");
+        throw new ValidationException("SET_BODY_TO_MDC_EXCEPTION");
     }
 }

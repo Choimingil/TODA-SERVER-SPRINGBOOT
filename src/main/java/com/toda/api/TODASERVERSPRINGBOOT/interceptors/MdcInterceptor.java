@@ -18,7 +18,7 @@ public final class MdcInterceptor extends AbstractInterceptor implements BaseInt
     public boolean doPreHandleLogic(HttpServletRequest request, HttpServletResponse response, Object handler) {
         mdcProvider.setMdc(request);
         if(!mdcProvider.isMdcSet())
-            throw new ValidationException(500,"MDC가 정상적으로 설정되지 않았습니다.");
+            throw new ValidationException("MDC_SETTING_EXCEPTION");
 
         return true;
     }

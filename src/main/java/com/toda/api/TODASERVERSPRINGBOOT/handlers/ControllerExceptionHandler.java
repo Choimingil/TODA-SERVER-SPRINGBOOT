@@ -4,6 +4,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.exceptions.ValidationException;
 import com.toda.api.TODASERVERSPRINGBOOT.handlers.base.AbstractExceptionHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.handlers.base.BaseExceptionHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.SlackProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.Exceptions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -24,12 +25,18 @@ public final class ControllerExceptionHandler extends AbstractExceptionHandler i
 
     @ExceptionHandler(RedisConnectionFailureException.class)
     public HashMap<String,?> checkBodyNull(RedisConnectionFailureException e) {
-        return getErrorResponse(500,"Redis 연결이 되어 있지 않습니다.");
+        return getErrorResponse(
+                Exceptions.REDIS_CONNECTION_EXCEPTION.code(),
+                Exceptions.REDIS_CONNECTION_EXCEPTION.message()
+        );
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public HashMap<String,?> checkBodyNull(HttpMessageNotReadableException e) {
-        return getErrorResponse(102,"Body가 비었습니다.");
+        return getErrorResponse(
+                Exceptions.NO_BODY_EXCEPTION.code(),
+                Exceptions.NO_BODY_EXCEPTION.message()
+        );
     }
 
     @ExceptionHandler(Exception.class)

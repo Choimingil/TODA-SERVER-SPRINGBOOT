@@ -5,7 +5,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.repositories.AuthRepository;
 import io.jsonwebtoken.Claims;
 import org.springframework.data.redis.core.ValueOperations;
 
-public interface ValidateWithRedis {
+public interface RedisPlugin {
     /**
      * Claims를 매개변수로 Redis에 값이 존재하는지 체크
      * @param claims

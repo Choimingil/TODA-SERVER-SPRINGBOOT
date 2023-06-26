@@ -42,7 +42,7 @@ public final class MdcProvider extends AbstractProvider implements BaseProvider 
     }
 
     public void setBody(BindingResult bindingResult){
-        if(bindingResult.hasErrors()) throw new ValidationException(404,"잘못된 요청값입니다.");
+        if(bindingResult.hasErrors()) throw new ValidationException("WRONG_BODY_EXCEPTION");
         MdcKeys.REQUEST_BODY.add(bindingResult);
         MdcKeys.REQUEST_BODY.log();
     }

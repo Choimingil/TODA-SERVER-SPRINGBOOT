@@ -8,6 +8,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.requests.ValidateEmail;
 import com.toda.api.TODASERVERSPRINGBOOT.services.SystemService;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.ValidationException;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.MdcProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.Success;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
@@ -33,10 +34,13 @@ public class SystemController extends AbstractController implements BaseControll
         mdcProvider.setBody(bindingResult);
 
         if(systemService.isValidEmail(validateEmail.getEmail())){
-            SuccessResponse response = new SuccessResponse.Builder(100,"사용 가능한 이메일입니다.").build();
+            SuccessResponse response = new SuccessResponse.Builder(
+                    Success.VALIDATE_EMAIL_SUCCESS.code(),
+                    Success.VALIDATE_EMAIL_SUCCESS.message()
+            ).build();
             return response.info;
         }
-        else throw new ValidationException(404, "유효한 이메일이 아닙니다.");
+        else throw new ValidationException("NOT_VALID_EMAIL_EXCEPTION");
     }
 
     // $r->addRoute('GET', '/update', ['LoginController', 'checkUpdate']);                                                     //1-6. 강제 업데이트 API

@@ -1,10 +1,18 @@
 package com.toda.api.TODASERVERSPRINGBOOT.exceptions;
 
+import com.toda.api.TODASERVERSPRINGBOOT.utils.Exceptions;
 import lombok.*;
 
 @AllArgsConstructor
 @Getter
 public final class ValidationException extends RuntimeException{
-    int code;
-    String message;
+    String exceptionsName;
+
+    public int getCode(){
+        return Exceptions.valueOf(exceptionsName).code();
+    }
+
+    public String getMessage(){
+        return Exceptions.valueOf(exceptionsName).message();
+    }
 }

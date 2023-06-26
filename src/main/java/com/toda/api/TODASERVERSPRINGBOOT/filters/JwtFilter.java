@@ -34,10 +34,10 @@ public final class JwtFilter extends AbstractFilter implements BaseFilter {
         if(!uriProvider.isValidPass(request)){
             String token = tokenProvider.getToken(request);
             if(!tokenProvider.isExistHeader(token))
-                throw new ValidationException(102,"헤더값이 인식되지 않습니다.");
+                throw new ValidationException("NO_HEADER_EXCEPTION");
 
             if(!tokenProvider.isValidHeader(token))
-                throw new ValidationException(103, "잘못된 헤더값입니다.");
+                throw new ValidationException("WRONG_HEADER_EXCEPTION");
         }
     }
 

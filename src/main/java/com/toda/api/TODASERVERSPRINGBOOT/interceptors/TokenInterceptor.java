@@ -25,7 +25,7 @@ public final class TokenInterceptor extends AbstractInterceptor implements BaseI
             Claims claims = tokenProvider.getClaims(token);
             if(!authenticationProvider.isExistRedis(claims)){
                 if(!authenticationProvider.isEqualWithDB(claims))
-                    throw new ValidationException(103,"토큰과 유저 정보가 일치하지 않습니다.");
+                    throw new ValidationException("WRONG_TOKEN_DATA_EXCEPTION");
             }
 
             authenticationProvider.setSecurityContextHolder(token, claims);

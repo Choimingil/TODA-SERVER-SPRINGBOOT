@@ -8,7 +8,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDao;
 import com.toda.api.TODASERVERSPRINGBOOT.models.requests.LoginRequest;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dto.DecodeTokenResponseDto;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.AuthRepository;
-import com.toda.api.TODASERVERSPRINGBOOT.plugins.ValidateWithRedis;
+import com.toda.api.TODASERVERSPRINGBOOT.plugins.RedisPlugin;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Component("authService")
 @RequiredArgsConstructor
-public class AuthService extends AbstractService implements BaseService, ValidateWithRedis {
+public class AuthService extends AbstractService implements BaseService, RedisPlugin {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final TokenProvider tokenProvider;
     private final AuthRepository authRepository;
@@ -41,7 +41,7 @@ public class AuthService extends AbstractService implements BaseService, Validat
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         if(!isExistRedis(loginRequest.getId()))
-            throw new ValidationException(404,"Redis에 정상적으로 등록되지 않았습니다.");
+            throw new ValidationException("REDIS_CONNECTION_EXCEPTION");
         return tokenProvider.createToken(authentication, getRedis(loginRequest.getId()));
     }
 
@@ -60,7 +60,7 @@ public class AuthService extends AbstractService implements BaseService, Validat
                     .appPw(Integer.parseInt(String.valueOf(claims.get("appPassword"))))
                     .build();
         }
-        else throw new ValidationException(103,"토큰과 유저 정보가 일치하지 않습니다.");
+        else throw new ValidationException("WRONG_TOKEN_DATA_EXCEPTION");
     }
 
     @Override

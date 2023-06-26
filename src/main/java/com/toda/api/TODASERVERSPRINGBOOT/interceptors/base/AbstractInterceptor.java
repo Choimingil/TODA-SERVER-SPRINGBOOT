@@ -28,7 +28,7 @@ public abstract class AbstractInterceptor implements BaseInterceptor, HandlerInt
             @NotNull Object handler
     ) throws Exception {
         boolean isMdcSet = doPreHandleLogic(request,response,handler);
-        if(!isMdcSet) throw new ValidationException(404,"mdc가 정상적으로 설정되지 않았습니다.");
+        if(!isMdcSet) throw new ValidationException("MDC_SETTING_EXCEPTION");
         return true;
     }
 

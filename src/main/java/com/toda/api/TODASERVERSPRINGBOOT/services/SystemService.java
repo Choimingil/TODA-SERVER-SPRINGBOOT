@@ -16,6 +16,6 @@ public class SystemService extends AbstractService implements BaseService {
     @Transactional
     public boolean isValidEmail(String email){
         if(!systemRepository.isExistEmail(email)) return true;
-        else throw new ValidationException(404,"이미 존재하는 이메일입니다.");
+        else throw new ValidationException("EXIST_EMAIL_EXCEPTION");
     }
 }
