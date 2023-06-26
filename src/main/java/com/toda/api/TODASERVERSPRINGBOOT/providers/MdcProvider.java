@@ -32,6 +32,10 @@ public final class MdcProvider extends AbstractProvider implements BaseProvider 
         return true;
     }
 
+    public boolean isMdcBodyExist(){
+        return MdcKeys.REQUEST_BODY.get() != null;
+    }
+
     public void setMdc(HttpServletRequest request){
         for(MdcKeys keys : mdcKeys) keys.add(request);
         getMdcLogs();
@@ -39,8 +43,8 @@ public final class MdcProvider extends AbstractProvider implements BaseProvider 
 
     public void setBody(BindingResult bindingResult){
         if(bindingResult.hasErrors()) throw new ValidationException(404,"잘못된 요청값입니다.");
-        MDC.put("request_body",bindingResult.getModel().toString());
-        logger.info("request_body : " + MDC.get("request_body"));
+        MdcKeys.REQUEST_BODY.add(bindingResult);
+        MdcKeys.REQUEST_BODY.log();
     }
 
     public void removeMdc(){

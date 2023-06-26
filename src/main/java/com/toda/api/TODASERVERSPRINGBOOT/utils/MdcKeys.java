@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.validation.BindingResult;
 
 import java.util.Date;
 import java.util.UUID;
@@ -26,50 +27,70 @@ public enum MdcKeys implements MdcKeysExtender {
     REQUEST_ID{
         @Override public String get() { return MDC.get("request_id");}
         @Override public void add(HttpServletRequest request){ MDC.put("request_id",UUID.randomUUID().toString()); }
+        @Override public void add(BindingResult bindingResult) { logger.error("wrong access"); }
         @Override public void remove(){ MDC.remove("request_id"); }
         @Override public void log(){ logger.info("request_id : " + MDC.get("request_id")); }
     },
     REQUEST_CONTEXT_PATH{
         @Override public String get() { return MDC.get("request_context_path");}
         @Override public void add(HttpServletRequest request){ MDC.put("request_context_path", request.getContextPath()); }
+        @Override public void add(BindingResult bindingResult) { logger.error("wrong access"); }
         @Override public void remove(){ MDC.remove("request_context_path"); }
         @Override public void log(){ logger.info("request_context_path : " + MDC.get("request_context_path")); }
     },
     REQUEST_URL{
         @Override public String get() { return MDC.get("request_url");}
         @Override public void add(HttpServletRequest request){ MDC.put("request_url", request.getRequestURI()); }
+        @Override public void add(BindingResult bindingResult) { logger.error("wrong access"); }
         @Override public void remove(){ MDC.remove("request_url"); }
         @Override public void log(){ logger.info("request_url : " + MDC.get("request_url")); }
     },
     REQUEST_METHOD{
         @Override public String get() { return MDC.get("request_method");}
         @Override public void add(HttpServletRequest request){ MDC.put("request_method", request.getMethod()); }
+        @Override public void add(BindingResult bindingResult) { logger.error("wrong access"); }
         @Override public void remove(){ MDC.remove("request_method"); }
         @Override public void log(){ logger.info("request_method : " + MDC.get("request_method")); }
     },
     REQUEST_TIME{
         @Override public String get() { return MDC.get("request_time");}
         @Override public void add(HttpServletRequest request){ MDC.put("request_time", new Date().toString()); }
+        @Override public void add(BindingResult bindingResult) { logger.error("wrong access"); }
         @Override public void remove(){ MDC.remove("request_time"); }
         @Override public void log(){ logger.info("request_time : " + MDC.get("request_time")); }
     },
     REQUEST_IP{
         @Override public String get() { return MDC.get("request_ip");}
         @Override public void add(HttpServletRequest request){ MDC.put("request_ip", request.getRemoteAddr()); }
+        @Override public void add(BindingResult bindingResult) { logger.error("wrong access"); }
         @Override public void remove(){ MDC.remove("request_ip"); }
         @Override public void log(){ logger.info("request_ip : " + MDC.get("request_ip")); }
     },
     REQUEST_HEADER{
         @Override public String get() { return MDC.get("request_header");}
         @Override public void add(HttpServletRequest request){ MDC.put("request_header", request.getHeader(TokenProvider.HEADER_NAME)); }
+        @Override public void add(BindingResult bindingResult) { logger.error("wrong access"); }
         @Override public void remove(){ MDC.remove("request_header"); }
         @Override public void log(){ logger.info("request_header : " + MDC.get("request_header")); }
     },
     REQUEST_QUERY_STRING{
         @Override public String get() { return MDC.get("request_query_string");}
         @Override public void add(HttpServletRequest request){ MDC.put("request_query_string", request.getQueryString()); }
+        @Override public void add(BindingResult bindingResult) { logger.error("wrong access"); }
         @Override public void remove(){ MDC.remove("request_query_string"); }
         @Override public void log(){ logger.info("request_query_string : " + MDC.get("request_query_string")); }
+    },
+    REQUEST_BODY{
+        @Override
+        public String get() { return MDC.get("request_body"); }
+        @Override
+        public void add(HttpServletRequest request) { logger.error("wrong access"); }
+        @Override
+        public void add(BindingResult bindingResult) { MDC.put("request_body",bindingResult.getModel().toString()); }
+        @Override
+        public void remove() { MDC.remove("request_body"); }
+        @Override
+        public void log() { logger.info("request_body : " + MDC.get("request_body")); }
     };
 
     protected final Logger logger = LoggerFactory.getLogger(MdcKeys.class);

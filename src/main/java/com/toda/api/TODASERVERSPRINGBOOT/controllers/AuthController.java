@@ -1,5 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
+import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
@@ -19,18 +20,18 @@ import java.util.HashMap;
 
 @RestController
 @RequiredArgsConstructor
-public final class AuthController extends AbstractController implements BaseController {
+//public final class AuthController extends AbstractController implements BaseController {
+public class AuthController extends AbstractController implements BaseController {
     private final AuthService authService;
     private final MdcProvider mdcProvider;
 
     //1. 자체 로그인 API
     @PostMapping("/login")
+    @SetMdcBody
     public HashMap<String,?> createJwt(
             @RequestBody LoginRequest loginRequest,
             BindingResult bindingResult
     ) {
-        mdcProvider.setBody(bindingResult);
-
         String jwt = authService.createJwt(loginRequest);
         SuccessResponse response = new SuccessResponse.Builder(100,"성공적으로 로그인되었습니다.")
                 .add("result",jwt)
@@ -54,13 +55,12 @@ public final class AuthController extends AbstractController implements BaseCont
 
     //1-4. 토큰 암호 유효성 검사 API
     @PostMapping("/token")
+    @SetMdcBody
     public HashMap<String,?> checkToken(
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
             @RequestBody @Nullable CheckToken checkToken,
             BindingResult bindingResult
     ) {
-        mdcProvider.setBody(bindingResult);
-
         DecodeTokenResponseDto checkTokenResult = authService.decodeToken(token);
         if(checkToken == null){
             if(checkTokenResult.getAppPw() == 10000){

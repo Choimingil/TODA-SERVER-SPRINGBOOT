@@ -1,5 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
+import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
@@ -24,6 +25,7 @@ public class SystemController extends AbstractController implements BaseControll
  
     // 1-2. 이메일 중복 확인 API
     @PostMapping("/email/valid")
+    @SetMdcBody
     public HashMap<String, ?> validateEmail(
             @RequestBody @Valid ValidateEmail validateEmail,
             BindingResult bindingResult
