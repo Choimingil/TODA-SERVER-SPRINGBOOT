@@ -23,6 +23,11 @@ public enum Exceptions {
     EXIST_EMAIL_EXCEPTION(104,"이미 존재하는 이메일입니다."),
     WRONG_BODY_EXCEPTION(104,"잘못된 Body입니다."),
 
+    /**
+     * Logic
+     */
+
+    WRONG_TYPE_EXCEPTION(500,"입력 타입과 다른 타입입니다."),
 
     /**
      * Utils

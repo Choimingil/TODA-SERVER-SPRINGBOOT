@@ -1,5 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.plugins;
 
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.ValidationException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDao;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.AuthRepository;
 import io.jsonwebtoken.Claims;
@@ -44,10 +45,12 @@ public interface RedisPlugin {
      * @return
      * @param <T>
      */
-    default <T> T getRedis(Claims claims){
-        // 타입 형 변환 제네릭 더 공부하면서 방법 찾아보기
-        @SuppressWarnings ("unchecked") T res = (T) getValueOperations().get(claims.getSubject());
-        return res;
+    default <T> T getRedis(Claims claims, Class<T> c){
+        if(c.isInstance(getValueOperations().get(claims.getSubject()))){
+            @SuppressWarnings ("unchecked") T res = (T) getValueOperations().get(claims.getSubject());
+            return res;
+        }
+        else throw new ValidationException("WRONG_TYPE_EXCEPTION");
     }
 
     /**
@@ -56,10 +59,12 @@ public interface RedisPlugin {
      * @return
      * @param <T>
      */
-    default <T> T getRedis(String key){
-        // 타입 형 변환 제네릭 더 공부하면서 방법 찾아보기
-        @SuppressWarnings ("unchecked") T res = (T) getValueOperations().get(key);
-        return res;
+    default <T> T getRedis(String key, Class<T> c){
+        if(c.isInstance(getValueOperations().get(key))){
+            @SuppressWarnings ("unchecked") T res = (T) getValueOperations().get(key);
+            return res;
+        }
+        else throw new ValidationException("WRONG_TYPE_EXCEPTION");
     }
 
     /**

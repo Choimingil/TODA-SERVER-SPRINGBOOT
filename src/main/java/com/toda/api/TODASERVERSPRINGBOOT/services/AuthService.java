@@ -42,7 +42,7 @@ public class AuthService extends AbstractService implements BaseService, RedisPl
 
         if(!isExistRedis(loginRequest.getId()))
             throw new ValidationException("REDIS_CONNECTION_EXCEPTION");
-        return tokenProvider.createToken(authentication, getRedis(loginRequest.getId()));
+        return tokenProvider.createToken(authentication, getRedis(loginRequest.getId(), UserInfoAllDao.class));
     }
 
     //1-3. 토큰 데이터 추출 API
@@ -50,7 +50,7 @@ public class AuthService extends AbstractService implements BaseService, RedisPl
     public DecodeTokenResponseDto decodeToken(String token){
         Claims claims = tokenProvider.getClaims(token);
         if(!isExistRedis(claims)) setRedis(claims);
-        UserInfoAllDao userInfoAllDao = getRedis(claims);
+        UserInfoAllDao userInfoAllDao = getRedis(claims, UserInfoAllDao.class);
 
         // 토큰 내용과 유저 정보가 같다면 값 리턴
         if(userInfoAllDao.isSameTokenAttributes(claims)){

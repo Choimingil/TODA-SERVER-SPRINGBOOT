@@ -4,5 +4,5 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.springframework.validation.BindingResult;
 
 public interface BaseAspect {
-    BindingResult getResult(final ProceedingJoinPoint joinPoint, String paramName);
+    <T> T getResult(final ProceedingJoinPoint joinPoint, String paramName, Class<T> c);
 }

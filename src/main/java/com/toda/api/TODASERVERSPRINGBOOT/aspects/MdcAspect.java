@@ -8,6 +8,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.BindingResult;
 
 @Aspect
 @Component
@@ -17,7 +18,7 @@ public class MdcAspect extends AbstractAspect implements BaseAspect {
 
     @Around("@annotation(com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody)")
     public Object aspectParameter(final ProceedingJoinPoint joinPoint) throws Throwable {
-        mdcProvider.setBody(getResult(joinPoint,"bindingResult"));
+        mdcProvider.setBody(getResult(joinPoint,"bindingResult", BindingResult.class));
         return joinPoint.proceed();
     }
 }
