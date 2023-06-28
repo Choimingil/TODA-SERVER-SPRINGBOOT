@@ -3,14 +3,14 @@ package com.toda.api.TODASERVERSPRINGBOOT.utils;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.validation.BindingResult;
 
 import java.util.Date;
 import java.util.UUID;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 @RequiredArgsConstructor
 public enum MdcKeys {
@@ -26,93 +26,44 @@ public enum MdcKeys {
      * - request_body : 요청 바디 (컨트롤러에서 벨리데이션 이후 추가)
      */
 
-    REQUEST_ID(
-            () -> MDC.get("request_id"),
-            (request) -> MDC.put("request_id", UUID.randomUUID().toString()),
-            (result) ->  LoggerFactory.getLogger(MdcKeys.class).error("wrong access"),
-            () -> MDC.remove("request_id"),
-            () -> LoggerFactory.getLogger(MdcKeys.class).info("request_id : " + MDC.get("request_id"))
-    ),
-    REQUEST_CONTEXT_PATH(
-            () -> MDC.get("request_context_path"),
-            (request) -> MDC.put("request_context_path", request.getContextPath()),
-            (result) ->  LoggerFactory.getLogger(MdcKeys.class).error("wrong access"),
-            () -> MDC.remove("request_context_path"),
-            () -> LoggerFactory.getLogger(MdcKeys.class).info("request_context_path : " + MDC.get("request_context_path"))
-    ),
-    REQUEST_URL(
-            () -> MDC.get("request_url"),
-            (request) -> MDC.put("request_url", request.getRequestURI()),
-            (result) ->  LoggerFactory.getLogger(MdcKeys.class).error("wrong access"),
-            () -> MDC.remove("request_url"),
-            () -> LoggerFactory.getLogger(MdcKeys.class).info("request_url : " + MDC.get("request_url"))
-    ),
-    REQUEST_METHOD(
-            () -> MDC.get("request_method"),
-            (request) -> MDC.put("request_method", request.getMethod()),
-            (result) ->  LoggerFactory.getLogger(MdcKeys.class).error("wrong access"),
-            () -> MDC.remove("request_method"),
-            () -> LoggerFactory.getLogger(MdcKeys.class).info("request_method : " + MDC.get("request_method"))
-    ),
-    REQUEST_TIME(
-            () -> MDC.get("request_time"),
-            (request) -> MDC.put("request_time", new Date().toString()),
-            (result) ->  LoggerFactory.getLogger(MdcKeys.class).error("wrong access"),
-            () -> MDC.remove("request_time"),
-            () -> LoggerFactory.getLogger(MdcKeys.class).info("request_time : " + MDC.get("request_time"))
-    ),
-    REQUEST_IP(
-            () -> MDC.get("request_ip"),
-            (request) -> MDC.put("request_ip", request.getRemoteAddr()),
-            (result) ->  LoggerFactory.getLogger(MdcKeys.class).error("wrong access"),
-            () -> MDC.remove("request_ip"),
-            () -> LoggerFactory.getLogger(MdcKeys.class).info("request_ip : " + MDC.get("request_ip"))
-    ),
-    REQUEST_HEADER(
-            () -> MDC.get("request_header"),
-            (request) -> MDC.put("request_header", request.getHeader(TokenProvider.HEADER_NAME)),
-            (result) ->  LoggerFactory.getLogger(MdcKeys.class).error("wrong access"),
-            () -> MDC.remove("request_header"),
-            () -> LoggerFactory.getLogger(MdcKeys.class).info("request_header : " + MDC.get("request_header"))
-    ),
-    REQUEST_QUERY_STRING(
-            () -> MDC.get("request_query_string"),
-            (request) -> MDC.put("request_query_string", request.getQueryString()),
-            (result) ->  LoggerFactory.getLogger(MdcKeys.class).error("wrong access"),
-            () -> MDC.remove("request_query_string"),
-            () -> LoggerFactory.getLogger(MdcKeys.class).info("request_query_string : " + MDC.get("request_query_string"))
-    ),
-    REQUEST_BODY(
-            () -> MDC.get("request_body"),
-            (request) -> LoggerFactory.getLogger(MdcKeys.class).error("wrong access"),
-            (result) ->  MDC.put("request_body",result.getModel().toString()),
-            () -> MDC.remove("request_body"),
-            () -> LoggerFactory.getLogger(MdcKeys.class).info("request_body : " + MDC.get("request_body"))
-    );
+    REQUEST_ID("request_id", MDC::get, MDC::put, MDC::remove),
+    REQUEST_CONTEXT_PATH("request_context_path", MDC::get, MDC::put, MDC::remove),
+    REQUEST_URL("request_url", MDC::get, MDC::put, MDC::remove),
+    REQUEST_METHOD("request_method", MDC::get, MDC::put, MDC::remove),
+    REQUEST_TIME("request_time", MDC::get, MDC::put, MDC::remove),
+    REQUEST_IP("request_ip", MDC::get, MDC::put, MDC::remove),
+    REQUEST_HEADER("request_header", MDC::get, MDC::put, MDC::remove),
+    REQUEST_QUERY_STRING("request_query_string", MDC::get, MDC::put, MDC::remove),
+    REQUEST_BODY("request_body", MDC::get, MDC::put, MDC::remove);
 
-    private final Supplier<String> get;
-    private final Consumer<HttpServletRequest> add;
-    private final Consumer<BindingResult> addBody;
-    private final Runnable remove;
-    private final Runnable log;
-
+    private final String title;
+    private final Function<String, String> get;
+    private final BiConsumer<String,String> add;
+    private final Consumer<String> remove;
     public final String get(){
-        return get.get();
+        return get.apply(title);
     }
-
-    public final void add(HttpServletRequest request){
-        add.accept(request);
+    public final void add(HttpServletRequest request, Logger logger){
+        String val = switch (title) {
+            case "request_id" -> UUID.randomUUID().toString();
+            case "request_context_path" -> request.getContextPath();
+            case "request_url" -> request.getRequestURI();
+            case "request_method" -> request.getMethod();
+            case "request_time" -> new Date().toString();
+            case "request_ip" -> request.getRemoteAddr();
+            case "request_header" -> request.getHeader(TokenProvider.HEADER_NAME);
+            case "request_query_string" -> request.getQueryString();
+            default -> "";
+        };
+        add.accept(title,val);
+        logger.info(title + " : " + MDC.get(title));
     }
-
-    public final void addBody(BindingResult bindingResult){
-        addBody.accept(bindingResult);
+    public final void add(BindingResult bindingResult, Logger logger){
+        add.accept(title, bindingResult.getModel().toString());
+        logger.info(title + " : " + MDC.get(title));
     }
-
-    public final void remove(){
-        remove.run();
-    }
-
-    public final void log(){
-        log.run();
+    public final void remove(Logger logger){
+        remove.accept(title);
+        logger.info(title + " : " + MDC.get(title));
     }
 }

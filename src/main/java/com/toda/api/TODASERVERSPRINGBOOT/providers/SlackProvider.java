@@ -23,7 +23,7 @@ public class SlackProvider extends AbstractProvider implements BaseProvider {
 
     @Override
     public void afterPropertiesSet() {
-
+        slackKeysEnumSet.remove(SlackKeys.REQUEST_BODY);
     }
 
     public void sendSlackWithNoMdc(HttpServletRequest request, Exception e) {
@@ -54,8 +54,8 @@ public class SlackProvider extends AbstractProvider implements BaseProvider {
 
     private List<SlackField> getSlackFieldsWithMdc(){
         List<SlackField> list = new ArrayList<>();
+        slackKeysEnumSet.add(SlackKeys.REQUEST_BODY);
         for(SlackKeys keys : slackKeysEnumSet) list.add(keys.addMdc());
-        list.add(new SlackField().setTitle("Request Body").setValue(MDC.get("request_body")));
         return list;
     }
 }

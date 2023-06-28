@@ -31,8 +31,6 @@ public class SystemController extends AbstractController implements BaseControll
             @RequestBody @Valid ValidateEmail validateEmail,
             BindingResult bindingResult
     ) {
-        mdcProvider.setBody(bindingResult);
-
         if(systemService.isValidEmail(validateEmail.getEmail())){
             SuccessResponse response = new SuccessResponse.Builder(
                     Success.VALIDATE_EMAIL_SUCCESS.code(),

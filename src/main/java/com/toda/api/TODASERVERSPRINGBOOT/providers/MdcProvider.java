@@ -24,39 +24,27 @@ public final class MdcProvider extends AbstractProvider implements BaseProvider 
             MdcKeys.REQUEST_IP
     );
 
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        mdcKeys.remove(MdcKeys.REQUEST_BODY);
+    }
+
     public boolean isMdcSet(){
-        for(MdcKeys keys : mandatoryKeys){
-            if(keys.get() == null) return false;
-        }
+        for(MdcKeys keys : mandatoryKeys) if(keys.get() == null) return false;
         return true;
     }
 
-    public boolean isMdcBodyExist(){
-        return MdcKeys.REQUEST_BODY.get() != null;
-    }
-
     public void setMdc(HttpServletRequest request){
-        for(MdcKeys keys : mdcKeys) keys.add(request);
-        getMdcLogs();
+        for(MdcKeys keys : mdcKeys) keys.add(request,logger);
     }
 
     public void setBody(BindingResult bindingResult){
         if(bindingResult.hasErrors()) throw new ValidationException("WRONG_BODY_EXCEPTION");
-        MdcKeys.REQUEST_BODY.addBody(bindingResult);
-        MdcKeys.REQUEST_BODY.log();
+        mdcKeys.add(MdcKeys.REQUEST_BODY);
+        MdcKeys.REQUEST_BODY.add(bindingResult, logger);
     }
 
     public void removeMdc(){
-        for(MdcKeys keys : mdcKeys) keys.remove();
-        getMdcLogs();
-    }
-
-    private void getMdcLogs(){
-        for(MdcKeys keys : mdcKeys) keys.log();
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-
+        for(MdcKeys keys : mdcKeys) keys.remove(logger);
     }
 }
