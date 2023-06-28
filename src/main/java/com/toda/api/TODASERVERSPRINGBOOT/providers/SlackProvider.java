@@ -48,13 +48,13 @@ public class SlackProvider extends AbstractProvider implements BaseProvider {
 
     private List<SlackField> getSlackFieldsWithRequest(HttpServletRequest request){
         List<SlackField> list = new ArrayList<>();
-        for(SlackKeys keys : slackKeysEnumSet) list.add(keys.setFieldWithRequest(request));
+        for(SlackKeys keys : slackKeysEnumSet) list.add(keys.addRequest(request));
         return list;
     }
 
     private List<SlackField> getSlackFieldsWithMdc(){
         List<SlackField> list = new ArrayList<>();
-        for(SlackKeys keys : slackKeysEnumSet) list.add(keys.setFieldWithMdc());
+        for(SlackKeys keys : slackKeysEnumSet) list.add(keys.addMdc());
         list.add(new SlackField().setTitle("Request Body").setValue(MDC.get("request_body")));
         return list;
     }

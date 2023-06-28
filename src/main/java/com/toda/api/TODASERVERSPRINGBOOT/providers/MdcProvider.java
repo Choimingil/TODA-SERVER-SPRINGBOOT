@@ -6,7 +6,6 @@ import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.MdcKeys;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.BindingResult;
 
@@ -43,7 +42,7 @@ public final class MdcProvider extends AbstractProvider implements BaseProvider 
 
     public void setBody(BindingResult bindingResult){
         if(bindingResult.hasErrors()) throw new ValidationException("WRONG_BODY_EXCEPTION");
-        MdcKeys.REQUEST_BODY.add(bindingResult);
+        MdcKeys.REQUEST_BODY.addBody(bindingResult);
         MdcKeys.REQUEST_BODY.log();
     }
 
