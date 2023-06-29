@@ -11,6 +11,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -47,15 +48,15 @@ public class SlackProvider extends AbstractProvider implements BaseProvider {
     }
 
     private List<SlackField> getSlackFieldsWithRequest(HttpServletRequest request){
-        List<SlackField> list = new ArrayList<>();
-        for(SlackKeys keys : slackKeysEnumSet) list.add(keys.addRequest(request));
-        return list;
+        return slackKeysEnumSet.stream()
+                .map(keys -> keys.addRequest(request))
+                .collect(Collectors.toList());
     }
 
     private List<SlackField> getSlackFieldsWithMdc(){
-        List<SlackField> list = new ArrayList<>();
         slackKeysEnumSet.add(SlackKeys.REQUEST_BODY);
-        for(SlackKeys keys : slackKeysEnumSet) list.add(keys.addMdc());
-        return list;
+        return slackKeysEnumSet.stream()
+                .map(SlackKeys::addMdc)
+                .collect(Collectors.toList());
     }
 }

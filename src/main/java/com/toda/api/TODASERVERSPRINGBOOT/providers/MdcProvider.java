@@ -30,8 +30,8 @@ public final class MdcProvider extends AbstractProvider implements BaseProvider 
     }
 
     public boolean isMdcSet(){
-        for(MdcKeys keys : mandatoryKeys) if(keys.get() == null) return false;
-        return true;
+        return mandatoryKeys.stream()
+                .allMatch(keys -> keys.get() != null);
     }
 
     public void setMdc(HttpServletRequest request){

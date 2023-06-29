@@ -8,7 +8,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -25,16 +28,18 @@ public final class UriProvider extends AbstractProvider implements BaseProvider 
     }
 
     private String getUri(HttpServletRequest request){
-        StringBuilder sb = new StringBuilder();
-        sb.append(request.getMethod());
-        sb.append("_");
-        String[] arr = request.getRequestURI().toUpperCase().trim().split("/");
-        for (int i=1;i< arr.length;i++){
-            if(RegularExpressions.NUMBER.getPattern().matcher(arr[i]).matches()) sb.append("NUMBER");
-            else sb.append(arr[i]);
-            if(i<arr.length-1) sb.append("_");
-        }
-        return sb.toString();
+        /**
+         * uri = /url_name 이기 때문에 /으로 파싱하면 맨 앞이 공백, 따라서 맨 앞을 스킵
+         */
+        List<String> list = new ArrayList<>(List.of(request.getRequestURI().toUpperCase().trim().split("/")));
+        list.add(1,request.getMethod());
+        return list.stream()
+                .skip(1)
+                .map(item -> {
+                    if (RegularExpressions.NUMBER.getPattern().matcher(item).matches()) return "NUMBER";
+                    else return item;
+                })
+                .collect(Collectors.joining("_", "", ""));
     }
 
     public boolean isValidUri(HttpServletRequest request){
