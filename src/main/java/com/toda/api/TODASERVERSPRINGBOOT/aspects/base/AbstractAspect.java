@@ -16,14 +16,14 @@ public abstract class AbstractAspect implements BaseAspect{
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T getResult(final ProceedingJoinPoint joinPoint, String paramName, Class<T> c){
+    public <T> T getResult(final ProceedingJoinPoint joinPoint, String paramName, Class<T> clazz){
         final String[] parameterNames = ((MethodSignature) joinPoint.getSignature()).getParameterNames();
         final List<Object> args = new ArrayList<>(Arrays.asList(joinPoint.getArgs()));
 
         return IntStream.range(0, parameterNames.length)
                 .filter(i -> parameterNames[i].equals(paramName))
                 .mapToObj(i -> {
-                    if (c.isInstance(args.get(i))) return (T) args.get(i);
+                    if (clazz.isInstance(args.get(i))) return (T) args.get(i);
                     else throw new ValidationException("WRONG_TYPE_EXCEPTION");
                 })
                 .findFirst()

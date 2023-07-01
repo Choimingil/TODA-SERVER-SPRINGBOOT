@@ -4,6 +4,9 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.base.AbstractModel;
 import com.toda.api.TODASERVERSPRINGBOOT.models.base.BaseModel;
 import lombok.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Getter
 public final class DecodeTokenResponseDto extends AbstractModel implements BaseModel {
     private long id;
@@ -25,14 +28,23 @@ public final class DecodeTokenResponseDto extends AbstractModel implements BaseM
 
     @Override
     public String toString(){
-        return "userID : " +
-                id +
-                ", " +
-                "password : " +
-                pw +
-                ", " +
-                "appPassword : " +
-                appPw;
+        StringBuilder sb = new StringBuilder();
+        sb.append("userID : ");
+        sb.append(id);
+        sb.append(", ");
+        sb.append("password : ");
+        sb.append(pw);
+        sb.append(", ");
+        sb.append("appPassword : ");
+        sb.append(appPw);
+        return sb.toString();
     }
 
+    public Map<String, ?> toMap() {
+        Map<String,Object> map = new HashMap<>();
+        map.put("id",id);
+        map.put("pw",pw);
+        map.put("appPw",appPw);
+        return map;
+    }
 }

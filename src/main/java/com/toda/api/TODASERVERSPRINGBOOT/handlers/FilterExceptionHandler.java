@@ -3,7 +3,9 @@ package com.toda.api.TODASERVERSPRINGBOOT.handlers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.toda.api.TODASERVERSPRINGBOOT.handlers.base.AbstractExceptionHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.handlers.base.BaseExceptionHandler;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.ErrorResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.SlackProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.Exceptions;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +19,12 @@ public final class FilterExceptionHandler extends AbstractExceptionHandler imple
     private final SlackProvider slackProvider;
     private final ObjectMapper objectMapper;
 
-    public void setErrorResponse(int code, String message, HttpServletResponse response) throws IOException {
+    public void setErrorResponse(HttpServletResponse response, int code, String message) throws IOException {
         sendResponse(response,code,message);
+    }
+
+    public void setErrorResponse(Exceptions exceptions, HttpServletResponse response) throws IOException {
+        sendResponse(response,exceptions.code(),exceptions.message());
     }
 
     public void sendErrorToSlack(
@@ -26,7 +32,7 @@ public final class FilterExceptionHandler extends AbstractExceptionHandler imple
             HttpServletResponse response,
             Exception e
     ) throws IOException {
-        slackProvider.sendSlackWithNoMdc(request,e);
+        slackProvider.doSlack(request,e);
         sendResponse(response,999,getErrorMsg(e));
     }
 
@@ -34,7 +40,9 @@ public final class FilterExceptionHandler extends AbstractExceptionHandler imple
         response.setStatus(200);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        String jsonResponse = objectMapper.writeValueAsString(getErrorResponse(code,msg));
+        String jsonResponse = objectMapper.writeValueAsString(
+                new ErrorResponse.Builder(code,msg).build().getResponse()
+        );
         response.getWriter().write(jsonResponse);
     }
 }

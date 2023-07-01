@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import net.gpedro.integrations.slack.SlackField;
 import org.slf4j.MDC;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.function.BiFunction;
 
@@ -27,7 +28,7 @@ public enum SlackKeys {
         String val = switch (mdcTitle) {
             case "request_url" -> request.getRequestURI();
             case "request_method" -> request.getMethod();
-            case "request_time" -> new Date().toString();
+            case "request_time" -> Instant.now().toString();
             case "request_ip" -> request.getRemoteAddr();
             case "request_header" -> request.getHeader(TokenProvider.HEADER_NAME);
             case "request_query_string" -> request.getQueryString();

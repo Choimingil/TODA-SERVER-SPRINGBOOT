@@ -1,5 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.handlers;
 
+import com.toda.api.TODASERVERSPRINGBOOT.utils.Exceptions;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,6 +19,6 @@ public final class JwtAccessDeniedHandler implements AccessDeniedHandler {
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
-        filterExceptionHandler.setErrorResponse(403,"현재 API의 사용 권한이 존재하지 않습니다.", response);
+        filterExceptionHandler.setErrorResponse(Exceptions.NO_ACCESS_EXCEPTION, response);
     }
 }

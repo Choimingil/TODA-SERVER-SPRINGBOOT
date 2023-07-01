@@ -8,7 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 @Component
-public class CheckExistMapper implements RowMapper<CheckExistDao> {
+public final class CheckExistMapper implements RowMapper<CheckExistDao> {
     private static CheckExistMapper mapper = null;
     public static CheckExistMapper getInstance(){
         if(mapper == null) mapper = new CheckExistMapper();

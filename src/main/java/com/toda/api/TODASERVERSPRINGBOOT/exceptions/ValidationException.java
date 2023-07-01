@@ -8,11 +8,13 @@ import lombok.*;
 public final class ValidationException extends RuntimeException{
     String exceptionsName;
 
-    public int getCode(){
-        return Exceptions.valueOf(exceptionsName).code();
-    }
+    public Exceptions getExceptions(){return Exceptions.valueOf(exceptionsName);}
 
-    public String getMessage(){
-        return Exceptions.valueOf(exceptionsName).message();
-    }
+//    public int getCode(){
+//        return Exceptions.valueOf(exceptionsName).code();
+//    }
+//
+//    public String getMessage(){
+//        return Exceptions.valueOf(exceptionsName).message();
+//    }
 }

@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 public final class AuthenticationProvider extends AbstractProvider implements BaseProvider, RedisPlugin {
     public static final String AUTHORITIES_KEY = "auth";
     private final AuthRepository authRepository;
-    private final LettuceConnectionFactory connectionFactory;
     private final RedisTemplate<String, Object> redisTemplate;
 
     /**

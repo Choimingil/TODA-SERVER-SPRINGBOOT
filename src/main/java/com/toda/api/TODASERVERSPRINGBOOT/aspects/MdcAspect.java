@@ -13,7 +13,7 @@ import org.springframework.validation.BindingResult;
 @Aspect
 @Component
 @RequiredArgsConstructor
-public class MdcAspect extends AbstractAspect implements BaseAspect {
+public final class MdcAspect extends AbstractAspect implements BaseAspect {
     private final MdcProvider mdcProvider;
 
     @Around("@annotation(com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody)")

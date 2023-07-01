@@ -29,7 +29,7 @@ public abstract class AbstractFilter extends OncePerRequestFilter implements Bas
         }
         catch (ValidationException e){
             logger.error(e.getMessage());
-            getFilterExceptionHandler().setErrorResponse(e.getCode(),e.getMessage(),response);
+            getFilterExceptionHandler().setErrorResponse(e.getExceptions(),response);
         }
         catch (Exception e){
             logger.error(e.getMessage());

@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.security.Key;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.stream.Collectors;
 
@@ -77,8 +79,6 @@ public final class TokenProvider extends AbstractProvider implements BaseProvide
         return jwtParser.isSigned(token);
     }
 
-
-
     /**
      * 토큰 생성
      * @param authentication
@@ -118,7 +118,7 @@ public final class TokenProvider extends AbstractProvider implements BaseProvide
      * @return
      */
     private Date getValidity(){
-        long now = (new Date()).getTime();
+        long now = Instant.now().toEpochMilli();
         return new Date(now + tokenValidityInMilliseconds);
     }
 }

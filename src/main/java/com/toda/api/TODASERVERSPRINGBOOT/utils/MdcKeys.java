@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.validation.BindingResult;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
 import java.util.function.*;
@@ -49,21 +50,29 @@ public enum MdcKeys {
             case "request_context_path" -> request.getContextPath();
             case "request_url" -> request.getRequestURI();
             case "request_method" -> request.getMethod();
-            case "request_time" -> new Date().toString();
+            case "request_time" -> Instant.now().toString();
             case "request_ip" -> request.getRemoteAddr();
             case "request_header" -> request.getHeader(TokenProvider.HEADER_NAME);
             case "request_query_string" -> request.getQueryString();
             default -> "";
         };
         add.accept(title,val);
-        logger.info(title + " : " + MDC.get(title));
+        getLog(logger);
     }
     public final void add(BindingResult bindingResult, Logger logger){
         add.accept(title, bindingResult.getModel().toString());
-        logger.info(title + " : " + MDC.get(title));
+        getLog(logger);
     }
     public final void remove(Logger logger){
         remove.accept(title);
-        logger.info(title + " : " + MDC.get(title));
+        getLog(logger);
+    }
+
+    private void getLog(Logger logger){
+        StringBuilder sb = new StringBuilder();
+        sb.append(title);
+        sb.append(" : ");
+        sb.append(MDC.get(title));
+        logger.info(sb.toString());
     }
 }

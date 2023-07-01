@@ -11,13 +11,14 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 public final class UriProvider extends AbstractProvider implements BaseProvider {
-    private final EnumSet<Uris> uris = EnumSet.allOf(Uris.class);
-    private final EnumSet<Uris> validPassUris = EnumSet.of(
+    private final Set<Uris> uris = EnumSet.allOf(Uris.class);
+    private final Set<Uris> validPassUris = EnumSet.of(
             Uris.POST_LOGIN,
             Uris.POST_EMAIL_VALID
     );

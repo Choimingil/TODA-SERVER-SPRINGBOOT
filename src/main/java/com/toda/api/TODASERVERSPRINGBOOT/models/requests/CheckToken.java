@@ -5,6 +5,8 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.base.BaseModel;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidAppPw;
 import lombok.*;
 
+import java.util.Map;
+
 @Getter
 public final class CheckToken extends AbstractModel implements BaseModel {
     @ValidAppPw private String appPW;
@@ -16,6 +18,9 @@ public final class CheckToken extends AbstractModel implements BaseModel {
 
     @Override
     public String toString(){
-        return "appPassword : " + appPW;
+        StringBuilder sb = new StringBuilder();
+        sb.append("appPassword : ");
+        sb.append(appPW);
+        return sb.toString();
     }
 }

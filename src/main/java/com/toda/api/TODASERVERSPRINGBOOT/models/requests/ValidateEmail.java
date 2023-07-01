@@ -14,6 +14,9 @@ public final class ValidateEmail {
 
     @Override
     public String toString(){
-        return "email : " + email;
+        StringBuilder sb = new StringBuilder();
+        sb.append("email : ");
+        sb.append(email);
+        return sb.toString();
     }
 }

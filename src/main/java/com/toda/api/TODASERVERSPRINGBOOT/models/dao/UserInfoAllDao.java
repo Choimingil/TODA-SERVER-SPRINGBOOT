@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
 
 @Getter
 public final class UserInfoAllDao extends AbstractModel implements BaseModel {
@@ -57,22 +58,24 @@ public final class UserInfoAllDao extends AbstractModel implements BaseModel {
 
     @Override
     public String toString(){
-        return "userID : " +
-                userID +
-                ", " +
-                "userCode : " +
-                userCode +
-                ", " +
-                "email : " +
-                email +
-                ", " +
-                "password : " +
-                password +
-                ", " +
-                "userName : " +
-                userName +
-                ", " +
-                "appPassword : " +
-                appPassword;
+        StringBuilder sb = new StringBuilder();
+        sb.append("userID : ");
+        sb.append(userID);
+        sb.append(", ");
+        sb.append("userCode : ");
+        sb.append(userCode);
+        sb.append(", ");
+        sb.append("email : ");
+        sb.append(email);
+        sb.append(", ");
+        sb.append("password : ");
+        sb.append(password);
+        sb.append(", ");
+        sb.append("userName : ");
+        sb.append(userName);
+        sb.append(", ");
+        sb.append("appPassword : ");
+        sb.append(appPassword);
+        return sb.toString();
     }
 }

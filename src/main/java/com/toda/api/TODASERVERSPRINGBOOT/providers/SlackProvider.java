@@ -20,23 +20,23 @@ public class SlackProvider extends AbstractProvider implements BaseProvider {
     private final SlackApi slackApi;
     private final SlackAttachment slackAttachment;
     private final SlackMessage slackMessage;
-    private final EnumSet<SlackKeys> slackKeysEnumSet = EnumSet.allOf(SlackKeys.class);
+    private final Set<SlackKeys> slackKeysEnumSet = EnumSet.allOf(SlackKeys.class);
 
     @Override
     public void afterPropertiesSet() {
         slackKeysEnumSet.remove(SlackKeys.REQUEST_BODY);
     }
 
-    public void sendSlackWithNoMdc(HttpServletRequest request, Exception e) {
+    public void doSlack(HttpServletRequest request, Exception e) {
         slackAttachment.setTitleLink(request.getContextPath());
-        slackAttachment.setFields(getSlackFieldsWithRequest(request));
+        slackAttachment.setFields(getSlackFields(request));
         send(e);
     }
 
     @Async
-    public void sendSlackWithMdc(Exception e) {
+    public void doSlack(Exception e) {
         slackAttachment.setTitleLink(MDC.get("request_context_path"));
-        slackAttachment.setFields(getSlackFieldsWithMdc());
+        slackAttachment.setFields(getSlackFields());
         send(e);
         mdcProvider.removeMdc();
     }
@@ -47,13 +47,13 @@ public class SlackProvider extends AbstractProvider implements BaseProvider {
         slackApi.call(slackMessage);
     }
 
-    private List<SlackField> getSlackFieldsWithRequest(HttpServletRequest request){
+    private List<SlackField> getSlackFields(HttpServletRequest request){
         return slackKeysEnumSet.stream()
                 .map(keys -> keys.addRequest(request))
                 .collect(Collectors.toList());
     }
 
-    private List<SlackField> getSlackFieldsWithMdc(){
+    private List<SlackField> getSlackFields(){
         slackKeysEnumSet.add(SlackKeys.REQUEST_BODY);
         return slackKeysEnumSet.stream()
                 .map(SlackKeys::addMdc)

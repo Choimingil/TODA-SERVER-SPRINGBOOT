@@ -45,7 +45,7 @@ public interface RedisPlugin {
      * @return
      * @param <T>
      */
-    default <T> T getRedis(Claims claims, Class<T> c){
+    default <T> T getRedisWithClaims(Claims claims, Class<T> c){
         if(c.isInstance(getValueOperations().get(claims.getSubject()))){
             @SuppressWarnings ("unchecked") T res = (T) getValueOperations().get(claims.getSubject());
             return res;
@@ -59,7 +59,7 @@ public interface RedisPlugin {
      * @return
      * @param <T>
      */
-    default <T> T getRedis(String key, Class<T> c){
+    default <T> T getRedisWithKey(String key, Class<T> c){
         if(c.isInstance(getValueOperations().get(key))){
             @SuppressWarnings ("unchecked") T res = (T) getValueOperations().get(key);
             return res;
@@ -71,7 +71,7 @@ public interface RedisPlugin {
      * Claims를 매개변수로 Redis에 DB값 저장
      * @param claims
      */
-    default void setRedis(Claims claims){
+    default void setRedisWithClaims(Claims claims){
         UserInfoAllDao userInfoAllDao = getRepository().getUserInfoAll(claims.getSubject());
         getValueOperations().set(claims.getSubject(),userInfoAllDao);
     }
@@ -80,7 +80,7 @@ public interface RedisPlugin {
      * Redis key 매개변수로 Redis에 DB값 저장
      * @param key
      */
-    default void setRedis(String key){
+    default void setRedisWithKey(String key){
         UserInfoAllDao userInfoAllDao = getRepository().getUserInfoAll(key);
         getValueOperations().set(key,userInfoAllDao);
     }

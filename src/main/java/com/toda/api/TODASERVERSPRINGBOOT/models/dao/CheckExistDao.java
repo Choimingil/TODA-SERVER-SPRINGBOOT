@@ -4,6 +4,8 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.base.AbstractModel;
 import com.toda.api.TODASERVERSPRINGBOOT.models.base.BaseModel;
 import lombok.*;
 
+import java.util.Map;
+
 @Getter
 public final class CheckExistDao extends AbstractModel implements BaseModel {
     private int exist;

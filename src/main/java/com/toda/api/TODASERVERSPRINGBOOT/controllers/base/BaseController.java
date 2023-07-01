@@ -1,5 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers.base;
 
-public interface BaseController {
+import java.util.Map;
 
+public interface BaseController {
+    boolean isFail(Map<String,?> map);
 }

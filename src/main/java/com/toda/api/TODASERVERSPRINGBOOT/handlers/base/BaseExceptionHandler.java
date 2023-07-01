@@ -1,6 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.handlers.base;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public interface BaseExceptionHandler {
     /**
@@ -9,7 +10,7 @@ public interface BaseExceptionHandler {
      * @param message
      * @return
      */
-    HashMap<String,?> getErrorResponse(int code, String message);
+//    Map<String,?> getErrorResponse(int code, String message);
 
     /**
      * 예상하지 못한 에러 발생 시 Error Message 생성 메소드

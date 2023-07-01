@@ -3,13 +3,15 @@ package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.ErrorResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.requests.ValidateEmail;
 import com.toda.api.TODASERVERSPRINGBOOT.services.SystemService;
-import com.toda.api.TODASERVERSPRINGBOOT.exceptions.ValidationException;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.MdcProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.utils.Exceptions;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.Success;
 import jakarta.validation.Valid;
+import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,28 +19,23 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
 public class SystemController extends AbstractController implements BaseController {
     private final SystemService systemService;
-    private final MdcProvider mdcProvider;
  
     // 1-2. 이메일 중복 확인 API
     @PostMapping("/email/valid")
     @SetMdcBody
-    public HashMap<String, ?> validateEmail(
+    public Map<String, ?> validateEmail(
             @RequestBody @Valid ValidateEmail validateEmail,
             BindingResult bindingResult
     ) {
-        if(systemService.isValidEmail(validateEmail.getEmail())){
-            SuccessResponse response = new SuccessResponse.Builder(
-                    Success.VALIDATE_EMAIL_SUCCESS.code(),
-                    Success.VALIDATE_EMAIL_SUCCESS.message()
-            ).build();
-            return response.info;
-        }
-        else throw new ValidationException("NOT_VALID_EMAIL_EXCEPTION");
+        if(systemService.isValidEmail(validateEmail.getEmail()))
+            return new SuccessResponse.Builder(Success.VALIDATE_EMAIL_SUCCESS).build().getResponse();
+        else throw new ValidationException("EXIST_EMAIL_EXCEPTION");
     }
 
     // $r->addRoute('GET', '/update', ['LoginController', 'checkUpdate']);                                                     //1-6. 강제 업데이트 API

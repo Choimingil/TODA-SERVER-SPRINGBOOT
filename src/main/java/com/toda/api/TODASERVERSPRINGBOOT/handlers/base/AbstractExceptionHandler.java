@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public abstract class AbstractExceptionHandler implements BaseExceptionHandler {
     protected final Logger logger = LoggerFactory.getLogger(AbstractController.class);
@@ -16,11 +17,11 @@ public abstract class AbstractExceptionHandler implements BaseExceptionHandler {
      * @param message
      * @return
      */
-    @Override
-    public HashMap<String,?> getErrorResponse(int code, String message){
-        ErrorResponse response = new ErrorResponse.Builder(code, message).build();
-        return response.info;
-    }
+//    @Override
+//    public Map<String,?> getErrorResponse(int code, String message){
+//        ErrorResponse response = new ErrorResponse.Builder(code, message).build();
+//        return response.info;
+//    }
 
     /**
      * 예상하지 못한 에러 발생 시 Error Message 생성 메소드 구현
@@ -29,6 +30,11 @@ public abstract class AbstractExceptionHandler implements BaseExceptionHandler {
      */
     @Override
     public String getErrorMsg(Exception e){
-        return "exception type :" + e.getClass() + " \nexception text : " + e.getMessage();
+        StringBuilder sb = new StringBuilder();
+        sb.append("exception type :");
+        sb.append(e.getClass());
+        sb.append(" \nexception text : ");
+        sb.append(e.getMessage());
+        return sb.toString();
     }
 }

@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public final class PasswordValidator implements ConstraintValidator<ValidPassword,String> {
-    private final MdcProvider mdcProvider;
     @Override
     public void initialize(ValidPassword constraintAnnotation) {
         ConstraintValidator.super.initialize(constraintAnnotation);

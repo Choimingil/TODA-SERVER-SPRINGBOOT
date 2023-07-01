@@ -1,13 +1,14 @@
 package com.toda.api.TODASERVERSPRINGBOOT.models.responses;
 
+import com.toda.api.TODASERVERSPRINGBOOT.utils.Exceptions;
+
 import java.util.HashMap;
+import java.util.Map;
 
 public class ErrorResponse extends Response {
-    public HashMap<String,?> info;
-
     private ErrorResponse(Builder builder){
         super(builder);
-        info = builder.response;
+        Map<String, ?> info = builder.response;
     }
 
     public static class Builder extends Response.Builder<Builder>{
@@ -15,6 +16,12 @@ public class ErrorResponse extends Response {
             this.response.put("isSuccess",false);
             this.response.put("code",code);
             this.response.put("message",message);
+        }
+
+        public Builder(Exceptions exceptions){
+            this.response.put("isSuccess",false);
+            this.response.put("code",exceptions.code());
+            this.response.put("message",exceptions.message());
         }
 
         @Override

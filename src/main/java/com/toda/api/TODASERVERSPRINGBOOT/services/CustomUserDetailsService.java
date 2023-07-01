@@ -27,8 +27,8 @@ public class CustomUserDetailsService extends AbstractService implements BaseSer
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        if(!isExistRedis(email)) setRedis(email);
-        UserInfoAllDao userInfoAllDao = getRedis(email, UserInfoAllDao.class);
+        if(!isExistRedis(email)) setRedisWithKey(email);
+        UserInfoAllDao userInfoAllDao = getRedisWithKey(email, UserInfoAllDao.class);
 
         // 비밀번호가 해싱되어있지 않은 경우 인코딩 진행
         if(userInfoAllDao.getPassword().length() < 25){

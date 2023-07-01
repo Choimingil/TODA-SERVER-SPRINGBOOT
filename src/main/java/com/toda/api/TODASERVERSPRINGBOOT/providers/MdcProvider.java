@@ -10,12 +10,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.BindingResult;
 
 import java.util.EnumSet;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
 public final class MdcProvider extends AbstractProvider implements BaseProvider {
-    private final EnumSet<MdcKeys> mdcKeys = EnumSet.allOf(MdcKeys.class);
-    private final EnumSet<MdcKeys> mandatoryKeys = EnumSet.of(
+    private final Set<MdcKeys> mdcKeys = EnumSet.allOf(MdcKeys.class);
+    private final Set<MdcKeys> mandatoryKeys = EnumSet.of(
             MdcKeys.REQUEST_ID,
             MdcKeys.REQUEST_CONTEXT_PATH,
             MdcKeys.REQUEST_URL,

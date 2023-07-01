@@ -32,9 +32,12 @@ public enum Exceptions {
     /**
      * Utils
      */
+    NO_AUTHENTICATION_EXCEPTION(403,"현재 API의 사용 권한이 존재하지 않습니다."),
+    NO_ACCESS_EXCEPTION(403,"현재 API의 사용 권한이 존재하지 않습니다."),
     REDIS_CONNECTION_EXCEPTION(500,"Redis에 정상적으로 등록되지 않았습니다."),
     MDC_SETTING_EXCEPTION(500,"MDC가 정상적으로 설정되지 않았습니다."),
-    SET_BODY_TO_MDC_EXCEPTION(500,"MDC에 Request_body를 넣는 중 오류가 발생했습니다.")
+    SET_BODY_TO_MDC_EXCEPTION(500,"MDC에 Request_body를 넣는 중 오류가 발생했습니다."),
+    UNKNOWN_EXCEPTION(999,"알 수 없는 에러가 발생했습니다.")
     ;
 
     private final int code;
