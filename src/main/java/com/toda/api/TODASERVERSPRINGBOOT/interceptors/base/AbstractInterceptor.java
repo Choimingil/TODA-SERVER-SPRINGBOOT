@@ -1,6 +1,5 @@
 package com.toda.api.TODASERVERSPRINGBOOT.interceptors.base;
 
-import com.toda.api.TODASERVERSPRINGBOOT.exceptions.ValidationException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
@@ -27,9 +26,7 @@ public abstract class AbstractInterceptor implements BaseInterceptor, HandlerInt
             @NotNull HttpServletResponse response,
             @NotNull Object handler
     ) throws Exception {
-        boolean isMdcSet = doPreHandleLogic(request,response,handler);
-        if(!isMdcSet) throw new ValidationException("MDC_SETTING_EXCEPTION");
-        return true;
+        return doPreHandleLogic(request,response,handler);
     }
 
     /**

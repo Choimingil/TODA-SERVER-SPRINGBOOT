@@ -5,6 +5,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.repositories.AuthRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
 import com.toda.api.TODASERVERSPRINGBOOT.plugins.RedisPlugin;
+import jakarta.servlet.ServletException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -27,7 +28,7 @@ public class CustomUserDetailsService extends AbstractService implements BaseSer
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        if(!isExistRedis(email)) setRedisWithKey(email);
+        if(!isExistRedis(email,String.class)) setRedis(email,String.class);
         UserInfoAllDao userInfoAllDao = getRedisWithKey(email, UserInfoAllDao.class);
 
         // 비밀번호가 해싱되어있지 않은 경우 인코딩 진행

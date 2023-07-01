@@ -1,6 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.interceptors;
 
-import com.toda.api.TODASERVERSPRINGBOOT.exceptions.ValidationException;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.interceptors.base.AbstractInterceptor;
 import com.toda.api.TODASERVERSPRINGBOOT.interceptors.base.BaseInterceptor;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.AuthenticationProvider;
@@ -23,9 +23,9 @@ public final class TokenInterceptor extends AbstractInterceptor implements BaseI
         if(!uriProvider.isValidPass(request)){
             String token = tokenProvider.getToken(request);
             Claims claims = tokenProvider.getClaims(token);
-            if(!authenticationProvider.isExistRedis(claims)){
+            if(!authenticationProvider.isExistRedis(claims,Claims.class)){
                 if(!authenticationProvider.isEqualWithDB(claims))
-                    throw new ValidationException("WRONG_TOKEN_DATA_EXCEPTION");
+                    throw new WrongArgException(WrongArgException.of.WRONG_TOKEN_DATA_EXCEPTION);
             }
 
             authenticationProvider.setSecurityContextHolder(token, claims);

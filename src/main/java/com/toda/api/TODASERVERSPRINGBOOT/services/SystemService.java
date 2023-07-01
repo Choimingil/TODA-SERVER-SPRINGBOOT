@@ -3,7 +3,6 @@ package com.toda.api.TODASERVERSPRINGBOOT.services;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.SystemRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
-import com.toda.api.TODASERVERSPRINGBOOT.exceptions.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,7 +14,6 @@ public class SystemService extends AbstractService implements BaseService {
 
     @Transactional
     public boolean isValidEmail(String email){
-        if(!systemRepository.isExistEmail(email)) return true;
-        else throw new ValidationException("EXIST_EMAIL_EXCEPTION");
+        return !systemRepository.isExistEmail(email);
     }
 }

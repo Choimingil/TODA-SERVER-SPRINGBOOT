@@ -1,7 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
-import com.toda.api.TODASERVERSPRINGBOOT.exceptions.ValidationException;
-import com.toda.api.TODASERVERSPRINGBOOT.models.responses.ErrorResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.FailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
@@ -10,7 +10,6 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.requests.LoginRequest;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dto.DecodeTokenResponseDto;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.AuthRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.plugins.RedisPlugin;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.Exceptions;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -45,19 +44,20 @@ public class AuthService extends AbstractService implements BaseService, RedisPl
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        if(!isExistRedis(loginRequest.getId())) throw new ValidationException("REDIS_CONNECTION_EXCEPTION");
-//            return new ErrorResponse.Builder(Exceptions.REDIS_CONNECTION_EXCEPTION).build().getResponse();
-
-        Map<String, String> res = new HashMap<>();
-        res.put("token",tokenProvider.createToken(authentication, getRedisWithKey(loginRequest.getId(), UserInfoAllDao.class)));
-        return res;
+        if(isExistRedis(loginRequest.getId(),String.class)){
+            Map<String, String> res = new HashMap<>();
+            res.put("token",tokenProvider.createToken(authentication, getRedisWithKey(loginRequest.getId(), UserInfoAllDao.class)));
+            return res;
+        }
+        else return new FailResponse.Builder(FailResponse.of.UNKNOWN_EXCEPTION).build().getResponse();
     }
 
     //1-3. 토큰 데이터 추출 API
     @Transactional
     public Map<String,?> decodeToken(String token){
         Claims claims = tokenProvider.getClaims(token);
-        if(!isExistRedis(claims)) setRedisWithClaims(claims);
+        if(!isExistRedis(claims,Claims.class)) setRedis(claims,Claims.class);
+//        if(!isExistRedis(claims,Claims.class)) setRedisWithClaims(claims);
         UserInfoAllDao userInfoAllDao = getRedisWithClaims(claims, UserInfoAllDao.class);
 
         // 토큰 내용과 유저 정보가 같다면 값 리턴
@@ -68,8 +68,7 @@ public class AuthService extends AbstractService implements BaseService, RedisPl
                     .appPw(Integer.parseInt(String.valueOf(claims.get("appPassword"))))
                     .build().toMap();
         }
-        else throw new ValidationException("WRONG_TOKEN_DATA_EXCEPTION");
-//            return new ErrorResponse.Builder(Exceptions.WRONG_TOKEN_DATA_EXCEPTION).build().getResponse();
+        else throw new WrongArgException(WrongArgException.of.WRONG_TOKEN_DATA_EXCEPTION);
     }
 
     @Override

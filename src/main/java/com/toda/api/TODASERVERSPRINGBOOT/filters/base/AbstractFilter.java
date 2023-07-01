@@ -1,6 +1,5 @@
 package com.toda.api.TODASERVERSPRINGBOOT.filters.base;
 
-import com.toda.api.TODASERVERSPRINGBOOT.exceptions.ValidationException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,13 +26,8 @@ public abstract class AbstractFilter extends OncePerRequestFilter implements Bas
             doFilterLogic(request,response);
             filterChain.doFilter(request,response);
         }
-        catch (ValidationException e){
-            logger.error(e.getMessage());
-            getFilterExceptionHandler().setErrorResponse(e.getExceptions(),response);
-        }
         catch (Exception e){
-            logger.error(e.getMessage());
-            getFilterExceptionHandler().sendErrorToSlack(request,response,e);
+            getFilterExceptionHandler().getResponse(request, response, e);
         }
     }
 }

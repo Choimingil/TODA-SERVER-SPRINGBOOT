@@ -1,21 +1,41 @@
 package com.toda.api.TODASERVERSPRINGBOOT.handlers.base;
 
+import com.toda.api.TODASERVERSPRINGBOOT.providers.SlackProvider;
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.HashMap;
 import java.util.Map;
 
 public interface BaseExceptionHandler {
-    /**
-     * ErrorResponse 생성 메소드
-     * @param code
-     * @param message
-     * @return
-     */
-//    Map<String,?> getErrorResponse(int code, String message);
-
     /**
      * 예상하지 못한 에러 발생 시 Error Message 생성 메소드
      * @param e
      * @return
      */
     String getErrorMsg(Exception e);
+
+    /**
+     * Exception 종류 별 실패를 MDC 값을 기준으로 리턴해주는 메소드
+     * @param e
+     * @param elementCode
+     * @param errorMessage
+     * @return
+     */
+    Map<String,?> getResponse(Exception e, int elementCode, String errorMessage);
+
+    /**
+     * Exception 종류 별 실패를 HttpServletRequest 값을 기준으로 리턴해주는 메소드
+     * @param request
+     * @param e
+     * @param elementCode
+     * @param errorMessage
+     * @return
+     */
+    Map<String,?> getResponse(HttpServletRequest request, Exception e, int elementCode, String errorMessage);
+
+    /**
+     * SlackProvider getter
+     * @return
+     */
+    SlackProvider getSlackProvider();
 }

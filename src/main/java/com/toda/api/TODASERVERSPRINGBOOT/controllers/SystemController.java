@@ -3,22 +3,17 @@ package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
-import com.toda.api.TODASERVERSPRINGBOOT.models.responses.ErrorResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.FailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.requests.ValidateEmail;
 import com.toda.api.TODASERVERSPRINGBOOT.services.SystemService;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.MdcProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.Exceptions;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.Success;
 import jakarta.validation.Valid;
-import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -34,8 +29,8 @@ public class SystemController extends AbstractController implements BaseControll
             BindingResult bindingResult
     ) {
         if(systemService.isValidEmail(validateEmail.getEmail()))
-            return new SuccessResponse.Builder(Success.VALIDATE_EMAIL_SUCCESS).build().getResponse();
-        else throw new ValidationException("EXIST_EMAIL_EXCEPTION");
+            return new SuccessResponse.Builder(SuccessResponse.of.VALIDATE_EMAIL_SUCCESS).build().getResponse();
+        else return new FailResponse.Builder(FailResponse.of.EXIST_EMAIL_EXCEPTION).build().getResponse();
     }
 
     // $r->addRoute('GET', '/update', ['LoginController', 'checkUpdate']);                                                     //1-6. 강제 업데이트 API

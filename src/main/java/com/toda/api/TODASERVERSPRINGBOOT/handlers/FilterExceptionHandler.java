@@ -1,11 +1,11 @@
 package com.toda.api.TODASERVERSPRINGBOOT.handlers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.*;
 import com.toda.api.TODASERVERSPRINGBOOT.handlers.base.AbstractExceptionHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.handlers.base.BaseExceptionHandler;
-import com.toda.api.TODASERVERSPRINGBOOT.models.responses.ErrorResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.FailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.SlackProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.Exceptions;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -19,30 +19,52 @@ public final class FilterExceptionHandler extends AbstractExceptionHandler imple
     private final SlackProvider slackProvider;
     private final ObjectMapper objectMapper;
 
-    public void setErrorResponse(HttpServletResponse response, int code, String message) throws IOException {
-        sendResponse(response,code,message);
-    }
-
-    public void setErrorResponse(Exceptions exceptions, HttpServletResponse response) throws IOException {
-        sendResponse(response,exceptions.code(),exceptions.message());
-    }
-
-    public void sendErrorToSlack(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Exception e
-    ) throws IOException {
-        slackProvider.doSlack(request,e);
-        sendResponse(response,999,getErrorMsg(e));
-    }
-
-    private void sendResponse(HttpServletResponse response, int code, String msg) throws IOException {
+    public void getResponse(HttpServletRequest request, HttpServletResponse response, Exception e) throws IOException {
         response.setStatus(200);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        String jsonResponse = objectMapper.writeValueAsString(
-                new ErrorResponse.Builder(code,msg).build().getResponse()
-        );
+
+        String jsonResponse;
+        if(e.getClass() == JwtAccessDeniedException.class){
+            JwtAccessDeniedException exception = (JwtAccessDeniedException) e;
+            jsonResponse = objectMapper.writeValueAsString(
+                    getResponse(request,exception,exception.getCode(),exception.getMessage())
+            );
+        }
+        else if(e.getClass() == JwtAuthenticationException.class){
+            JwtAuthenticationException exception = (JwtAuthenticationException) e;
+            jsonResponse = objectMapper.writeValueAsString(
+                    getResponse(request,exception,exception.getCode(),exception.getMessage())
+            );
+        }
+        else if(e.getClass() == NoArgException.class){
+            NoArgException exception = (NoArgException) e;
+            jsonResponse = objectMapper.writeValueAsString(
+                    getResponse(request,exception,exception.getElement().getCode(),exception.getElement().getMessage())
+            );
+        }
+        else if(e.getClass() == WrongArgException.class){
+            WrongArgException exception = (WrongArgException) e;
+            jsonResponse = objectMapper.writeValueAsString(
+                    getResponse(request,exception,exception.getElement().getCode(),exception.getElement().getMessage())
+            );
+        }
+        else if(e.getClass() == NoBodyException.class){
+            NoBodyException exception = (NoBodyException) e;
+            jsonResponse = objectMapper.writeValueAsString(
+                    getResponse(request,exception,exception.getElement().getCode(),exception.getElement().getMessage())
+            );
+        }
+        else{
+            jsonResponse = objectMapper.writeValueAsString(
+                    getResponse(request,e,FailResponse.of.UNKNOWN_EXCEPTION.getCode(), e.getMessage())
+            );
+        }
         response.getWriter().write(jsonResponse);
+    }
+
+    @Override
+    public SlackProvider getSlackProvider() {
+        return slackProvider;
     }
 }

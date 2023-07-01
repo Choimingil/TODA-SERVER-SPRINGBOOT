@@ -3,16 +3,12 @@ package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
-import com.toda.api.TODASERVERSPRINGBOOT.models.responses.ErrorResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dto.DecodeTokenResponseDto;
 import com.toda.api.TODASERVERSPRINGBOOT.models.requests.CheckToken;
 import com.toda.api.TODASERVERSPRINGBOOT.models.requests.LoginRequest;
 import com.toda.api.TODASERVERSPRINGBOOT.services.AuthService;
-import com.toda.api.TODASERVERSPRINGBOOT.exceptions.ValidationException;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.Exceptions;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.Success;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
@@ -35,7 +31,7 @@ public class AuthController extends AbstractController implements BaseController
         Map<String,?> createJwtResult = authService.createJwt(loginRequest);
         if(isFail(createJwtResult)) return createJwtResult;
 
-        return new SuccessResponse.Builder(Success.LOGIN_SUCCESS)
+        return new SuccessResponse.Builder(SuccessResponse.of.LOGIN_SUCCESS)
                 .add("result",createJwtResult.get("token"))
                 .build().getResponse();
     }
@@ -48,7 +44,7 @@ public class AuthController extends AbstractController implements BaseController
         Map<String,?> checkTokenResult = authService.decodeToken(token);
         if(isFail(checkTokenResult)) return checkTokenResult;
 
-        return new SuccessResponse.Builder(Success.DECODE_TOKEN_SUCCESS)
+        return new SuccessResponse.Builder(SuccessResponse.of.DECODE_TOKEN_SUCCESS)
                 .add("id",checkTokenResult.get("id"))
                 .add("pw",checkTokenResult.get("pw"))
                 .add("appPw",checkTokenResult.get("appPw"))
@@ -67,14 +63,14 @@ public class AuthController extends AbstractController implements BaseController
         if(isFail(checkTokenResult)) return checkTokenResult;
         if(checkToken == null){
             if((int) checkTokenResult.get("appPw") == 10000)
-                return new SuccessResponse.Builder(Success.CHECK_TOKEN_SUCCESS).build().getResponse();
-            else throw new ValidationException("WRONG_APP_PASSWORD_EXCEPTION");
+                return new SuccessResponse.Builder(SuccessResponse.of.CHECK_TOKEN_SUCCESS).build().getResponse();
+            else throw new WrongArgException(WrongArgException.of.WRONG_APP_PASSWORD_EXCEPTION);
         }
         else{
             int appPw = Integer.parseInt(checkToken.getAppPW());
             if((int) checkTokenResult.get("appPw") == appPw)
-                return new SuccessResponse.Builder(Success.CHECK_TOKEN_SUCCESS).build().getResponse();
-            else throw new ValidationException("WRONG_APP_PASSWORD_EXCEPTION");
+                return new SuccessResponse.Builder(SuccessResponse.of.CHECK_TOKEN_SUCCESS).build().getResponse();
+            else throw new WrongArgException(WrongArgException.of.WRONG_APP_PASSWORD_EXCEPTION);
         }
     }
 }

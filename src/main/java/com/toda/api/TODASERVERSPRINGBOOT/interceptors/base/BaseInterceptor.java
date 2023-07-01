@@ -2,7 +2,6 @@ package com.toda.api.TODASERVERSPRINGBOOT.interceptors.base;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.web.servlet.ModelAndView;
 
 public interface BaseInterceptor {
     /**

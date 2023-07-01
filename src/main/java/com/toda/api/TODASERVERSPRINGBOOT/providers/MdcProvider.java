@@ -1,6 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.providers;
 
-import com.toda.api.TODASERVERSPRINGBOOT.exceptions.ValidationException;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.utils.MdcKeys;
@@ -40,7 +40,7 @@ public final class MdcProvider extends AbstractProvider implements BaseProvider 
     }
 
     public void setBody(BindingResult bindingResult){
-        if(bindingResult.hasErrors()) throw new ValidationException("WRONG_BODY_EXCEPTION");
+        if(bindingResult.hasErrors()) throw new WrongArgException(WrongArgException.of.WRONG_BODY_EXCEPTION);
         mdcKeys.add(MdcKeys.REQUEST_BODY);
         MdcKeys.REQUEST_BODY.add(bindingResult, logger);
     }

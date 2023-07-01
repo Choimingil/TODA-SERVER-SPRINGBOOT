@@ -1,6 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.plugins;
 
-import com.toda.api.TODASERVERSPRINGBOOT.exceptions.ValidationException;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDao;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.AuthRepository;
 import io.jsonwebtoken.Claims;
@@ -8,20 +8,20 @@ import org.springframework.data.redis.core.ValueOperations;
 
 public interface RedisPlugin {
     /**
-     * Claims를 매개변수로 Redis에 값이 존재하는지 체크
-     * @param claims
+     * Redis에 값이 존재하는지 체크
+     * @param obj
+     * @param clazz
      * @return
+     * @param <T>
      */
-    default boolean isExistRedis(Claims claims){
-        return getValueOperations().get(claims.getSubject()) != null;
-    }
+    default <T> boolean isExistRedis(T obj, Class<T> clazz) {
+        String key = "";
+        if(clazz == Claims.class){
+            Claims claims = (Claims) obj;
+            key = claims.getSubject();
+        }
+        else if(clazz == String.class) key = (String) obj;
 
-    /**
-     * Redis key를 매개변수로 Redis에 값이 존재하는지 체크
-     * @param key
-     * @return
-     */
-    default boolean isExistRedis(String key){
         return getValueOperations().get(key) != null;
     }
 
@@ -50,7 +50,7 @@ public interface RedisPlugin {
             @SuppressWarnings ("unchecked") T res = (T) getValueOperations().get(claims.getSubject());
             return res;
         }
-        else throw new ValidationException("WRONG_TYPE_EXCEPTION");
+        else throw new WrongArgException(WrongArgException.of.WRONG_TYPE_EXCEPTION);
     }
 
     /**
@@ -64,23 +64,29 @@ public interface RedisPlugin {
             @SuppressWarnings ("unchecked") T res = (T) getValueOperations().get(key);
             return res;
         }
-        else throw new ValidationException("WRONG_TYPE_EXCEPTION");
+        else throw new WrongArgException(WrongArgException.of.WRONG_TYPE_EXCEPTION);
     }
 
     /**
-     * Claims를 매개변수로 Redis에 DB값 저장
-     * @param claims
+     *
+     * class.isInstance : 이 클래스가 특정 클래스 또는 그 클래스의 하위 클래스인지 여부를 확인할 때 사용
+     * 장점 : 비교 클래스가 클래스 리터럴 상태가 아니어도 비교 가능
+     * 단점 : 정적으로 컴파일 시간에 알려진 클래스일 경우 클래스 리터럴을 이용해서 비교 불가
+     * == : 두 클래스가 같은지 확인
+     * 장점 : 클래스 리터럴을 이용해서 타입 비교 가능
+     * 단점 : 클래스 리터럴 상태가 아닐 경우 비교 불가
+     * @param obj
+     * @param clazz
+     * @param <T>
      */
-    default void setRedisWithClaims(Claims claims){
-        UserInfoAllDao userInfoAllDao = getRepository().getUserInfoAll(claims.getSubject());
-        getValueOperations().set(claims.getSubject(),userInfoAllDao);
-    }
+    default <T> void setRedis(T obj, Class<T> clazz){
+        String key = "";
+        if(clazz == Claims.class){
+            Claims claims = (Claims) obj;
+            key = claims.getSubject();
+        }
+        else if(clazz == String.class) key = (String) obj;
 
-    /**
-     * Redis key 매개변수로 Redis에 DB값 저장
-     * @param key
-     */
-    default void setRedisWithKey(String key){
         UserInfoAllDao userInfoAllDao = getRepository().getUserInfoAll(key);
         getValueOperations().set(key,userInfoAllDao);
     }

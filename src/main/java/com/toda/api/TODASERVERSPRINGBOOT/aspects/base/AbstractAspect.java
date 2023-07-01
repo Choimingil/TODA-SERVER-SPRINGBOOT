@@ -1,6 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.aspects.base;
 
-import com.toda.api.TODASERVERSPRINGBOOT.exceptions.ValidationException;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
@@ -24,9 +25,9 @@ public abstract class AbstractAspect implements BaseAspect{
                 .filter(i -> parameterNames[i].equals(paramName))
                 .mapToObj(i -> {
                     if (clazz.isInstance(args.get(i))) return (T) args.get(i);
-                    else throw new ValidationException("WRONG_TYPE_EXCEPTION");
+                    else throw new WrongArgException(WrongArgException.of.WRONG_TYPE_EXCEPTION);
                 })
                 .findFirst()
-                .orElseThrow(() -> new ValidationException("SET_BODY_TO_MDC_EXCEPTION"));
+                .orElseThrow(() -> new WrongAccessException(WrongAccessException.of.SET_BODY_TO_MDC_EXCEPTION));
     }
 }
