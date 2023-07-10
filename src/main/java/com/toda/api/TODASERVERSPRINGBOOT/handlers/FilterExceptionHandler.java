@@ -25,41 +25,66 @@ public final class FilterExceptionHandler extends AbstractExceptionHandler imple
         response.setCharacterEncoding("UTF-8");
 
         String jsonResponse;
+
+        /**
+         * JwtAccessDeniedException Handler
+         */
         if(e.getClass() == JwtAccessDeniedException.class){
             JwtAccessDeniedException exception = (JwtAccessDeniedException) e;
             jsonResponse = objectMapper.writeValueAsString(
                     getResponse(request,exception,exception.getCode(),exception.getMessage())
             );
         }
+
+        /**
+         * JwtAuthenticationException Handler
+         */
         else if(e.getClass() == JwtAuthenticationException.class){
             JwtAuthenticationException exception = (JwtAuthenticationException) e;
             jsonResponse = objectMapper.writeValueAsString(
                     getResponse(request,exception,exception.getCode(),exception.getMessage())
             );
         }
+
+        /**
+         * NoArgException Handler
+         */
         else if(e.getClass() == NoArgException.class){
             NoArgException exception = (NoArgException) e;
             jsonResponse = objectMapper.writeValueAsString(
                     getResponse(request,exception,exception.getElement().getCode(),exception.getElement().getMessage())
             );
         }
+
+        /**
+         * WrongArgException Handler
+         */
         else if(e.getClass() == WrongArgException.class){
             WrongArgException exception = (WrongArgException) e;
             jsonResponse = objectMapper.writeValueAsString(
                     getResponse(request,exception,exception.getElement().getCode(),exception.getElement().getMessage())
             );
         }
+
+        /**
+         * NoBodyException Handler
+         */
         else if(e.getClass() == NoBodyException.class){
             NoBodyException exception = (NoBodyException) e;
             jsonResponse = objectMapper.writeValueAsString(
                     getResponse(request,exception,exception.getElement().getCode(),exception.getElement().getMessage())
             );
         }
+
+        /**
+         * Rest Exceptions Handler
+         */
         else{
             jsonResponse = objectMapper.writeValueAsString(
                     getResponse(request,e,FailResponse.of.UNKNOWN_EXCEPTION.getCode(), e.getMessage())
             );
         }
+
         response.getWriter().write(jsonResponse);
     }
 

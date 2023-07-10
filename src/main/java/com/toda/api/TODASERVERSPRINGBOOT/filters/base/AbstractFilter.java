@@ -1,6 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.filters.base;
 
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
@@ -21,13 +22,23 @@ public abstract class AbstractFilter extends OncePerRequestFilter implements Bas
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
+    ) throws IOException, ServletException {
+        doFilterLogic(request,response);
+        filterChain.doFilter(request,response);
+    }
+
+    /**
+     * Filter ExceptionHandler
+     * @param request
+     * @param response
+     * @param e
+     * @throws IOException
+     */
+    protected void throwException(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            Exception e
     ) throws IOException {
-        try{
-            doFilterLogic(request,response);
-            filterChain.doFilter(request,response);
-        }
-        catch (Exception e){
-            getFilterExceptionHandler().getResponse(request, response, e);
-        }
+        getFilterExceptionHandler().getResponse(request, response, e);
     }
 }

@@ -1,5 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
@@ -27,7 +28,7 @@ public class AuthController extends AbstractController implements BaseController
     public Map<String,?> createJwt(
             @RequestBody LoginRequest loginRequest,
             BindingResult bindingResult
-    ) {
+    ) throws InvalidProtocolBufferException {
         Map<String,?> createJwtResult = authService.createJwt(loginRequest);
         if(isFail(createJwtResult)) return createJwtResult;
 
@@ -40,7 +41,7 @@ public class AuthController extends AbstractController implements BaseController
     @GetMapping("/token")
     public Map<String,?> decodeToken(
             @RequestHeader(TokenProvider.HEADER_NAME) String token
-    ) {
+    ) throws InvalidProtocolBufferException {
         Map<String,?> checkTokenResult = authService.decodeToken(token);
         if(isFail(checkTokenResult)) return checkTokenResult;
 
@@ -58,7 +59,7 @@ public class AuthController extends AbstractController implements BaseController
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
             @RequestBody @Nullable CheckToken checkToken,
             BindingResult bindingResult
-    ) {
+    ) throws InvalidProtocolBufferException {
         Map<String,?> checkTokenResult = authService.decodeToken(token);
         if(isFail(checkTokenResult)) return checkTokenResult;
         if(checkToken == null){

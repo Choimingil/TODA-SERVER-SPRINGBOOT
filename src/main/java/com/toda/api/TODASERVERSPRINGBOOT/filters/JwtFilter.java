@@ -28,8 +28,8 @@ public final class JwtFilter extends AbstractFilter implements BaseFilter {
         // 토큰이 필요 없는 API는 패스
         if(!uriProvider.isValidPass(request)){
             String token = tokenProvider.getToken(request);
-            if(!tokenProvider.isExistHeader(token)) throw new NoArgException(NoArgException.of.NO_HEADER_EXCEPTION);
-            if(!tokenProvider.isValidHeader(token)) throw new WrongArgException(WrongArgException.of.WRONG_HEADER_EXCEPTION);
+            if(!tokenProvider.isExistHeader(token)) throwException(request,response,new NoArgException(NoArgException.of.NO_HEADER_EXCEPTION));
+            if(!tokenProvider.isValidHeader(token)) throwException(request,response,new WrongArgException(WrongArgException.of.WRONG_HEADER_EXCEPTION));
         }
     }
 

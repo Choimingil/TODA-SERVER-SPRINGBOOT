@@ -1,0 +1,11 @@
+syntax = "proto3";
+option java_outer_classname = "UserInfoProto";
+
+message UserInfo {
+  int64 userID = 1;
+  string userCode = 2;
+  string email = 3;
+  string password = 4;
+  string userName = 5;
+  string appPassword = 6;
+}

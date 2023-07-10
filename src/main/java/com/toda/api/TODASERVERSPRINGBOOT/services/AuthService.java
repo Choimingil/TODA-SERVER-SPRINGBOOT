@@ -1,5 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.FailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
@@ -17,7 +18,10 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,35 +34,29 @@ public class AuthService extends AbstractService implements BaseService, RedisPl
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final TokenProvider tokenProvider;
     private final AuthRepository authRepository;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, byte[]> redisTemplate;
 
     //1. 자체 로그인 API
     @Transactional
-    public Map<String,?> createJwt(LoginRequest loginRequest) {
-        UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getId(),
-                        loginRequest.getPw()
-                );
+    public Map<String,?> createJwt(LoginRequest loginRequest) throws InvalidProtocolBufferException {
+        String email = loginRequest.getId();
+        String pw = loginRequest.getPw();
 
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(email,pw);
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
+        UserInfoAllDao userInfoAllDao = getUserInfo(loginRequest.getId());
 
-        if(isExistRedis(loginRequest.getId(),String.class)){
-            Map<String, String> res = new HashMap<>();
-            res.put("token",tokenProvider.createToken(authentication, getRedisWithKey(loginRequest.getId(), UserInfoAllDao.class)));
-            return res;
-        }
-        else return new FailResponse.Builder(FailResponse.of.UNKNOWN_EXCEPTION).build().getResponse();
+        Map<String, String> res = new HashMap<>();
+        res.put("token",tokenProvider.createToken(authentication, userInfoAllDao));
+        return res;
     }
 
     //1-3. 토큰 데이터 추출 API
     @Transactional
-    public Map<String,?> decodeToken(String token){
+    public Map<String,?> decodeToken(String token) throws InvalidProtocolBufferException {
         Claims claims = tokenProvider.getClaims(token);
-        if(!isExistRedis(claims,Claims.class)) setRedis(claims,Claims.class);
-//        if(!isExistRedis(claims,Claims.class)) setRedisWithClaims(claims);
-        UserInfoAllDao userInfoAllDao = getRedisWithClaims(claims, UserInfoAllDao.class);
+        UserInfoAllDao userInfoAllDao = getUserInfo(claims.getSubject());
 
         // 토큰 내용과 유저 정보가 같다면 값 리턴
         if(userInfoAllDao.isSameTokenAttributes(claims)){
@@ -72,7 +70,7 @@ public class AuthService extends AbstractService implements BaseService, RedisPl
     }
 
     @Override
-    public ValueOperations<String, Object> getValueOperations() {
+    public ValueOperations<String, byte[]> getValueOperations() {
         return redisTemplate.opsForValue();
     }
 

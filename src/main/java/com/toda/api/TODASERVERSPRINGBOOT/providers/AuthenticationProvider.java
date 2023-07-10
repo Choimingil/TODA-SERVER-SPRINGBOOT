@@ -23,10 +23,8 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public final class AuthenticationProvider extends AbstractProvider implements BaseProvider, RedisPlugin {
+public final class AuthenticationProvider extends AbstractProvider implements BaseProvider {
     public static final String AUTHORITIES_KEY = "auth";
-    private final AuthRepository authRepository;
-    private final RedisTemplate<String, Object> redisTemplate;
 
     /**
      * Authentication을 SecurityContextHolder에 저장
@@ -55,16 +53,6 @@ public final class AuthenticationProvider extends AbstractProvider implements Ba
 
         // 최종적으로 Authentication 객체 리턴
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
-    }
-
-    @Override
-    public ValueOperations<String, Object> getValueOperations() {
-        return redisTemplate.opsForValue();
-    }
-
-    @Override
-    public AuthRepository getRepository() {
-        return authRepository;
     }
 
     @Override

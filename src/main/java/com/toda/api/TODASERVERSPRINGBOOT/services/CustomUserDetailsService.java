@@ -1,11 +1,12 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDao;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.AuthRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
 import com.toda.api.TODASERVERSPRINGBOOT.plugins.RedisPlugin;
-import jakarta.servlet.ServletException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -23,13 +24,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class CustomUserDetailsService extends AbstractService implements BaseService, UserDetailsService, RedisPlugin {
     private final AuthRepository authRepository;
     private final PasswordEncoder passwordEncoder;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, byte[]> redisTemplate;
 
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        if(!isExistRedis(email,String.class)) setRedis(email,String.class);
-        UserInfoAllDao userInfoAllDao = getRedisWithKey(email, UserInfoAllDao.class);
+        // 저장된 유저 정보
+        UserInfoAllDao userInfoAllDao = null;
+        try {
+            userInfoAllDao = getUserInfo(email);
+        } catch (InvalidProtocolBufferException e) {
+            throw new WrongArgException(WrongArgException.of.WRONG_BODY_EXCEPTION);
+        }
 
         // 비밀번호가 해싱되어있지 않은 경우 인코딩 진행
         if(userInfoAllDao.getPassword().length() < 25){
@@ -46,7 +52,7 @@ public class CustomUserDetailsService extends AbstractService implements BaseSer
     }
 
     @Override
-    public ValueOperations<String, Object> getValueOperations() {
+    public ValueOperations<String, byte[]> getValueOperations() {
         return redisTemplate.opsForValue();
     }
 
@@ -54,4 +60,6 @@ public class CustomUserDetailsService extends AbstractService implements BaseSer
     public AuthRepository getRepository() {
         return authRepository;
     }
+
+
 }

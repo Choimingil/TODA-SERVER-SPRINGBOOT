@@ -1,11 +1,8 @@
 package com.toda.api.TODASERVERSPRINGBOOT.exceptions;
 
-import jakarta.servlet.ServletException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataAccessException;
-
 
 @AllArgsConstructor
 @Getter

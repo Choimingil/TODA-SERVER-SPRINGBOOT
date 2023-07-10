@@ -37,3 +37,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Proto Buffer ###
+/src/main/java/com/toda/api/TODASERVERSPRINGBOOT/protobufs/
+/src/main/java/com/toda/api/TODASERVERSPRINGBOOT/models/dao/UserInfoProto.java
