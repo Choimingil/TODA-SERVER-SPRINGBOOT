@@ -19,9 +19,9 @@ public final class UriFilter extends AbstractFilter implements BaseFilter {
     private final UriProvider uriProvider;
 
     @Override
-    public void doFilterLogic(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void doFilterLogic(HttpServletRequest request, HttpServletResponse response) {
         logger.info("1. URI 유효성 검사");
-        if(!uriProvider.isValidUri(request)) throwException(request,response,new NoArgException(NoArgException.of.NO_URI_EXCEPTION));
+        if(!uriProvider.isValidUri(request)) throw new NoArgException(NoArgException.of.NO_URI_EXCEPTION);
     }
 
     @Override

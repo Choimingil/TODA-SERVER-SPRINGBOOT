@@ -1,4 +1,5 @@
 syntax = "proto3";
+option java_package = "com.toda.api.TODASERVERSPRINGBOOT.models.dao";
 option java_outer_classname = "UserInfoProto";
 
 message UserInfo {

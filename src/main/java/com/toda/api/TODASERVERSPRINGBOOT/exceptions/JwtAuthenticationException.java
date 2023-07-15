@@ -7,8 +7,8 @@ import org.springframework.security.core.AuthenticationException;
 public final class JwtAuthenticationException extends AuthenticationException {
     public JwtAuthenticationException(String msg) {
         super(msg);
-        this.code = 403;
-        this.message = "현재 API의 사용 권한이 존재하지 않습니다.";
+        this.code = 401;
+        this.message = "토큰 인증이 실패했습니다.";
     }
 
     private final int code;

@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 public abstract class AbstractExceptionHandler implements BaseExceptionHandler {
-    protected final Logger logger = LoggerFactory.getLogger(AbstractController.class);
+    protected final Logger logger = LoggerFactory.getLogger(AbstractExceptionHandler.class);
 
     /**
      * Exception 종류 별 실패를 MDC 값을 기준으로 리턴해주는 골격 메소드

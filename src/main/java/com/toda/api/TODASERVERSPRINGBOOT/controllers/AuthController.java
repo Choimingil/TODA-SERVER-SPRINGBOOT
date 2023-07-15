@@ -29,11 +29,9 @@ public class AuthController extends AbstractController implements BaseController
             @RequestBody LoginRequest loginRequest,
             BindingResult bindingResult
     ) throws InvalidProtocolBufferException {
-        Map<String,?> createJwtResult = authService.createJwt(loginRequest);
-        if(isFail(createJwtResult)) return createJwtResult;
-
+        String jwt = authService.createJwt(loginRequest);
         return new SuccessResponse.Builder(SuccessResponse.of.LOGIN_SUCCESS)
-                .add("result",createJwtResult.get("token"))
+                .add("result",jwt)
                 .build().getResponse();
     }
 

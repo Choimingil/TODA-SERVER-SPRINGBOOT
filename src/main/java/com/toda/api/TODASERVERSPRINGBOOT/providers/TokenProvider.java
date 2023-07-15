@@ -9,14 +9,19 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.security.Key;
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.stream.Collectors;
 
@@ -24,6 +29,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public final class TokenProvider extends AbstractProvider implements BaseProvider {
     public static final String HEADER_NAME = "x-access-token";
+    private static final String AUTHORITIES_KEY = "auth";
     private Key key;
     @Value("${jwt.secret}")
     private String secret;
@@ -96,7 +102,7 @@ public final class TokenProvider extends AbstractProvider implements BaseProvide
                 .claim("email",userInfoAllDao.getEmail())
                 .claim("userName",userInfoAllDao.getUserName())
                 .claim("appPassword",userInfoAllDao.getAppPassword())
-                .claim(AuthenticationProvider.AUTHORITIES_KEY,authorities)
+                .claim(AUTHORITIES_KEY,authorities)
                 .signWith(key, SignatureAlgorithm.HS512)
                 .setExpiration(validity)
                 .compact();
@@ -120,5 +126,39 @@ public final class TokenProvider extends AbstractProvider implements BaseProvide
     private Date getValidity(){
         long now = Instant.now().toEpochMilli();
         return new Date(now + tokenValidityInMilliseconds);
+    }
+
+    /**
+     * Authentication을 SecurityContextHolder에 저장
+     * @param token
+     */
+    public void setSecurityContextHolder(String token){
+        SecurityContextHolder.getContext().setAuthentication(getAuthentication(token));
+    }
+
+    /**
+     * 토큰에 담겨있는 정보를 이용해 Authentication 객체 리턴
+     * @param token
+     * @return
+     */
+    private Authentication getAuthentication(String token){
+        Claims claims = Jwts
+                .parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        // claim을 이용하여 authorities 생성
+        Collection<? extends GrantedAuthority> authorities =
+                Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(Collectors.toList());
+
+        // claim과 authorities 이용하여 User 객체 생성
+        User principal = new User(claims.getSubject(), "", authorities);
+
+        // 최종적으로 Authentication 객체 리턴
+        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
 }

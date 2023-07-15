@@ -1,5 +1,8 @@
 package com.toda.api.TODASERVERSPRINGBOOT.filters.base;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,8 +26,13 @@ public abstract class AbstractFilter extends OncePerRequestFilter implements Bas
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws IOException, ServletException {
-        doFilterLogic(request,response);
-        filterChain.doFilter(request,response);
+        try {
+            doFilterLogic(request,response);
+            filterChain.doFilter(request,response);
+        }
+        catch(Exception e){
+            throwException(request,response,e);
+        }
     }
 
     /**
