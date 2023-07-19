@@ -18,14 +18,13 @@ public abstract class AbstractInterceptor implements BaseInterceptor, HandlerInt
      * @param response current HTTP response
      * @param handler chosen handler to execute, for type and/or instance evaluation
      * @return
-     * @throws Exception
      */
     @Override
     public boolean preHandle(
             @NotNull HttpServletRequest request,
             @NotNull HttpServletResponse response,
             @NotNull Object handler
-    ) throws Exception {
+    ) {
         return doPreHandleLogic(request,response,handler);
     }
 
@@ -37,7 +36,6 @@ public abstract class AbstractInterceptor implements BaseInterceptor, HandlerInt
      * execution, for type and/or instance examination
      * @param modelAndView the {@code ModelAndView} that the handler returned
      * (can also be {@code null})
-     * @throws Exception
      */
     @Override
     public void postHandle(
@@ -45,7 +43,7 @@ public abstract class AbstractInterceptor implements BaseInterceptor, HandlerInt
             @NotNull HttpServletResponse response,
             @NotNull Object handler,
             ModelAndView modelAndView
-    ) throws Exception {
+    ) {
         doPostHandleLogic(request,response,handler);
     }
 

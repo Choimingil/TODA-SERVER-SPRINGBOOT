@@ -45,17 +45,6 @@ public final class UserInfoAllDao extends AbstractModel implements BaseModel {
                 ((String) claims.get("appPassword")).equals(appPassword);
     }
 
-    public static UserInfoAllDao mapRow(ResultSet rs, int rowNum) throws SQLException {
-        long userID = rs.getLong("userID");
-        String userCode = rs.getString("userCode");
-        String email = rs.getString("email");
-        String password = rs.getString("password");
-        String userName = rs.getString("userName");
-        String appPassword = rs.getString("appPassword");
-
-        return new UserInfoAllDao(userID, userCode, email, password, userName, appPassword);
-    }
-
     @Override
     public String toString(){
         StringBuilder sb = new StringBuilder();

@@ -18,14 +18,13 @@ public abstract class AbstractFilter extends OncePerRequestFilter implements Bas
      * @param request
      * @param response
      * @param filterChain
-     * @throws IOException
      */
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
-    ) throws IOException, ServletException {
+    ) {
         try {
             doFilterLogic(request,response);
             filterChain.doFilter(request,response);
@@ -40,13 +39,12 @@ public abstract class AbstractFilter extends OncePerRequestFilter implements Bas
      * @param request
      * @param response
      * @param e
-     * @throws IOException
      */
     protected void throwException(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             Exception e
-    ) throws IOException {
+    ) {
         getFilterExceptionHandler().getResponse(request, response, e);
     }
 }

@@ -1,5 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.providers;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDao;
@@ -12,15 +13,19 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+
 @Component
 @RequiredArgsConstructor
-public final class RedisProvider extends AbstractProvider implements BaseProvider {
+public class RedisProvider extends AbstractProvider implements BaseProvider {
     private final AuthRepository authRepository;
     private final RedisTemplate<String, byte[]> redisTemplate;
     private static UserInfoAllDao userInfo = null;
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
 
     }
 
@@ -30,12 +35,22 @@ public final class RedisProvider extends AbstractProvider implements BaseProvide
      * @return
      */
     private UserInfoAllDao getRedis(String key) {
-        byte[] bytes = redisTemplate.opsForValue().get(key);
-        if(bytes == null) return null;
-
         try {
+            return getRedisFuture(key).get();
+        }
+        catch (ExecutionException | InterruptedException e){
+            throw new WrongAccessException(WrongAccessException.of.REDIS_CONNECTION_EXCEPTION);
+        }
+    }
+
+    @Async
+    private Future<UserInfoAllDao> getRedisFuture(String key) {
+        try {
+            byte[] bytes = redisTemplate.opsForValue().get(key);
+            if(bytes == null) return null;
+
             UserInfoProto.UserInfo userProto = UserInfoProto.UserInfo.parseFrom(bytes);
-            return UserInfoAllDao.builder()
+            UserInfoAllDao userInfoAllDao = UserInfoAllDao.builder()
                     .userID(userProto.getUserID())
                     .userCode(userProto.getUserCode())
                     .email(userProto.getEmail())
@@ -43,8 +58,9 @@ public final class RedisProvider extends AbstractProvider implements BaseProvide
                     .userName(userProto.getUserName())
                     .appPassword(userProto.getAppPassword())
                     .build();
+            return CompletableFuture.completedFuture(userInfoAllDao);
         }
-        catch (Exception e){
+        catch (InvalidProtocolBufferException e){
             throw new WrongAccessException(WrongAccessException.of.REDIS_CONNECTION_EXCEPTION);
         }
     }
@@ -59,6 +75,7 @@ public final class RedisProvider extends AbstractProvider implements BaseProvide
      * 단점 : 클래스 리터럴 상태가 아닐 경우 비교 불가
      * @param key
      */
+    @Async
     private void setRedis(String key){
         UserInfoAllDao userInfoAllDao = authRepository.getUserInfoAll(key);
         UserInfoProto.UserInfo userProto = UserInfoProto.UserInfo.newBuilder()
@@ -71,6 +88,21 @@ public final class RedisProvider extends AbstractProvider implements BaseProvide
                 .build();
         redisTemplate.opsForValue().set(key,userProto.toByteArray());
     }
+
+//    public void publishMessage(String key) {
+//        UserInfoAllDao userInfoAllDao = authRepository.getUserInfoAll(key);
+//        UserInfoProto.UserInfo userProto = UserInfoProto.UserInfo.newBuilder()
+//                .setUserID(userInfoAllDao.getUserID())
+//                .setUserCode(userInfoAllDao.getUserCode())
+//                .setEmail(userInfoAllDao.getEmail())
+//                .setPassword(userInfoAllDao.getPassword())
+//                .setUserName(userInfoAllDao.getUserName())
+//                .setAppPassword(userInfoAllDao.getAppPassword())
+//                .build();
+//
+//        byte[] serializedMessage = userProto.toByteArray();
+//        redisTemplate.convertAndSend(channelTopic.getTopic(), serializedMessage);
+//    }
 
     // 비밀번호 변경 기능 개발 시 resetRedis 추가
 

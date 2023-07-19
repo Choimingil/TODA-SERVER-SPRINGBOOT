@@ -12,7 +12,7 @@ public interface BaseFilter {
      * @param request
      * @param response
      */
-    void doFilterLogic(HttpServletRequest request, HttpServletResponse response) throws IOException;
+    void doFilterLogic(HttpServletRequest request, HttpServletResponse response);
 
     /**
      * FilterExceptionHandler getter

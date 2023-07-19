@@ -1,5 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.config;
 
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.filters.JwtFilter;
 import com.toda.api.TODASERVERSPRINGBOOT.filters.UriFilter;
 import com.toda.api.TODASERVERSPRINGBOOT.handlers.JwtAccessDeniedHandler;
@@ -39,33 +40,39 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+        try {
+            http
 //                 토큰을 사용하기 때문에 csrf 설정 disable
-                .csrf(AbstractHttpConfigurer::disable)
+                    .csrf(AbstractHttpConfigurer::disable)
 
 //                 예외 처리 시 직접 만들었던 클래스 추가
-                .exceptionHandling((exceptionHandling) -> exceptionHandling
-                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-                        .accessDeniedHandler(jwtAccessDeniedHandler)
-                )
+                    .exceptionHandling((exceptionHandling) -> exceptionHandling
+                            .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                            .accessDeniedHandler(jwtAccessDeniedHandler)
+                    )
 
 //                 세션 사용하지 않기 때문에 세션 설정 STATELESS
-                .sessionManagement((sessionManagement) -> sessionManagement
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+                    .sessionManagement((sessionManagement) -> sessionManagement
+                            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                    )
 
 //                 토큰이 없는 상태에서 요청이 들어오는 API들은 permitAll
-                .authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests
-                        .requestMatchers("/login").permitAll()
-                        .requestMatchers("/email/valid").permitAll()
-                        .anyRequest().authenticated()
-                )
+                    .authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests
+                            .requestMatchers("/login").permitAll()
+                            .requestMatchers("/email/valid").permitAll()
+                            .anyRequest().authenticated()
+                    )
 
 //                 필터 추가
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(uriFilter, JwtFilter.class);
+                    .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                    .addFilterBefore(uriFilter, JwtFilter.class);
 
-        return http.build();
+            return http.build();
+        }
+        catch(Exception e){
+            throw new RuntimeException();
+        }
+
     }
 }

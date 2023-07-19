@@ -18,8 +18,7 @@ public final class JwtAuthenticationEntryPoint implements AuthenticationEntryPoi
     private final FilterExceptionHandler filterExceptionHandler;
 
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-        System.out.println(authException.getMessage());
+    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) {
         filterExceptionHandler.getResponse(request, response, new JwtAuthenticationException(authException.getMessage()));
     }
 }

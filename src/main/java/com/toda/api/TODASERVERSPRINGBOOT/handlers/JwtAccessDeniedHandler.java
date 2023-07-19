@@ -1,5 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.handlers;
 
+import ch.qos.logback.core.encoder.EchoEncoder;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.JwtAccessDeniedException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,7 +19,12 @@ public final class JwtAccessDeniedHandler implements AccessDeniedHandler {
     private final FilterExceptionHandler filterExceptionHandler;
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
-        filterExceptionHandler.getResponse(request, response, new JwtAccessDeniedException(accessDeniedException.getMessage()));
+    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) {
+        try {
+            filterExceptionHandler.getResponse(request, response, new JwtAccessDeniedException(accessDeniedException.getMessage()));
+        }
+        catch (Exception e){
+            System.out.println("Exception");
+        }
     }
 }

@@ -28,10 +28,11 @@ public class AuthController extends AbstractController implements BaseController
     public Map<String,?> createJwt(
             @RequestBody LoginRequest loginRequest,
             BindingResult bindingResult
-    ) throws InvalidProtocolBufferException {
+    ) {
         String jwt = authService.createJwt(loginRequest);
         return new SuccessResponse.Builder(SuccessResponse.of.LOGIN_SUCCESS)
                 .add("result",jwt)
+                .add("isUpdating",false)
                 .build().getResponse();
     }
 
@@ -39,7 +40,7 @@ public class AuthController extends AbstractController implements BaseController
     @GetMapping("/token")
     public Map<String,?> decodeToken(
             @RequestHeader(TokenProvider.HEADER_NAME) String token
-    ) throws InvalidProtocolBufferException {
+    ) {
         Map<String,?> checkTokenResult = authService.decodeToken(token);
         if(isFail(checkTokenResult)) return checkTokenResult;
 
@@ -57,7 +58,7 @@ public class AuthController extends AbstractController implements BaseController
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
             @RequestBody @Nullable CheckToken checkToken,
             BindingResult bindingResult
-    ) throws InvalidProtocolBufferException {
+    ) {
         Map<String,?> checkTokenResult = authService.decodeToken(token);
         if(isFail(checkTokenResult)) return checkTokenResult;
         if(checkToken == null){

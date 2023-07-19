@@ -26,7 +26,7 @@ public final class MdcProvider extends AbstractProvider implements BaseProvider 
     );
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         mdcKeys.remove(MdcKeys.REQUEST_BODY);
     }
 

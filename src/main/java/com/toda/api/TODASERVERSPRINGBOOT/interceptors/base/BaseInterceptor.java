@@ -11,7 +11,7 @@ public interface BaseInterceptor {
      * @param response
      * @param handler
      */
-    boolean doPreHandleLogic(HttpServletRequest request, HttpServletResponse response, Object handler) throws InvalidProtocolBufferException;
+    boolean doPreHandleLogic(HttpServletRequest request, HttpServletResponse response, Object handler);
     /**
      * 컨트롤러 메서드 실행 후 로직 수행하는 메소드
      * @param request
