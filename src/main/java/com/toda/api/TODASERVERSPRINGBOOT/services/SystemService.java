@@ -14,6 +14,6 @@ public class SystemService extends AbstractService implements BaseService {
 
     @Transactional
     public boolean isValidEmail(String email){
-        return !systemRepository.isExistEmail(email);
+        return !systemRepository.existsByEmailAndAppPasswordNot(email,99999);
     }
 }

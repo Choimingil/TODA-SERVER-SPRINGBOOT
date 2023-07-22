@@ -5,6 +5,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDao;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoProto;
+import com.toda.api.TODASERVERSPRINGBOOT.models.mappings.UserInfoMappings;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.AuthRepository;
@@ -36,7 +37,9 @@ public class RedisProvider extends AbstractProvider implements BaseProvider {
      */
     private UserInfoAllDao getRedis(String key) {
         try {
-            return getRedisFuture(key).get();
+            UserInfoAllDao userInfoAllDao = getRedisFuture(key).get();
+            if(userInfoAllDao.getUserID() == 0) return null;
+            else return getRedisFuture(key).get();
         }
         catch (ExecutionException | InterruptedException e){
             throw new WrongAccessException(WrongAccessException.of.REDIS_CONNECTION_EXCEPTION);
@@ -47,7 +50,15 @@ public class RedisProvider extends AbstractProvider implements BaseProvider {
     private Future<UserInfoAllDao> getRedisFuture(String key) {
         try {
             byte[] bytes = redisTemplate.opsForValue().get(key);
-            if(bytes == null) return null;
+            if(bytes == null)
+                return CompletableFuture.completedFuture(UserInfoAllDao.builder()
+                        .userID(0)
+                        .userCode("")
+                        .email("")
+                        .password("")
+                        .userName("")
+                        .appPassword("")
+                        .build());
 
             UserInfoProto.UserInfo userProto = UserInfoProto.UserInfo.parseFrom(bytes);
             UserInfoAllDao userInfoAllDao = UserInfoAllDao.builder()
@@ -76,8 +87,7 @@ public class RedisProvider extends AbstractProvider implements BaseProvider {
      * @param key
      */
     @Async
-    private void setRedis(String key){
-        UserInfoAllDao userInfoAllDao = authRepository.getUserInfoAll(key);
+    private void setRedis(String key, UserInfoAllDao userInfoAllDao){
         UserInfoProto.UserInfo userProto = UserInfoProto.UserInfo.newBuilder()
                 .setUserID(userInfoAllDao.getUserID())
                 .setUserCode(userInfoAllDao.getUserCode())
@@ -111,12 +121,22 @@ public class RedisProvider extends AbstractProvider implements BaseProvider {
         if(userInfo == null){
             UserInfoAllDao userInfoAllDao = getRedis(email);
             if(userInfoAllDao == null){
-                userInfoAllDao = authRepository.getUserInfoAll(email);
-                setRedis(email);
+                UserInfoMappings mappings = authRepository.findByEmail(email);
+                userInfoAllDao = UserInfoAllDao.builder()
+                        .userID(mappings.getUserID())
+                        .userCode(mappings.getUserCode())
+                        .email(mappings.getEmail())
+                        .password(mappings.getPassword())
+                        .userName(mappings.getUserName())
+                        .appPassword(mappings.getAppPassword())
+                        .build();
+                setRedis(email, userInfoAllDao);
             }
             if(!userInfoAllDao.getEmail().equals(email)) throw new WrongArgException(WrongArgException.of.WRONG_BODY_EXCEPTION);
             userInfo = userInfoAllDao;
         }
         return userInfo;
     }
+
+
 }

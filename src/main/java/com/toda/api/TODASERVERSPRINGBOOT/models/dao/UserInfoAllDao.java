@@ -12,11 +12,11 @@ import java.util.Map;
 @Getter
 public final class UserInfoAllDao extends AbstractModel implements BaseModel {
     private long userID;
-    @NonNull String userCode;
-    @NonNull String email;
-    @NonNull String password;
-    @NonNull String userName;
-    @NonNull String appPassword;
+    @NonNull private String userCode;
+    @NonNull private String email;
+    @NonNull private String password;
+    @NonNull private String userName;
+    @NonNull private String appPassword;
 
     public UserInfoAllDao(){}
 

@@ -1,36 +1,23 @@
 package com.toda.api.TODASERVERSPRINGBOOT.repositories;
 
-import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDao;
-import com.toda.api.TODASERVERSPRINGBOOT.mappers.UserInfoAllMapper;
-import com.toda.api.TODASERVERSPRINGBOOT.repositories.base.AbstractRepository;
-import com.toda.api.TODASERVERSPRINGBOOT.repositories.base.BaseRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.jdbc.core.JdbcTemplate;
+import com.toda.api.TODASERVERSPRINGBOOT.models.entities.User;
+import com.toda.api.TODASERVERSPRINGBOOT.models.mappings.UserInfoMappings;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-@RequiredArgsConstructor
-public class AuthRepository extends AbstractRepository implements BaseRepository {
-    private final JdbcTemplate jdbcTemplate;
+public interface AuthRepository extends JpaRepository<User, Long> {
+    UserInfoMappings findByEmail(String email);
 
-    public UserInfoAllDao getUserInfoAll(String email) {
-        List<String> params = new ArrayList<>(List.of(email));
-        return selectOneTuple(
-                "SELECT ID as userID, code as userCode, email, password, name as userName, status as appPassword FROM User WHERE email like ?;",
-                UserInfoAllMapper.getInstance(),
-                params
-        );
-    }
-    public String setUserPasswordEncoded(String email, String encodedPassword) {
-        List<String> params = new ArrayList<>(List.of(encodedPassword,email));
-        update("UPDATE User SET password = ? where email = ?;",params);
-        return "성공";
-    }
-    @Override
-    public JdbcTemplate getJdbcTemplate() {
-        return jdbcTemplate;
-    }
+    // List로 리턴하는 예시
+//    List<UserInfoMappings> findByUserName(String userName);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE User SET password = :password WHERE email = :email")
+    void setUserPasswordEncoded(@Param("email") String email, @Param("password") String password);
 }

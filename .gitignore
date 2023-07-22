@@ -3,6 +3,7 @@ HELP.md
 build/
 src/test
 src/main/resources/application.properties
+src/main/resources/META-INF/persistence.xml
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
@@ -41,3 +42,5 @@ out/
 ### Proto Buffer ###
 /src/main/java/com/toda/api/TODASERVERSPRINGBOOT/protobufs/
 /src/main/java/com/toda/api/TODASERVERSPRINGBOOT/models/dao/UserInfoProto.java
+
+

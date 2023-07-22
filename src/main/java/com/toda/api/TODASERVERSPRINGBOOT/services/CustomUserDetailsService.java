@@ -30,7 +30,7 @@ public class CustomUserDetailsService extends AbstractService implements BaseSer
         // 비밀번호가 해싱되어있지 않은 경우 인코딩 진행
         if(userInfoAllDao.getPassword().length() < 25){
             String encodedPassword = passwordEncoder.encode(userInfoAllDao.getPassword());
-            authRepository.setUserPasswordEncoded(userInfoAllDao.getEmail(),encodedPassword);
+            authRepository.setUserPasswordEncoded(userInfoAllDao.getEmail(), encodedPassword);
             return User.builder()
                     .username(email)
                     .password(encodedPassword)
