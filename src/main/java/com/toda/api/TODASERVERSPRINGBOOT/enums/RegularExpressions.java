@@ -1,4 +1,4 @@
-package com.toda.api.TODASERVERSPRINGBOOT.utils;
+package com.toda.api.TODASERVERSPRINGBOOT.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

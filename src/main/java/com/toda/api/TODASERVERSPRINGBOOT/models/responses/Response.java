@@ -1,12 +1,9 @@
 package com.toda.api.TODASERVERSPRINGBOOT.models.responses;
 
-import com.toda.api.TODASERVERSPRINGBOOT.models.base.AbstractModel;
-import com.toda.api.TODASERVERSPRINGBOOT.models.base.BaseModel;
-
 import java.util.*;
 
 
-public abstract class Response extends AbstractModel implements BaseModel {
+public abstract class Response {
     private final Map<String,?> response;
 
     abstract static class Builder<T extends Builder<T>>{

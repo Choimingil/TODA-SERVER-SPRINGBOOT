@@ -1,6 +1,6 @@
-package com.toda.api.TODASERVERSPRINGBOOT.models.mappings;
+package com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings;
 
-public interface UserInfoMappings {
+public interface UserInfo {
     Long getUserID();
     String getUserCode();
     String getEmail();

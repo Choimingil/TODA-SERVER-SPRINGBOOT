@@ -1,6 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.providers;
 
-import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDao;
+import com.toda.api.TODASERVERSPRINGBOOT.models.entities.User;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
 import io.jsonwebtoken.*;
@@ -14,7 +14,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -86,22 +85,22 @@ public final class TokenProvider extends AbstractProvider implements BaseProvide
     }
 
     /**
-     * 토큰 생성
+     * 토큰 생성 메서드
      * @param authentication
-     * @param userInfoAllDao
+     * @param user
      * @return
      */
-    public String createToken(Authentication authentication, UserInfoAllDao userInfoAllDao){
+    public String createToken(Authentication authentication, User user){
         String authorities = getAuthorities(authentication);
         Date validity = getValidity();
         return Jwts.builder()
                 // subject : email
                 .setSubject(authentication.getName())
-                .claim("userID",userInfoAllDao.getUserID())
-                .claim("userCode",userInfoAllDao.getUserCode())
-                .claim("email",userInfoAllDao.getEmail())
-                .claim("userName",userInfoAllDao.getUserName())
-                .claim("appPassword",userInfoAllDao.getAppPassword())
+                .claim("userID",user.getUserID())
+                .claim("userCode",user.getUserCode())
+                .claim("email",user.getEmail())
+                .claim("userName",user.getUserName())
+                .claim("appPassword",user.getAppPassword())
                 .claim(AUTHORITIES_KEY,authorities)
                 .signWith(key, SignatureAlgorithm.HS512)
                 .setExpiration(validity)
@@ -156,7 +155,8 @@ public final class TokenProvider extends AbstractProvider implements BaseProvide
                         .collect(Collectors.toList());
 
         // claim과 authorities 이용하여 User 객체 생성
-        User principal = new User(claims.getSubject(), "", authorities);
+        org.springframework.security.core.userdetails.User principal =
+                new org.springframework.security.core.userdetails.User(claims.getSubject(), "", authorities);
 
         // 최종적으로 Authentication 객체 리턴
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);

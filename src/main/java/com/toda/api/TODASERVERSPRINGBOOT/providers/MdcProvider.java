@@ -3,7 +3,7 @@ package com.toda.api.TODASERVERSPRINGBOOT.providers;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.MdcKeys;
+import com.toda.api.TODASERVERSPRINGBOOT.enums.MdcKeys;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

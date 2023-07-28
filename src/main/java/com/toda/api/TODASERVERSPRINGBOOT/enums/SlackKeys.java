@@ -1,4 +1,4 @@
-package com.toda.api.TODASERVERSPRINGBOOT.utils;
+package com.toda.api.TODASERVERSPRINGBOOT.enums;
 
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,7 +7,6 @@ import net.gpedro.integrations.slack.SlackField;
 import org.slf4j.MDC;
 
 import java.time.Instant;
-import java.util.Date;
 import java.util.function.BiFunction;
 
 @RequiredArgsConstructor

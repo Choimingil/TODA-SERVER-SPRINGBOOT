@@ -3,9 +3,9 @@ package com.toda.api.TODASERVERSPRINGBOOT.providers;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDao;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoProto;
-import com.toda.api.TODASERVERSPRINGBOOT.models.mappings.UserInfoMappings;
+import com.toda.api.TODASERVERSPRINGBOOT.models.protobufs.UserInfoProto;
+import com.toda.api.TODASERVERSPRINGBOOT.models.entities.User;
+import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserInfo;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.AuthRepository;
@@ -23,7 +23,7 @@ import java.util.concurrent.Future;
 public class RedisProvider extends AbstractProvider implements BaseProvider {
     private final AuthRepository authRepository;
     private final RedisTemplate<String, byte[]> redisTemplate;
-    private static UserInfoAllDao userInfo = null;
+    private static User userInfo = null;
 
     @Override
     public void afterPropertiesSet() {
@@ -31,14 +31,14 @@ public class RedisProvider extends AbstractProvider implements BaseProvider {
     }
 
     /**
-     * Redis key를 매개변수로 Redis에 저장된 값 get
-     * @param key
-     * @return
+     * Redis 접속해서 key(Email)값으로 데이터 조회
+     * @param key : email
+     * @return : User type
      */
-    private UserInfoAllDao getRedis(String key) {
+    private User getRedis(String key) {
         try {
-            UserInfoAllDao userInfoAllDao = getRedisFuture(key).get();
-            if(userInfoAllDao.getUserID() == 0) return null;
+            User user = getRedisFuture(key).get();
+            if(user.getUserID() == 0) return null;
             else return getRedisFuture(key).get();
         }
         catch (ExecutionException | InterruptedException e){
@@ -46,30 +46,35 @@ public class RedisProvider extends AbstractProvider implements BaseProvider {
         }
     }
 
+    /**
+     * 비동기 처리로 Redis 접속
+     * @param key : email
+     * @return : Future<User>
+     */
     @Async
-    private Future<UserInfoAllDao> getRedisFuture(String key) {
+    private Future<User> getRedisFuture(String key) {
         try {
             byte[] bytes = redisTemplate.opsForValue().get(key);
             if(bytes == null)
-                return CompletableFuture.completedFuture(UserInfoAllDao.builder()
+                return CompletableFuture.completedFuture(User.builder()
                         .userID(0)
                         .userCode("")
                         .email("")
                         .password("")
                         .userName("")
-                        .appPassword("")
+                        .appPassword(99999)
                         .build());
 
             UserInfoProto.UserInfo userProto = UserInfoProto.UserInfo.parseFrom(bytes);
-            UserInfoAllDao userInfoAllDao = UserInfoAllDao.builder()
+            User user = User.builder()
                     .userID(userProto.getUserID())
                     .userCode(userProto.getUserCode())
                     .email(userProto.getEmail())
                     .password(userProto.getPassword())
                     .userName(userProto.getUserName())
-                    .appPassword(userProto.getAppPassword())
+                    .appPassword(Integer.parseInt(userProto.getAppPassword()))
                     .build();
-            return CompletableFuture.completedFuture(userInfoAllDao);
+            return CompletableFuture.completedFuture(user);
         }
         catch (InvalidProtocolBufferException e){
             throw new WrongAccessException(WrongAccessException.of.REDIS_CONNECTION_EXCEPTION);
@@ -77,66 +82,46 @@ public class RedisProvider extends AbstractProvider implements BaseProvider {
     }
 
     /**
-     *
-     * class.isInstance : 이 클래스가 특정 클래스 또는 그 클래스의 하위 클래스인지 여부를 확인할 때 사용
-     * 장점 : 비교 클래스가 클래스 리터럴 상태가 아니어도 비교 가능
-     * 단점 : 정적으로 컴파일 시간에 알려진 클래스일 경우 클래스 리터럴을 이용해서 비교 불가
-     * == : 두 클래스가 같은지 확인
-     * 장점 : 클래스 리터럴을 이용해서 타입 비교 가능
-     * 단점 : 클래스 리터럴 상태가 아닐 경우 비교 불가
-     * @param key
+     * 비동기 Redis 접속해서 데이터 추가
+     * @param key : email
+     * @param user : 유저 데이터(User type)
      */
     @Async
-    private void setRedis(String key, UserInfoAllDao userInfoAllDao){
+    private void setRedis(String key, User user){
         UserInfoProto.UserInfo userProto = UserInfoProto.UserInfo.newBuilder()
-                .setUserID(userInfoAllDao.getUserID())
-                .setUserCode(userInfoAllDao.getUserCode())
-                .setEmail(userInfoAllDao.getEmail())
-                .setPassword(userInfoAllDao.getPassword())
-                .setUserName(userInfoAllDao.getUserName())
-                .setAppPassword(userInfoAllDao.getAppPassword())
+                .setUserID(user.getUserID())
+                .setUserCode(user.getUserCode())
+                .setEmail(user.getEmail())
+                .setPassword(user.getPassword())
+                .setUserName(user.getUserName())
+                .setAppPassword(String.valueOf(user.getAppPassword()))
                 .build();
         redisTemplate.opsForValue().set(key,userProto.toByteArray());
     }
 
-//    public void publishMessage(String key) {
-//        UserInfoAllDao userInfoAllDao = authRepository.getUserInfoAll(key);
-//        UserInfoProto.UserInfo userProto = UserInfoProto.UserInfo.newBuilder()
-//                .setUserID(userInfoAllDao.getUserID())
-//                .setUserCode(userInfoAllDao.getUserCode())
-//                .setEmail(userInfoAllDao.getEmail())
-//                .setPassword(userInfoAllDao.getPassword())
-//                .setUserName(userInfoAllDao.getUserName())
-//                .setAppPassword(userInfoAllDao.getAppPassword())
-//                .build();
-//
-//        byte[] serializedMessage = userProto.toByteArray();
-//        redisTemplate.convertAndSend(channelTopic.getTopic(), serializedMessage);
-//    }
-
-    // 비밀번호 변경 기능 개발 시 resetRedis 추가
-
-
-    public UserInfoAllDao getUserInfo(String email){
+    /**
+     * 외부 클래스에서 Redis에 저장된 유저 정보 Get 시 사용
+     * @param email : Redis key
+     * @return : User type
+     */
+    public User getUserInfo(String email){
         if(userInfo == null){
-            UserInfoAllDao userInfoAllDao = getRedis(email);
-            if(userInfoAllDao == null){
-                UserInfoMappings mappings = authRepository.findByEmail(email);
-                userInfoAllDao = UserInfoAllDao.builder()
+            User user = getRedis(email);
+            if(user == null){
+                UserInfo mappings = authRepository.findByEmail(email);
+                user = User.builder()
                         .userID(mappings.getUserID())
                         .userCode(mappings.getUserCode())
                         .email(mappings.getEmail())
                         .password(mappings.getPassword())
                         .userName(mappings.getUserName())
-                        .appPassword(mappings.getAppPassword())
+                        .appPassword(Integer.parseInt(mappings.getAppPassword()))
                         .build();
-                setRedis(email, userInfoAllDao);
+                setRedis(email, user);
             }
-            if(!userInfoAllDao.getEmail().equals(email)) throw new WrongArgException(WrongArgException.of.WRONG_BODY_EXCEPTION);
-            userInfo = userInfoAllDao;
+            if(!user.getEmail().equals(email)) throw new WrongArgException(WrongArgException.of.WRONG_BODY_EXCEPTION);
+            userInfo = user;
         }
         return userInfo;
     }
-
-
 }

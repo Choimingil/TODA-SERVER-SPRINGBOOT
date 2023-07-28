@@ -1,7 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.validators;
 
-import com.toda.api.TODASERVERSPRINGBOOT.providers.MdcProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.RegularExpressions;
+import com.toda.api.TODASERVERSPRINGBOOT.enums.RegularExpressions;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidPassword;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;

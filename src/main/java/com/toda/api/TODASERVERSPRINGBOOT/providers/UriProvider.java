@@ -2,8 +2,8 @@ package com.toda.api.TODASERVERSPRINGBOOT.providers;
 
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.RegularExpressions;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.Uris;
+import com.toda.api.TODASERVERSPRINGBOOT.enums.RegularExpressions;
+import com.toda.api.TODASERVERSPRINGBOOT.enums.Uris;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

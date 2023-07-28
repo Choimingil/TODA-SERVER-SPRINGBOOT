@@ -2,7 +2,7 @@ package com.toda.api.TODASERVERSPRINGBOOT.providers;
 
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.utils.SlackKeys;
+import com.toda.api.TODASERVERSPRINGBOOT.enums.SlackKeys;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import net.gpedro.integrations.slack.*;

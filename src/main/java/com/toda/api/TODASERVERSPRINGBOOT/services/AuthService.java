@@ -1,10 +1,10 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
+import com.toda.api.TODASERVERSPRINGBOOT.models.entities.User;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.RedisProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDao;
 import com.toda.api.TODASERVERSPRINGBOOT.models.requests.LoginRequest;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dto.DecodeTokenResponseDto;
 import io.jsonwebtoken.Claims;
@@ -35,19 +35,19 @@ public class AuthService extends AbstractService implements BaseService {
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        UserInfoAllDao userInfoAllDao = redisProvider.getUserInfo(loginRequest.getId());
-        return tokenProvider.createToken(authentication, userInfoAllDao);
+        User user = redisProvider.getUserInfo(loginRequest.getId());
+        return tokenProvider.createToken(authentication, user);
     }
 
     //1-3. 토큰 데이터 추출 API
     @Transactional
     public Map<String,?> decodeToken(String token) {
         Claims claims = tokenProvider.getClaims(token);
-        UserInfoAllDao userInfoAllDao = redisProvider.getUserInfo(claims.getSubject());
+        User user = redisProvider.getUserInfo(claims.getSubject());
 
         return DecodeTokenResponseDto.builder()
                 .id(Long.parseLong(String.valueOf(claims.get("userID"))))
-                .pw(userInfoAllDao.getPassword())
+                .pw(user.getPassword())
                 .appPw(Integer.parseInt(String.valueOf(claims.get("appPassword"))))
                 .build().toMap();
     }

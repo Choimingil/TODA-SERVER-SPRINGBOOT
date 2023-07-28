@@ -1,4 +1,4 @@
-package com.toda.api.TODASERVERSPRINGBOOT.utils;
+package com.toda.api.TODASERVERSPRINGBOOT.enums;
 
 public enum Uris {
     /** 1. 자체 로그인 API */ POST_LOGIN,

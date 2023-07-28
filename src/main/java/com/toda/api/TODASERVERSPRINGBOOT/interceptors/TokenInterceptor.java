@@ -3,7 +3,7 @@ package com.toda.api.TODASERVERSPRINGBOOT.interceptors;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.interceptors.base.AbstractInterceptor;
 import com.toda.api.TODASERVERSPRINGBOOT.interceptors.base.BaseInterceptor;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dao.UserInfoAllDao;
+import com.toda.api.TODASERVERSPRINGBOOT.models.entities.User;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.RedisProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.UriProvider;
@@ -25,8 +25,8 @@ public final class TokenInterceptor extends AbstractInterceptor implements BaseI
         if(!uriProvider.isValidPass(request)){
             String token = tokenProvider.getToken(request);
             Claims claims = tokenProvider.getClaims(token);
-            UserInfoAllDao userInfoAllDao = redisProvider.getUserInfo(claims.getSubject());
-            if(!userInfoAllDao.isSameTokenAttributes(claims)) throw new WrongArgException(WrongArgException.of.WRONG_TOKEN_DATA_EXCEPTION);
+            User user = redisProvider.getUserInfo(claims.getSubject());
+            if(!user.getEmail().equals(claims.getSubject())) throw new WrongArgException(WrongArgException.of.WRONG_TOKEN_DATA_EXCEPTION);
         }
         return true;
     }

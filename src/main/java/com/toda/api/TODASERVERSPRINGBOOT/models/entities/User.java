@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @ToString
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,4 +42,29 @@ public class User {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name="updateAt", nullable = false)
     private LocalDateTime updateAt;
+
+    User(){}
+
+    @Builder
+    User(
+            long userID,
+            String email,
+            String password,
+            String userCode,
+            int appPassword,
+            String userName,
+            int point,
+            LocalDateTime createAt,
+            LocalDateTime updateAt
+    ){
+        this.userID = userID;
+        this.email = email;
+        this.password = password;
+        this.userCode = userCode;
+        this.appPassword = appPassword;
+        this.userName = userName;
+        this.point = point;
+        this.createAt = createAt;
+        this.updateAt = updateAt;
+    }
 }

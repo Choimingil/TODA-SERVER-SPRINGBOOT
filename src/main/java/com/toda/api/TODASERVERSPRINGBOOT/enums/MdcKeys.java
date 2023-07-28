@@ -1,15 +1,13 @@
-package com.toda.api.TODASERVERSPRINGBOOT.utils;
+package com.toda.api.TODASERVERSPRINGBOOT.enums;
 
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.validation.BindingResult;
 
 import java.time.Instant;
-import java.util.Date;
 import java.util.UUID;
 import java.util.function.*;
 
