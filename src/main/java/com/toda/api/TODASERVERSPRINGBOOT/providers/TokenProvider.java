@@ -161,4 +161,9 @@ public final class TokenProvider extends AbstractProvider implements BaseProvide
         // 최종적으로 Authentication 객체 리턴
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
+
+    public long getUserID(String token){
+        Claims claims = getClaims(token);
+        return Long.parseLong(String.valueOf(claims.get("userID")));
+    }
 }

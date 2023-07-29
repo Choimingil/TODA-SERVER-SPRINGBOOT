@@ -20,7 +20,8 @@ public final class UriProvider extends AbstractProvider implements BaseProvider 
     private final Set<Uris> uris = EnumSet.allOf(Uris.class);
     private final Set<Uris> validPassUris = EnumSet.of(
             Uris.POST_LOGIN,
-            Uris.POST_EMAIL_VALID
+            Uris.POST_EMAIL_VALID,
+            Uris.GET_TERMS
     );
 
     @Override

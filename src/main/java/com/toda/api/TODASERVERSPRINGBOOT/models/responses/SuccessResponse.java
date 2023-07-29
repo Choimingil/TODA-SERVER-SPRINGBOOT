@@ -9,6 +9,8 @@ public class SuccessResponse extends Response {
     @RequiredArgsConstructor
     @Getter
     public enum of{
+        SUCCESS(100, "성공"),
+
         /**
          * AuthController
          */
@@ -19,7 +21,12 @@ public class SuccessResponse extends Response {
         /**
          * SystemController
          */
-        VALIDATE_EMAIL_SUCCESS(100,"사용 가능한 이메일입니다.");
+        VALIDATE_EMAIL_SUCCESS(100,"사용 가능한 이메일입니다."),
+        RIGHT_USER_EMAIL_SUCCESS(100, "성공"),
+        NOT_USER_EMAIL_SUCCESS(200, "자신의 이메일이 아닙니다."),
+        CURR_DEVICE_VERSION_SUCCESS(100,"최신 버전입니다."),
+        PREV_DEVICE_VERSION_SUCCESS(200,"최신 버전이 아닙니다.");
+
 
         private final int code;
         private final String message;
