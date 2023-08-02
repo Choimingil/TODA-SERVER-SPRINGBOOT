@@ -73,6 +73,12 @@ dependencies {
 
 	// Protobuf
 	implementation 'com.google.protobuf:protobuf-java:3.19.6'
+
+	// Caffeine
+	implementation("com.github.ben-manes.caffeine:caffeine:3.1.7")
+	// Optional extensions
+	implementation("com.github.ben-manes.caffeine:guava:3.1.7")
+	implementation("com.github.ben-manes.caffeine:jcache:3.1.7")
 }
 
 tasks.named('test') {

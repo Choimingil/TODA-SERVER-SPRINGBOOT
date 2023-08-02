@@ -1,4 +1,4 @@
-package com.toda.api.TODASERVERSPRINGBOOT.models.requests;
+package com.toda.api.TODASERVERSPRINGBOOT.models.bodies;
 
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidEmail;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidPassword;

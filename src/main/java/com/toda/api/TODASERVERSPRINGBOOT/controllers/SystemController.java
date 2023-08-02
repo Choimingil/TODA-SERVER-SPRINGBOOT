@@ -6,7 +6,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.FailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.models.requests.ValidateEmail;
+import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.ValidateEmail;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.services.SystemService;
 import jakarta.validation.Valid;
@@ -79,21 +79,9 @@ public class SystemController extends AbstractController implements BaseControll
     //1-12. 약관 조회 API
     @GetMapping("/terms")
     public Map<String, ?> getTerms(){
-
-        // Spring Boot Cache 활용해서 캐싱한 값 조회
-
         String term = systemService.readTxtFile("privacy.txt");
         return new SuccessResponse.Builder(SuccessResponse.of.SUCCESS)
                 .add("result",term)
                 .build().getResponse();
     }
-
-
-
-    // $r->addRoute('GET', '/announcement', ['LoginController', 'getAnnouncement']);                                           //38. 공지사항 리스트 조회 API
-    // $r->addRoute('GET', '/announcement/{announcementID:\d+}', ['LoginController', 'getAnnouncementDetail']);                //39. 공지사항 상세 조회 API
-    // $r->addRoute('GET', '/announcement/check', ['LoginController', 'getAnnouncementCheck']);
-
-    // $r->addRoute('GET', '/popup/{version}', ['LoginController', 'getPopupRead']);                                           //1-9. 업데이트 공지 읽었는지 확인 API
-    // $r->addRoute('PATCH', '/popup/{version}', ['LoginController', 'updatePopupRead']);                                      //1-10. 업데이트 공지 읽기 API
 }

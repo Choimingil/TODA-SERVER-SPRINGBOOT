@@ -10,6 +10,7 @@ public class SuccessResponse extends Response {
     @Getter
     public enum of{
         SUCCESS(100, "성공"),
+        GET_SUCCESS(100,"성공적으로 조회되었습니다."),
 
         /**
          * AuthController
@@ -26,6 +27,7 @@ public class SuccessResponse extends Response {
         NOT_USER_EMAIL_SUCCESS(200, "자신의 이메일이 아닙니다."),
         CURR_DEVICE_VERSION_SUCCESS(100,"최신 버전입니다."),
         PREV_DEVICE_VERSION_SUCCESS(200,"최신 버전이 아닙니다.");
+
 
 
         private final int code;

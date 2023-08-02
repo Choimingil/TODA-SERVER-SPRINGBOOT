@@ -7,7 +7,10 @@ public enum Uris {
     /** 1-4. 토큰 유효성 검사 API */ POST_TOKEN,
     /** 1-6. 강제 업데이트 API */ GET_UPDATE,
     /** 1-11. 자신의 이메일인지 확인 API */ POST_EMAIL_CHECK,
-    /** 1-12. 약관 조회 API */ GET_TERMS;
+    /** 1-12. 약관 조회 API */ GET_TERMS,
+    /** 38. 공지사항 리스트 조회 API */ GET_ANNOUNCEMENT,
+    /** 39. 공지사항 상세 조회 API */ GET_ANNOUNCEMENT_NUMBER,
+    /** 40. 공지사항 읽었는지 안읽었는지 확인 API */ GET_ANNOUNCEMENT_CHECK;
 
 
     // 관리자 API 만들기

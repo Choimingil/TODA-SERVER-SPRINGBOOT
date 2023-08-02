@@ -3,7 +3,7 @@ package com.toda.api.TODASERVERSPRINGBOOT.providers;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
-import com.toda.api.TODASERVERSPRINGBOOT.models.protobufs.UserInfoProto;
+import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.UserInfoProto;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.User;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserInfo;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;

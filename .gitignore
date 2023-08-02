@@ -40,6 +40,6 @@ out/
 .vscode/
 
 ### Proto Buffer ###
-/src/main/java/com/toda/api/TODASERVERSPRINGBOOT/models/protobufs/UserInfoProto.java
+/src/main/java/com/toda/api/TODASERVERSPRINGBOOT/models/protobuffers/UserInfoProto.java
 
 

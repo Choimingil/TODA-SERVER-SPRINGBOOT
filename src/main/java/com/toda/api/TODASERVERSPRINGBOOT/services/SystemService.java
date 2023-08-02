@@ -1,7 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
-import com.toda.api.TODASERVERSPRINGBOOT.repositories.SystemRepository;
+import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ import java.nio.charset.StandardCharsets;
 @Component("systemService")
 @RequiredArgsConstructor
 public class SystemService extends AbstractService implements BaseService {
-    private final SystemRepository systemRepository;
+    private final UserRepository userRepository;
 
     @Value("${toda.ios.version.prev}")
     private String iosVerPrev;
@@ -31,12 +31,12 @@ public class SystemService extends AbstractService implements BaseService {
 
     @Transactional
     public boolean isValidEmail(String email){
-        return !systemRepository.existsByEmailAndAppPasswordNot(email,99999);
+        return !userRepository.existsByEmailAndAppPasswordNot(email,99999);
     }
 
     @Transactional
     public boolean isMyEmail(long userID, String email){
-        return systemRepository.existsByUserIDAndEmail(userID, email);
+        return userRepository.existsByUserIDAndEmail(userID, email);
     }
 
     public boolean isValidIosVersion(String version){
@@ -46,7 +46,7 @@ public class SystemService extends AbstractService implements BaseService {
     public boolean isValidAosVersion(String version){
         return version.equals(aosVerPrev) || version.equals(aosVerCurr);
     }
-
+    
     public String readTxtFile(String filename) {
         try{
             ClassPathResource resource = new ClassPathResource(filename);

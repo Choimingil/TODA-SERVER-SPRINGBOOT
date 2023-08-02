@@ -1,13 +1,12 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.models.requests.CheckToken;
-import com.toda.api.TODASERVERSPRINGBOOT.models.requests.LoginRequest;
+import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CheckToken;
+import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.LoginRequest;
 import com.toda.api.TODASERVERSPRINGBOOT.services.AuthService;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import jakarta.annotation.Nullable;

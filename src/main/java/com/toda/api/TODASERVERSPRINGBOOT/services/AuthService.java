@@ -5,8 +5,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.providers.RedisProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.models.requests.LoginRequest;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dto.DecodeTokenResponseDto;
+import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.LoginRequest;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Component("authService")
@@ -45,10 +45,10 @@ public class AuthService extends AbstractService implements BaseService {
         Claims claims = tokenProvider.getClaims(token);
         User user = redisProvider.getUserInfo(claims.getSubject());
 
-        return DecodeTokenResponseDto.builder()
-                .id(Long.parseLong(String.valueOf(claims.get("userID"))))
-                .pw(user.getPassword())
-                .appPw(Integer.parseInt(String.valueOf(claims.get("appPassword"))))
-                .build().toMap();
+        Map<String,Object> map = new HashMap<>();
+        map.put("id", Long.parseLong(String.valueOf(claims.get("userID"))));
+        map.put("pw", user.getPassword());
+        map.put("appPw", Integer.parseInt(String.valueOf(claims.get("appPassword"))));
+        return map;
     }
 }
