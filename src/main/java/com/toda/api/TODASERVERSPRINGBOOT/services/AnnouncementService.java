@@ -23,7 +23,6 @@ public class AnnouncementService {
     private final AnnouncementRepository announcementRepository;
     private final UserAnnouncementRepository userAnnouncementRepository;
 
-    @Transactional
     public List<Map<String,Object>> getAnnouncement(long userID, int page){
         int start = (page-1)*20;
         Pageable pageable = PageRequest.of(start,20);
@@ -39,7 +38,6 @@ public class AnnouncementService {
         }).collect(Collectors.toList());
     }
 
-    @Transactional
     public List<Map<String,Object>> getAnnouncementDetail(long userID, long announcementID){
         List<AnnouncementDetail> announcementDetails = announcementRepository.findByStatusNotAndAnnouncementID(0,announcementID);
         boolean isRead = userAnnouncementRepository.existsByUserIDAndAnnouncementID(userID,announcementID);
@@ -55,7 +53,6 @@ public class AnnouncementService {
         }).collect(Collectors.toList());
     }
 
-    @Transactional
     public boolean isAllAnnouncementRead(long userID){
         long announcementNum = announcementRepository.count();
         long userReadNum = userAnnouncementRepository.countByUserID(userID);

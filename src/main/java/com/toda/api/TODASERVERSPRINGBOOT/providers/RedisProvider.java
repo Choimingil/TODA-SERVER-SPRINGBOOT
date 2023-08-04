@@ -10,8 +10,10 @@ import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.AuthRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.MDC;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.CompletableFuture;
@@ -22,8 +24,8 @@ import java.util.concurrent.Future;
 @RequiredArgsConstructor
 public class RedisProvider extends AbstractProvider implements BaseProvider {
     private final AuthRepository authRepository;
+    private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, byte[]> redisTemplate;
-    private static User userInfo = null;
 
     @Override
     public void afterPropertiesSet() {
@@ -100,12 +102,34 @@ public class RedisProvider extends AbstractProvider implements BaseProvider {
     }
 
     /**
+     * 비밀번호가 해싱되어있지 않은 경우 인코딩 진행
+     * @param user
+     */
+    private void encodePassword(User user){
+        if(user.getPassword().length() < 25) {
+            String encodedPassword = passwordEncoder.encode(user.getPassword());
+            user.setPassword(encodedPassword);
+            authRepository.save(user);
+            authRepository.setUserPasswordEncoded(user.getEmail(), encodedPassword);
+        }
+    }
+
+    private void setMdc(User user){
+        MDC.put("userID", String.valueOf(user.getUserID()));
+        MDC.put("userCode", String.valueOf(user.getUserCode()));
+        MDC.put("email", String.valueOf(user.getEmail()));
+        MDC.put("password", String.valueOf(user.getPassword()));
+        MDC.put("userName", String.valueOf(user.getUserName()));
+        MDC.put("appPassword", String.valueOf(user.getAppPassword()));
+    }
+
+    /**
      * 외부 클래스에서 Redis에 저장된 유저 정보 Get 시 사용
      * @param email : Redis key
      * @return : User type
      */
     public User getUserInfo(String email){
-        if(userInfo == null){
+        if(MDC.get("userID") == null){
             User user = getRedis(email);
             if(user == null){
                 UserInfo mappings = authRepository.findByEmail(email);
@@ -117,11 +141,33 @@ public class RedisProvider extends AbstractProvider implements BaseProvider {
                         .userName(mappings.getUserName())
                         .appPassword(Integer.parseInt(mappings.getAppPassword()))
                         .build();
+
+                setMdc(user);
                 setRedis(email, user);
+                encodePassword(user);
             }
             if(!user.getEmail().equals(email)) throw new WrongArgException(WrongArgException.of.WRONG_BODY_EXCEPTION);
-            userInfo = user;
+            return user;
         }
-        return userInfo;
+        else{
+            return User.builder()
+                    .userID(Long.parseLong(MDC.get("userID")))
+                    .userCode(MDC.get("userCode"))
+                    .email(MDC.get("email"))
+                    .password(MDC.get("password"))
+                    .userName(MDC.get("userName"))
+                    .appPassword(Integer.parseInt(MDC.get("appPassword")))
+                    .build();
+        }
+    }
+
+    /**
+     * 비밀번호 변경, 앱 잠금 진행 시 Redis 정보 리셋
+     * @param user
+     */
+    public void resetUserInfo(User user){
+        setMdc(user);
+        setRedis(user.getEmail(), user);
+        encodePassword(user);
     }
 }

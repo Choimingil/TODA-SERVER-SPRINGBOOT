@@ -29,7 +29,7 @@ public class SystemController extends AbstractController implements BaseControll
             @RequestBody @Valid ValidateEmail validateEmail,
             BindingResult bindingResult
     ) {
-        if(systemService.isValidEmail(validateEmail.getEmail()))
+        if(systemService.isExistEmail(validateEmail.getEmail()))
             return new SuccessResponse.Builder(SuccessResponse.of.VALIDATE_EMAIL_SUCCESS).build().getResponse();
         else return new FailResponse.Builder(FailResponse.of.EXIST_EMAIL_EXCEPTION).build().getResponse();
     }

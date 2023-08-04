@@ -29,12 +29,10 @@ public class SystemService extends AbstractService implements BaseService {
     @Value("${toda.aos.version.curr}")
     private String aosVerCurr;
 
-    @Transactional
-    public boolean isValidEmail(String email){
+    public boolean isExistEmail(String email){
         return !userRepository.existsByEmailAndAppPasswordNot(email,99999);
     }
 
-    @Transactional
     public boolean isMyEmail(long userID, String email){
         return userRepository.existsByUserIDAndEmail(userID, email);
     }

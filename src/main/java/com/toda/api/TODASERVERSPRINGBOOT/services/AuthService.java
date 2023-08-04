@@ -25,8 +25,6 @@ public class AuthService extends AbstractService implements BaseService {
     private final TokenProvider tokenProvider;
     private final RedisProvider redisProvider;
 
-    //1. 자체 로그인 API
-    @Transactional
     public String createJwt(LoginRequest loginRequest) {
         String email = loginRequest.getId();
         String pw = loginRequest.getPw();
@@ -39,8 +37,6 @@ public class AuthService extends AbstractService implements BaseService {
         return tokenProvider.createToken(authentication, user);
     }
 
-    //1-3. 토큰 데이터 추출 API
-    @Transactional
     public Map<String,?> decodeToken(String token) {
         Claims claims = tokenProvider.getClaims(token);
         User user = redisProvider.getUserInfo(claims.getSubject());

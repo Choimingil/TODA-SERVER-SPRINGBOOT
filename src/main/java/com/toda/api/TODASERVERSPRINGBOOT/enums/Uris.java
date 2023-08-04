@@ -8,6 +8,11 @@ public enum Uris {
     /** 1-6. 강제 업데이트 API */ GET_UPDATE,
     /** 1-11. 자신의 이메일인지 확인 API */ POST_EMAIL_CHECK,
     /** 1-12. 약관 조회 API */ GET_TERMS,
+    /** 2. 자체 회원가입 API */ POST_USER,
+    /** 3. 회원탈퇴 API */ DELETE_USER,
+    /** 4. 닉네임 변경 API */ PATCH_NAME,
+    /** 5. 비밀번호 변경 API */ PATCH_PASSWORD,
+    /** 6. 유저 정보 변경 API */ PATCH_USER,
     /** 38. 공지사항 리스트 조회 API */ GET_ANNOUNCEMENT,
     /** 39. 공지사항 상세 조회 API */ GET_ANNOUNCEMENT_NUMBER,
     /** 40. 공지사항 읽었는지 안읽었는지 확인 API */ GET_ANNOUNCEMENT_CHECK;

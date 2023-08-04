@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="ID", nullable = false)
+    @Column(name="ID", nullable = false, insertable = false, updatable = false)
     private long userID;
 
     @Column(name="email", nullable = false)
@@ -25,27 +25,27 @@ public class User {
     @Column(name="code", nullable = false)
     private String userCode;
 
-    @Column(name="status", nullable = false)
+    @Column(name="status", nullable = false, insertable = false)
     private int appPassword;
 
     @Column(name="name", nullable = false)
     private String userName;
 
-    @Column(name="point", nullable = false)
+    @Column(name="point", nullable = false, insertable = false, updatable = false)
     private int point;
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name="createAt", nullable = false)
+    @Column(name="createAt", nullable = false, insertable = false, updatable = false)
     private LocalDateTime createAt;
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name="updateAt", nullable = false)
+    @Column(name="updateAt", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updateAt;
 
-    User(){}
+    public User(){}
 
     @Builder
-    User(
+    public User(
             long userID,
             String email,
             String password,

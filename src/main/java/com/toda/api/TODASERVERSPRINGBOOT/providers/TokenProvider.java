@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 public final class TokenProvider extends AbstractProvider implements BaseProvider {
     public static final String HEADER_NAME = "x-access-token";
     private static final String AUTHORITIES_KEY = "auth";
+    public static String SKIP_VALUE;
     private Key key;
     @Value("${jwt.secret}")
     private String secret;
@@ -39,6 +40,7 @@ public final class TokenProvider extends AbstractProvider implements BaseProvide
     public void afterPropertiesSet() {
         byte[] keyBytes = Decoders.BASE64.decode(secret);
         key = Keys.hmacShaKeyFor(keyBytes);
+        SKIP_VALUE = secret;
     }
 
     /**

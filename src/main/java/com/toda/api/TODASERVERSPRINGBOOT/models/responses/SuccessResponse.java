@@ -9,9 +9,6 @@ public class SuccessResponse extends Response {
     @RequiredArgsConstructor
     @Getter
     public enum of{
-        SUCCESS(100, "성공"),
-        GET_SUCCESS(100,"성공적으로 조회되었습니다."),
-
         /**
          * AuthController
          */
@@ -26,7 +23,22 @@ public class SuccessResponse extends Response {
         RIGHT_USER_EMAIL_SUCCESS(100, "성공"),
         NOT_USER_EMAIL_SUCCESS(200, "자신의 이메일이 아닙니다."),
         CURR_DEVICE_VERSION_SUCCESS(100,"최신 버전입니다."),
-        PREV_DEVICE_VERSION_SUCCESS(200,"최신 버전이 아닙니다.");
+        PREV_DEVICE_VERSION_SUCCESS(200,"최신 버전이 아닙니다."),
+
+        /**
+         * UserController
+         */
+        CREATE_USER_SUCCESS(100, "회원가입이 완료되었습니다."),
+        DELETE_USER_SUCCESS(100, "회원탈퇴가 완료되었습니다."),
+        UPDATE_NAME_SUCCESS(100, "이름이 성공적으로 변경되었습니다."),
+        UPDATE_PASSWORD_SUCCESS(100, "비밀번호가 성공적으로 변경되었습니다."),
+        UPDATE_USER_SUCCESS(100, "유저 정보가 성공적으로 변경되었습니다."),
+
+        /**
+         * BASIC
+         */
+        SUCCESS(100, "성공"),
+        GET_SUCCESS(100,"성공적으로 조회되었습니다.");
 
 
 
