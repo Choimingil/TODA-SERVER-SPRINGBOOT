@@ -17,7 +17,8 @@ public class CreateUser {
     @ValidEmail private String email;
     @ValidPassword @NonNull private String password;
     @ValidUserName @NonNull private String name;
-    private String birth = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+//    private String birth = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    private String birth = LocalDateTime.now().toString();
 
     public CreateUser(){}
     @Builder

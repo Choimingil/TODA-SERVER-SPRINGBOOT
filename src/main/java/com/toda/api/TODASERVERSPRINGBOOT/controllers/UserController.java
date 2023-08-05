@@ -11,6 +11,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.services.SystemService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +24,9 @@ public class UserController extends AbstractController implements BaseController
     private final SystemService systemService;
     private final TokenProvider tokenProvider;
 
+    @Value("${toda.url.userImage}")
+    private String defaultProfile;
+
     //2. 자체 회원가입 API
     @PostMapping("/user")
     @SetMdcBody
@@ -33,9 +37,8 @@ public class UserController extends AbstractController implements BaseController
         if(!systemService.isExistEmail(createUser.getEmail()))
             return new FailResponse.Builder(FailResponse.of.EXIST_EMAIL_EXCEPTION).build().getResponse();
 
-        String code = userService.createUserCode();
-        long userID = userService.createUser(createUser,code);
-        userService.createUserImage(userID);
+        long userID = userService.createUser(createUser);
+        userService.createUserImage(userID,defaultProfile);
         return new SuccessResponse.Builder(SuccessResponse.of.CREATE_USER_SUCCESS)
                 .build().getResponse();
     }
@@ -45,8 +48,7 @@ public class UserController extends AbstractController implements BaseController
     public Map<String,?> deleteUser(
             @RequestHeader(TokenProvider.HEADER_NAME) String token
     ){
-        long userID = tokenProvider.getUserID(token);
-        userService.deleteUser(userID);
+        userService.deleteUser(token);
         return new SuccessResponse.Builder(SuccessResponse.of.DELETE_USER_SUCCESS)
                 .build().getResponse();
     }
@@ -58,8 +60,7 @@ public class UserController extends AbstractController implements BaseController
             @RequestBody @Valid UpdateName updateName,
             BindingResult bindingResult
     ){
-        long userID = tokenProvider.getUserID(token);
-        userService.updateName(userID, updateName.getName());
+        userService.updateName(token, updateName.getName());
         return new SuccessResponse.Builder(SuccessResponse.of.UPDATE_NAME_SUCCESS)
                 .build().getResponse();
     }
@@ -71,8 +72,7 @@ public class UserController extends AbstractController implements BaseController
             @RequestBody @Valid UpdatePw updatePw,
             BindingResult bindingResult
     ){
-        long userID = tokenProvider.getUserID(token);
-        userService.updatePassword(userID, updatePw.getPw());
+        userService.updatePassword(token, updatePw.getPw());
         return new SuccessResponse.Builder(SuccessResponse.of.UPDATE_PASSWORD_SUCCESS)
                 .build().getResponse();
     }
@@ -84,14 +84,35 @@ public class UserController extends AbstractController implements BaseController
             @RequestBody @Valid UpdateUser updateUser,
             BindingResult bindingResult
     ){
-        long userID = tokenProvider.getUserID(token);
-        if(!updateUser.getName().equals(TokenProvider.SKIP_VALUE)) userService.updateName(userID, updateUser.getName());
-        if(!updateUser.getImage().equals(TokenProvider.SKIP_VALUE)) userService.updateProfile(userID, updateUser.getImage());
+        if(!updateUser.getName().equals(TokenProvider.SKIP_VALUE)) userService.updateName(token, updateUser.getName());
+        if(!updateUser.getImage().equals(TokenProvider.SKIP_VALUE)) userService.updateProfile(token, updateUser.getImage());
         return new SuccessResponse.Builder(SuccessResponse.of.UPDATE_USER_SUCCESS)
                 .build().getResponse();
     }
 
-    // $r->addRoute('DELETE', '/selfie', ['UserController', 'deleteSelfie']);                                                  //6-0. 프로필 사진 삭제 API
+    //6-0. 프로필 사진 삭제 API
+    @DeleteMapping("/selfie")
+    public Map<String,?> deleteProfile(
+            @RequestHeader(TokenProvider.HEADER_NAME) String token
+    ){
+        userService.updateProfile(token, defaultProfile);
+        return new SuccessResponse.Builder(SuccessResponse.of.DELETE_PROFILE_SUCCESS)
+                .build().getResponse();
+    }
+
+    //7. 회원정보조회 API
+//    @GetMapping("/user")
+//    public Map<String,?> getUserInfo(
+//            @RequestHeader(TokenProvider.HEADER_NAME) String token
+//    ){
+//
+//
+//        // 스티커 세팅되어있지 않은 경우 스티커 세팅하기
+//
+//        return new SuccessResponse.Builder(SuccessResponse.of.DELETE_PROFILE_SUCCESS)
+//                .build().getResponse();
+//    }
+
     // $r->addRoute('GET', '/user', ['UserController', 'getUser']);                                                            //7. 회원정보조회 API
     // $r->addRoute('GET', '/usercode/{userCode}/user', ['UserController', 'getUserByUserCode']);                              //7-0. 유저코드를 통한 회원정보 조회 API
     // $r->addRoute('GET', '/log', ['UserController', 'getLog']);                                                              //10. 알림 조회 API

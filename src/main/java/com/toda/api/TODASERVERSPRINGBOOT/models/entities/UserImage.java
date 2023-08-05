@@ -33,8 +33,4 @@ public class UserImage {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name="createAt", nullable = false, insertable = false, updatable = false)
     private LocalDateTime createAt;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name="updateAt", nullable = false, insertable = false, updatable = false)
-    private LocalDateTime updateAt;
 }

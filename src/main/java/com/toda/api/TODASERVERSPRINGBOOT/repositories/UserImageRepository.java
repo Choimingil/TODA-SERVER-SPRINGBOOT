@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface UserImageRepository extends JpaRepository<UserImage, Long> {
+    void deleteByUserID(long userID);
+    UserImage findByUserIDAndStatusNot(long userID, int status);
 
     @Modifying
     @Transactional

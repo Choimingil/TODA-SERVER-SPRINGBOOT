@@ -19,9 +19,4 @@ public interface UserRepository extends JpaRepository<User,Long> {
     @Transactional
     @Query("UPDATE User SET appPassword = 99999 WHERE userID = :userID")
     void deleteUser(long userID);
-
-    @Modifying
-    @Transactional
-    @Query("UPDATE User SET userName = :userName WHERE userID = :userID")
-    void updateName(String userName, long userID);
 }

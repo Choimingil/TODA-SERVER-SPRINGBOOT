@@ -1,5 +1,5 @@
 syntax = "proto3";
-option java_package = "com.toda.api.TODASERVERSPRINGBOOT.models.protobufs";
+option java_package = "com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers";
 option java_outer_classname = "UserInfoProto";
 
 message UserInfo {
@@ -9,4 +9,6 @@ message UserInfo {
   string password = 4;
   string userName = 5;
   string appPassword = 6;
+  string createAt = 7;
+  string profile = 8;
 }

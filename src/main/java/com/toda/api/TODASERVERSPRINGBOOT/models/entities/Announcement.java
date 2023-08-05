@@ -32,8 +32,4 @@ public class Announcement {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name="createAt", nullable = false)
     private LocalDateTime createAt;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name="updateAt", nullable = false)
-    private LocalDateTime updateAt;
 }

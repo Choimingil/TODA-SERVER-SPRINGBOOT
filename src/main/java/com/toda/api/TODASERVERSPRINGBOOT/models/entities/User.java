@@ -3,7 +3,9 @@ package com.toda.api.TODASERVERSPRINGBOOT.models.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Entity
 @Table(name="User")
@@ -31,16 +33,9 @@ public class User {
     @Column(name="name", nullable = false)
     private String userName;
 
-    @Column(name="point", nullable = false, insertable = false, updatable = false)
-    private int point;
-
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name="createAt", nullable = false, insertable = false, updatable = false)
     private LocalDateTime createAt;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name="updateAt", nullable = false, insertable = false, updatable = false)
-    private LocalDateTime updateAt;
 
     public User(){}
 
@@ -52,9 +47,7 @@ public class User {
             String userCode,
             int appPassword,
             String userName,
-            int point,
-            LocalDateTime createAt,
-            LocalDateTime updateAt
+            LocalDateTime createAt
     ){
         this.userID = userID;
         this.email = email;
@@ -62,8 +55,6 @@ public class User {
         this.userCode = userCode;
         this.appPassword = appPassword;
         this.userName = userName;
-        this.point = point;
         this.createAt = createAt;
-        this.updateAt = updateAt;
     }
 }

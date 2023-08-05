@@ -1,7 +1,10 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
+import com.toda.api.TODASERVERSPRINGBOOT.enums.TokenFields;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.User;
+import com.toda.api.TODASERVERSPRINGBOOT.models.entities.UserImage;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.RedisProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserImageRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
@@ -22,6 +25,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthService extends AbstractService implements BaseService {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
+    private final UserImageRepository userImageRepository;
     private final TokenProvider tokenProvider;
     private final RedisProvider redisProvider;
 
@@ -34,17 +38,18 @@ public class AuthService extends AbstractService implements BaseService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         User user = redisProvider.getUserInfo(loginRequest.getId());
-        return tokenProvider.createToken(authentication, user);
+        UserImage userImage = userImageRepository.findByUserIDAndStatusNot(user.getUserID(), 0);
+        return tokenProvider.createToken(authentication, user, userImage.getUrl());
     }
 
     public Map<String,?> decodeToken(String token) {
-        Claims claims = tokenProvider.getClaims(token);
-        User user = redisProvider.getUserInfo(claims.getSubject());
+        User decodedToken = tokenProvider.getUserInfo(token);
+        User user = redisProvider.getUserInfo(decodedToken.getEmail());
 
         Map<String,Object> map = new HashMap<>();
-        map.put("id", Long.parseLong(String.valueOf(claims.get("userID"))));
+        map.put("id", user.getUserID());
         map.put("pw", user.getPassword());
-        map.put("appPw", Integer.parseInt(String.valueOf(claims.get("appPassword"))));
+        map.put("appPw", user.getAppPassword());
         return map;
     }
 }
