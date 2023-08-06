@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -22,7 +23,6 @@ import java.util.Map;
 public class UserController extends AbstractController implements BaseController {
     private final UserService userService;
     private final SystemService systemService;
-    private final TokenProvider tokenProvider;
 
     @Value("${toda.url.userImage}")
     private String defaultProfile;
@@ -39,6 +39,7 @@ public class UserController extends AbstractController implements BaseController
 
         long userID = userService.createUser(createUser);
         userService.createUserImage(userID,defaultProfile);
+        userService.setSticker(userID);
         return new SuccessResponse.Builder(SuccessResponse.of.CREATE_USER_SUCCESS)
                 .build().getResponse();
     }
@@ -101,21 +102,41 @@ public class UserController extends AbstractController implements BaseController
     }
 
     //7. 회원정보조회 API
-//    @GetMapping("/user")
-//    public Map<String,?> getUserInfo(
-//            @RequestHeader(TokenProvider.HEADER_NAME) String token
-//    ){
-//
-//
-//        // 스티커 세팅되어있지 않은 경우 스티커 세팅하기
-//
-//        return new SuccessResponse.Builder(SuccessResponse.of.DELETE_PROFILE_SUCCESS)
-//                .build().getResponse();
-//    }
+    @GetMapping("/user")
+    public Map<String,?> getUserInfo(
+            @RequestHeader(TokenProvider.HEADER_NAME) String token
+    ){
+        Map<String,?> userInfo = userService.getUserInfo(token);
+        return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
+                .add("result",userInfo)
+                .build().getResponse();
+    }
 
-    // $r->addRoute('GET', '/user', ['UserController', 'getUser']);                                                            //7. 회원정보조회 API
-    // $r->addRoute('GET', '/usercode/{userCode}/user', ['UserController', 'getUserByUserCode']);                              //7-0. 유저코드를 통한 회원정보 조회 API
-    // $r->addRoute('GET', '/log', ['UserController', 'getLog']);                                                              //10. 알림 조회 API
+    //7-0. 유저코드를 통한 회원정보 조회 API
+    @GetMapping("/usercode/{userCode}/user")
+    public Map<String,?> getUserInfoWithUserCode(
+            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @PathVariable("userCode") String userCode
+    ){
+        Map<String,?> userInfo = userService.getUserInfoWithUserCode(userCode);
+        return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
+                .add("result",userInfo)
+                .build().getResponse();
+    }
+
+    //10. 알림 조회 API
+    @GetMapping("/log")
+    public Map<String,?> getUserLog(
+            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestParam(name="page") int page
+    ){
+        List<Map<String,?>> userLogs = userService.getUserLog(token,page);
+        if(userLogs == null)
+            return new SuccessResponse.Builder(SuccessResponse.of.NO_USER_LOG_SUCCESS).build().getResponse();
+        else return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
+                .add("result",userLogs)
+                .build().getResponse();
+    }
 
 
 

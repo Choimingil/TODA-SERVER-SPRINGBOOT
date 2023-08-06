@@ -32,7 +32,6 @@ public class RedisProvider extends AbstractProvider implements BaseProvider {
     private final UserImageRepository userImageRepository;
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, byte[]> redisTemplate;
-    private final TokenProvider tokenProvider;
 
     @Override
     public void afterPropertiesSet() {
@@ -96,7 +95,6 @@ public class RedisProvider extends AbstractProvider implements BaseProvider {
      * @param profile : 프로필 url
      */
     @Async
-    @Transactional
     private void setRedis(User user, String profile){
         UserInfoProto.UserInfo userProto = UserInfoProto.UserInfo.newBuilder()
                 .setUserID(user.getUserID())
@@ -116,7 +114,6 @@ public class RedisProvider extends AbstractProvider implements BaseProvider {
      * @param key
      */
     @Async
-    @Transactional
     private void deleteRedis(String key){
         redisTemplate.delete(key);
     }
@@ -140,7 +137,6 @@ public class RedisProvider extends AbstractProvider implements BaseProvider {
      * @param user
      * @param profile
      */
-    @Transactional
     private void setMdc(User user, String profile){
         MDC.put(TokenFields.USER_ID.value, String.valueOf(user.getUserID()));
         MDC.put(TokenFields.USER_CODE.value, String.valueOf(user.getUserCode()));
@@ -155,7 +151,6 @@ public class RedisProvider extends AbstractProvider implements BaseProvider {
     /**
      * MDC에 저장한 유저 정보 삭제
      */
-    @Transactional
     private void removeMdc(){
         MDC.remove(TokenFields.USER_ID.value);
         MDC.remove(TokenFields.USER_CODE.value);

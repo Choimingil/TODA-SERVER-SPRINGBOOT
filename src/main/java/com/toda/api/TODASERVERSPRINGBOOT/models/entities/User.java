@@ -3,9 +3,7 @@ package com.toda.api.TODASERVERSPRINGBOOT.models.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Entity
 @Table(name="User")

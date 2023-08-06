@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class SlackProvider extends AbstractProvider implements BaseProvider {
-    private final MdcProvider mdcProvider;
+    private final LogProvider mdcProvider;
     private final SlackApi slackApi;
     private final SlackAttachment slackAttachment;
     private final SlackMessage slackMessage;

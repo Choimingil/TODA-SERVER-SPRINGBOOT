@@ -12,7 +12,7 @@ import java.util.UUID;
 import java.util.function.*;
 
 @RequiredArgsConstructor
-public enum MdcKeys {
+public enum LogFields {
     /**
      * - request_id : 로그 아이디
      * - request_context_path : 요청 path

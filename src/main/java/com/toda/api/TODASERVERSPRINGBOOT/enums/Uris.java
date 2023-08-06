@@ -15,6 +15,8 @@ public enum Uris {
     /** 6. 유저 정보 변경 API */ PATCH_USER,
     /** 6-0. 프로필 사진 삭제 API */ DELETE_SELFIE,
     /** 7. 회원정보조회 API */ GET_USER,
+    /** 7-0. 유저코드를 통한 회원정보 조회 API */ GET_USERCODE_NUMBER_USER,
+    /** 10. 알림 조회 API */ GET_LOG,
     /** 38. 공지사항 리스트 조회 API */ GET_ANNOUNCEMENT,
     /** 39. 공지사항 상세 조회 API */ GET_ANNOUNCEMENT_NUMBER,
     /** 40. 공지사항 읽었는지 안읽었는지 확인 API */ GET_ANNOUNCEMENT_CHECK;

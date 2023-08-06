@@ -34,6 +34,7 @@ public class SuccessResponse extends Response {
         UPDATE_PASSWORD_SUCCESS(100, "비밀번호가 성공적으로 변경되었습니다."),
         UPDATE_USER_SUCCESS(100, "유저 정보가 성공적으로 변경되었습니다."),
         DELETE_PROFILE_SUCCESS(100, "프로필 사진이 성공적으로 삭제되었습니다."),
+        NO_USER_LOG_SUCCESS(100, "알림이 존재하지 않습니다."),
 
         /**
          * BASIC
