@@ -20,7 +20,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class SystemController extends AbstractController implements BaseController {
     private final SystemService systemService;
-    private final TokenProvider tokenProvider;
  
     // 1-2. 이메일 중복 확인 API
     @PostMapping("/email/valid")
@@ -65,8 +64,7 @@ public class SystemController extends AbstractController implements BaseControll
             @RequestBody @Valid ValidateEmail validateEmail,
             BindingResult bindingResult
     ){
-        long userID = tokenProvider.getUserID(token);
-        if(systemService.isMyEmail(userID, validateEmail.getEmail()))
+        if(systemService.isMyEmail(token, validateEmail.getEmail()))
             return new SuccessResponse.Builder(SuccessResponse.of.RIGHT_USER_EMAIL_SUCCESS)
                     .add("result",true)
                     .build().getResponse();

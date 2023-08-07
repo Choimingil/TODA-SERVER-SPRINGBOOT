@@ -1,11 +1,11 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.User;
+import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.RedisProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.repositories.AuthRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -17,15 +17,15 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CustomUserDetailsService extends AbstractService implements BaseService, UserDetailsService {
     private final RedisProvider redisProvider;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        // 저장된 유저 정보
-        User user = redisProvider.getUserInfo(email);
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
-                .password(user.getPassword())
+        UserData userdata = redisProvider.getUserInfo(email);
+        return User.builder()
+                .username(userdata.getEmail())
+                .password(passwordEncoder.encode(userdata.getPassword()))
                 .roles("USER").build();
     }
 }

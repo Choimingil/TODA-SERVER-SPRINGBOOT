@@ -10,6 +10,8 @@ public final class NoArgException extends NullPointerException{
     @RequiredArgsConstructor
     @Getter
     public enum of{
+        NULL_PARAM_EXCEPTION(500,"파라미터가 Null로 넘어왔습니다."),
+        NO_STICKER_EXCEPTION(103,"스티커가 존재하지 않습니다."),
         NO_URI_EXCEPTION(101,"존재하지 않는 Uri입니다."),
         NO_HEADER_EXCEPTION(102,"헤더값이 인식되지 않습니다.");
 

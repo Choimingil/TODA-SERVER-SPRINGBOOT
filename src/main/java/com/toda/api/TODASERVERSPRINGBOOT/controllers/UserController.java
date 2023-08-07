@@ -4,9 +4,12 @@ import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.*;
+import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
+import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserStickerDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.FailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.services.AuthService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.SystemService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.UserService;
 import jakarta.validation.Valid;
@@ -15,16 +18,19 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
 public class UserController extends AbstractController implements BaseController {
     private final UserService userService;
     private final SystemService systemService;
+    private final AuthService authService;
 
-    @Value("${toda.url.userImage}")
+    @Value("${toda.url.alarmServer}")
     private String defaultProfile;
 
     //2. 자체 회원가입 API
@@ -39,7 +45,7 @@ public class UserController extends AbstractController implements BaseController
 
         long userID = userService.createUser(createUser);
         userService.createUserImage(userID,defaultProfile);
-        userService.setSticker(userID);
+        userService.setBasicSticker(userID);
         return new SuccessResponse.Builder(SuccessResponse.of.CREATE_USER_SUCCESS)
                 .build().getResponse();
     }
@@ -124,6 +130,63 @@ public class UserController extends AbstractController implements BaseController
                 .build().getResponse();
     }
 
+    //7-1. 유저 보유 스티커 조회 API
+    @GetMapping("/user/stickers")
+    public Map<String,?> getUserStickers(
+            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestParam(name="page") int page
+    ){
+        List<UserStickerDetail> userStickers = userService.getUserStickers(token,page);
+        List<Map<String,?>> result = userStickers.stream().map(element -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("ID", element.getUserStickerID());
+            map.put("stickerPackID", element.getStickerPackID());
+            map.put("miniticon", element.getMiniticon());
+            return map;
+        }).collect(Collectors.toList());
+
+        return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
+                .add("result",result)
+                .build().getResponse();
+    }
+
+    //7-2. 임시 비밀번호 발급
+    @PostMapping("/user/searchPW")
+    public Map<String, ?> getTempPassword(
+            @RequestBody @Valid GetTempPw getTempPw,
+            BindingResult bindingResult
+    ){
+        userService.updateTempPassword(getTempPw.getId());
+        return new SuccessResponse.Builder(SuccessResponse.of.UPDATE_TEMP_PASSWORD_SUCCESS)
+                .build().getResponse();
+    }
+
+    //8. 앱 비밀번호 설정 API
+    @PostMapping("/lock")
+    public Map<String, ?> setAppPassword(
+            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestBody @Valid GetAppPassword appPassword,
+            BindingResult bindingResult
+    ){
+        UserData userData = userService.updateAppPassword(token, Integer.parseInt(appPassword.getAppPW()));
+        String jwt = authService.createJwt(userData.getEmail(), userData.getPassword());
+        return new SuccessResponse.Builder(SuccessResponse.of.UPDATE_APP_PASSWORD_SUCCESS)
+                .add("token",jwt)
+                .build().getResponse();
+    }
+
+    //9. 앱 비밀번호 해제 API
+    @DeleteMapping("/lock")
+    public Map<String, ?> deleteAppPassword(
+            @RequestHeader(TokenProvider.HEADER_NAME) String token
+    ){
+        UserData userData = userService.updateAppPassword(token, 10000);
+        String jwt = authService.createJwt(userData.getEmail(), userData.getPassword());
+        return new SuccessResponse.Builder(SuccessResponse.of.DELETE_APP_PASSWORD_SUCCESS)
+                .add("token",jwt)
+                .build().getResponse();
+    }
+
     //10. 알림 조회 API
     @GetMapping("/log")
     public Map<String,?> getUserLog(
@@ -137,15 +200,7 @@ public class UserController extends AbstractController implements BaseController
                 .add("result",userLogs)
                 .build().getResponse();
     }
-
-
-
-    // SystemController에 추가
-    // $r->addRoute('POST', '/user/searchPW', ['UserController', 'getTmpPw']);                                                  //7-2. 임시 비밀번호 발급
-
-
-    // LockController 만들기
-    // Redis 내용도 같이 수정해야 함
-    // $r->addRoute('POST', '/lock', ['LoginController', 'postLock']);
-    // $r->addRoute('DELETE', '/lock', ['LoginController', 'deleteLock']);
 }
+
+
+//        $r->addRoute('GET', '/user/stickers', ['StickerController', 'getUserStickers']);                                        //7-1. 유저 보유 스티커 조회 API(스티커 Controller에 존재)

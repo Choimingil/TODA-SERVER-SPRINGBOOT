@@ -1,6 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
+import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
@@ -19,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 @RequiredArgsConstructor
 public class SystemService extends AbstractService implements BaseService {
     private final UserRepository userRepository;
+    private final TokenProvider tokenProvider;
 
     @Value("${toda.ios.version.prev}")
     private String iosVerPrev;
@@ -33,7 +35,8 @@ public class SystemService extends AbstractService implements BaseService {
         return !userRepository.existsByEmailAndAppPasswordNot(email,99999);
     }
 
-    public boolean isMyEmail(long userID, String email){
+    public boolean isMyEmail(String token, String email){
+        long userID = tokenProvider.getUserID(token);
         return userRepository.existsByUserIDAndEmail(userID, email);
     }
 

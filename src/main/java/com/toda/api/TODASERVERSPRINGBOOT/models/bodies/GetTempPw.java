@@ -1,5 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.models.bodies;
 
+import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidEmail;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidPassword;
 import lombok.Builder;
 import lombok.Getter;
@@ -7,12 +8,12 @@ import lombok.ToString;
 
 @Getter
 @ToString
-public final class UpdatePw {
-    @ValidPassword
-    private String pw;
-    public UpdatePw(){}
+public final class GetTempPw {
+    @ValidEmail
+    private String id;
+    public GetTempPw(){}
     @Builder
-    public UpdatePw(String pw){
-        this.pw = pw;
+    public GetTempPw(String id){
+        this.id = id;
     }
 }

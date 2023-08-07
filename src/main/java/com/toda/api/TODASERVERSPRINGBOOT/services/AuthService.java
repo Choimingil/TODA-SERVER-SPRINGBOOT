@@ -1,6 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
 import com.toda.api.TODASERVERSPRINGBOOT.enums.TokenFields;
+import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.User;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.UserImage;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.RedisProvider;
@@ -25,31 +26,25 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthService extends AbstractService implements BaseService {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
-    private final UserImageRepository userImageRepository;
     private final TokenProvider tokenProvider;
     private final RedisProvider redisProvider;
 
-    public String createJwt(LoginRequest loginRequest) {
-        String email = loginRequest.getId();
-        String pw = loginRequest.getPw();
-
+    public String createJwt(String email, String pw) {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(email,pw);
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        User user = redisProvider.getUserInfo(loginRequest.getId());
-        UserImage userImage = userImageRepository.findByUserIDAndStatusNot(user.getUserID(), 0);
-        return tokenProvider.createToken(authentication, user, userImage.getUrl());
+        UserData userData = redisProvider.getUserInfo(email);
+        return tokenProvider.createToken(authentication, userData);
     }
 
     public Map<String,?> decodeToken(String token) {
-        User decodedToken = tokenProvider.getUserInfo(token);
-        User user = redisProvider.getUserInfo(decodedToken.getEmail());
+        UserData userData = redisProvider.getUserInfo(token);
 
         Map<String,Object> map = new HashMap<>();
-        map.put("id", user.getUserID());
-        map.put("pw", user.getPassword());
-        map.put("appPw", user.getAppPassword());
+        map.put("id", userData.getUserID());
+        map.put("pw", userData.getPassword());
+        map.put("appPw", userData.getAppPassword());
         return map;
     }
 }

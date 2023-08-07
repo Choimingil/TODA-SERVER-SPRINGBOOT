@@ -13,7 +13,7 @@ import java.time.format.DateTimeFormatter;
 
 @Getter
 @ToString
-public class CreateUser {
+public final class CreateUser {
     @ValidEmail private String email;
     @ValidPassword @NonNull private String password;
     @ValidUserName @NonNull private String name;

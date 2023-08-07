@@ -22,7 +22,8 @@ public final class UriProvider extends AbstractProvider implements BaseProvider 
             Uris.POST_LOGIN,
             Uris.POST_EMAIL_VALID,
             Uris.GET_TERMS,
-            Uris.POST_USER
+            Uris.POST_USER,
+            Uris.POST_USER_SEARCHPW
     );
 
     @Override

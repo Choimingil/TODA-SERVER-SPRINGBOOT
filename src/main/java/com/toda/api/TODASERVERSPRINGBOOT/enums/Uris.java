@@ -16,6 +16,10 @@ public enum Uris {
     /** 6-0. 프로필 사진 삭제 API */ DELETE_SELFIE,
     /** 7. 회원정보조회 API */ GET_USER,
     /** 7-0. 유저코드를 통한 회원정보 조회 API */ GET_USERCODE_NUMBER_USER,
+    /** 7-1. 유저 보유 스티커 조회 API */ GET_USER_STICKERS,
+    /** 7-2. 임시 비밀번호 발급 */ POST_USER_SEARCHPW,
+    /** 8. 앱 비밀번호 설정 API */ POST_LOCK,
+    /** 9. 앱 비밀번호 해제 API */ DELETE_LOCK,
     /** 10. 알림 조회 API */ GET_LOG,
     /** 38. 공지사항 리스트 조회 API */ GET_ANNOUNCEMENT,
     /** 39. 공지사항 상세 조회 API */ GET_ANNOUNCEMENT_NUMBER,
@@ -26,26 +30,10 @@ public enum Uris {
     // 1. 환불 API
     // 2. 삭제 일기 복구 API
     // 3. 삭제 일기 조회 API
-    // 4. Redis 초기화 API
+    // 4. Redis 관련 API
 
 
-    //        $r->addRoute('GET', '/update', ['LoginController', 'checkUpdate']);                                                     //1-6. 강제 업데이트 API
-//        $r->addRoute('GET', '/popup/{version}', ['LoginController', 'getPopupRead']);                                           //1-9. 업데이트 공지 읽었는지 확인 API
-//        $r->addRoute('PATCH', '/popup/{version}', ['LoginController', 'updatePopupRead']);                                      //1-10. 업데이트 공지 읽기 API
-//        $r->addRoute('POST', '/email/check', ['LoginController', 'isMyEmail']);                                                 //1-11. 자신의 이메일인지 확인 API
-//        $r->addRoute('GET', '/terms', ['LoginController', 'getTerms']);                                                         //1-12. 약관 조회 API
-//
-//        $r->addRoute('POST', '/user', ['LoginController', 'createUser']);                                                       //2. 자체 회원가입 API
-//        $r->addRoute('POST', '/user/{code:\d+}', ['LoginController', 'postUserInfo']);                                          //2-1. 간편 회원가입 API
-//
-//        $r->addRoute('PATCH', '/name', ['UserController', 'updateName']);                                                       //4. 닉네임 변경 API
-//        $r->addRoute('PATCH', '/password', ['UserController', 'updatePassword']);
-//        $r->addRoute('DELETE', '/selfie', ['UserController', 'deleteSelfie']);                                                  //6-0. 프로필 사진 삭제 API
-//        $r->addRoute('PATCH', '/birth', ['UserController', 'updateBirth']);                                                     //6-1. 생년월일 변경 API
-//        $r->addRoute('GET', '/user', ['UserController', 'getUser']);                                                            //7. 회원정보조회 API
-//        $r->addRoute('GET', '/usercode/{userCode}/user', ['UserController', 'getUserByUserCode']);                              //7-0. 유저코드를 통한 회원정보 조회 API
 //        $r->addRoute('GET', '/user/stickers', ['StickerController', 'getUserStickers']);                                        //7-1. 유저 보유 스티커 조회 API(스티커 Controller에 존재)
-//        $r->addRoute('POST', '/user/searchPW', ['UserController', 'getTmpPw']);                                                 //7-2. 임시 비밀번호 발급
 //
 //        $r->addRoute('POST', '/notification', ['NotificationController', 'checkNotification']);                                 //1-5. 알림 토큰 저장 API
 //        $r->addRoute('GET', '/alarm', ['NotificationController', 'checkAlarm']);                                                //1-7. 알림 허용 여부 확인 API
@@ -54,10 +42,6 @@ public enum Uris {
 //        $r->addRoute('PATCH', '/alarm/ver2', ['NotificationController', 'updateAlarmVer2']);                                    //7-6. 알림 허용 여부 변경 API(3개)
 //        $r->addRoute('GET', '/alarm/time', ['NotificationController', 'getAlarmTime']);                                         //7-7. 알림 시간 조회 API
 //        $r->addRoute('PATCH', '/alarm/time', ['NotificationController', 'updateAlarmTime']);                                    //7-8. 알림 시간 변경 API
-//
-//        $r->addRoute('POST', '/lock', ['LoginController', 'postLock']);
-//        $r->addRoute('DELETE', '/lock', ['LoginController', 'deleteLock']);
-//        $r->addRoute('GET', '/log', ['UserController', 'getLog']);                                                              //10. 알림 조회 API
 //
 //        $r->addRoute('POST', '/diary', ['DiaryController', 'addDiary']);                                                        //11. 다이어리 추가 API
 //        $r->addRoute('POST', '/diaries/{diaryID:\d+}/user', ['DiaryController', 'addDiaryFriend']);                             //12. 다이어리 유저 추가 API
@@ -98,9 +82,11 @@ public enum Uris {
 //        $r->addRoute('PATCH', '/comment', ['LikeCommentController', 'updateComment']);
 //        $r->addRoute('GET', '/posts/{postID:\d+}/comments', ['LikeCommentController', 'getComment']);                           //33. 댓글 리스트 조회 API
 //
-//        $r->addRoute('GET', '/diaries/{diaryID:\d+}/schedule', ['CalenderController', 'getSchedule']);                          //37. 일정 조회 API
 //
-//        $r->addRoute('GET', '/announcement', ['LoginController', 'getAnnouncement']);                                           //38. 공지사항 리스트 조회 API
-//        $r->addRoute('GET', '/announcement/{announcementID:\d+}', ['LoginController', 'getAnnouncementDetail']);                //39. 공지사항 상세 조회 API
-//        $r->addRoute('GET', '/announcement/check', ['LoginController', 'getAnnouncementCheck']);
+//
+//        $r->addRoute('GET', '/diaries/{diaryID:\d+}/schedule', ['CalenderController', 'getSchedule']);                          //37. 일정 조회 API
+//        $r->addRoute('GET', '/popup/{version}', ['LoginController', 'getPopupRead']);                                           //1-9. 업데이트 공지 읽었는지 확인 API
+//        $r->addRoute('PATCH', '/popup/{version}', ['LoginController', 'updatePopupRead']);                                      //1-10. 업데이트 공지 읽기 API
+//        $r->addRoute('POST', '/user/{code:\d+}', ['LoginController', 'postUserInfo']);                                          //2-1. 간편 회원가입 API
+//        $r->addRoute('PATCH', '/birth', ['UserController', 'updateBirth']);                                                     //6-1. 생년월일 변경 API
 }

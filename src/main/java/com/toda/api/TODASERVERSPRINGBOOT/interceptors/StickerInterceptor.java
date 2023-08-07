@@ -22,7 +22,7 @@ public final class StickerInterceptor extends AbstractInterceptor implements Bas
         if(!uriProvider.isValidPass(request)){
             String token = tokenProvider.getToken(request);
             long userID = tokenProvider.getUserID(token);
-            userService.setSticker(userID);
+            userService.resetBasicSticker(userID);
         }
         return true;
     }

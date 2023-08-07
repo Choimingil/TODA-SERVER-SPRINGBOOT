@@ -1,6 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.providers;
 
 import com.toda.api.TODASERVERSPRINGBOOT.enums.TokenFields;
+import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.User;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
@@ -92,22 +93,22 @@ public final class TokenProvider extends AbstractProvider implements BaseProvide
     /**
      * 토큰 생성 메서드
      * @param authentication
-     * @param user
+     * @param userData
      * @return
      */
-    public String createToken(Authentication authentication, User user, String profile){
+    public String createToken(Authentication authentication, UserData userData){
         String authorities = getAuthorities(authentication);
         Date validity = getValidity();
         return Jwts.builder()
                 // subject : email
                 .setSubject(authentication.getName())
-                .claim(TokenFields.USER_ID.value, user.getUserID())
-                .claim(TokenFields.USER_CODE.value, user.getUserCode())
-                .claim(TokenFields.APP_PASSWORD.value, user.getAppPassword())
-                .claim(TokenFields.EMAIL.value, user.getEmail())
-                .claim(TokenFields.USER_NAME.value, user.getUserName())
-                .claim(TokenFields.CREATE_AT.value, user.getCreateAt().toString())
-                .claim(TokenFields.PROFILE.value, profile)
+                .claim(TokenFields.USER_ID.value, userData.getUserID())
+                .claim(TokenFields.USER_CODE.value, userData.getUserCode())
+                .claim(TokenFields.APP_PASSWORD.value, userData.getAppPassword())
+                .claim(TokenFields.EMAIL.value, userData.getEmail())
+                .claim(TokenFields.USER_NAME.value, userData.getUserName())
+                .claim(TokenFields.CREATE_AT.value, userData.getCreateAt().toString())
+                .claim(TokenFields.PROFILE.value, userData.getProfile())
                 .claim(AUTHORITIES_KEY,authorities)
                 .signWith(key, SignatureAlgorithm.HS512)
 //                .setExpiration(validity)
@@ -174,22 +175,18 @@ public final class TokenProvider extends AbstractProvider implements BaseProvide
         return Long.parseLong(String.valueOf(claims.get(TokenFields.USER_ID.value)));
     }
 
-    public User getUserInfo(String token){
+    public UserData decodeToken(String token){
         Claims claims = getClaims(token);
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
-        return User.builder()
+        return UserData.builder()
                 .userID(Long.parseLong(String.valueOf(claims.get(TokenFields.USER_ID.value))))
                 .userCode(String.valueOf(claims.get(TokenFields.USER_CODE.value)))
                 .appPassword(Integer.parseInt(String.valueOf(claims.get(TokenFields.APP_PASSWORD.value))))
                 .email(String.valueOf(claims.get(TokenFields.EMAIL.value)))
                 .userName(String.valueOf(claims.get(TokenFields.USER_NAME.value)))
                 .createAt(LocalDateTime.parse(String.valueOf(claims.get(TokenFields.CREATE_AT.value)), formatter))
+                .profile(String.valueOf(claims.get(TokenFields.PROFILE.value)))
                 .build();
-    }
-
-    public String getUserProfile(String token){
-        Claims claims = getClaims(token);
-        return String.valueOf(claims.get(TokenFields.PROFILE.value));
     }
 }

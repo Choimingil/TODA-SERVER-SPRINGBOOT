@@ -9,7 +9,7 @@ import lombok.ToString;
 
 @Getter
 @ToString
-public class UpdateUser {
+public final class UpdateUser {
     @ValidUserName private String name;
     @ValidUrl private String image;
     public UpdateUser(){}

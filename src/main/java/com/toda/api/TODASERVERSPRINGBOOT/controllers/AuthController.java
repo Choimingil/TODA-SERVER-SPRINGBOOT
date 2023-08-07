@@ -5,7 +5,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CheckToken;
+import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.GetAppPassword;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.LoginRequest;
 import com.toda.api.TODASERVERSPRINGBOOT.services.AuthService;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
@@ -28,7 +28,7 @@ public class AuthController extends AbstractController implements BaseController
             @RequestBody LoginRequest loginRequest,
             BindingResult bindingResult
     ) {
-        String jwt = authService.createJwt(loginRequest);
+        String jwt = authService.createJwt(loginRequest.getId(), loginRequest.getPw());
         return new SuccessResponse.Builder(SuccessResponse.of.LOGIN_SUCCESS)
                 .add("result",jwt)
                 .add("isUpdating",false)
@@ -55,18 +55,18 @@ public class AuthController extends AbstractController implements BaseController
     @SetMdcBody
     public Map<String,?> checkToken(
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
-            @RequestBody @Nullable CheckToken checkToken,
+            @RequestBody @Nullable GetAppPassword appPassword,
             BindingResult bindingResult
     ) {
         Map<String,?> checkTokenResult = authService.decodeToken(token);
         if(isFail(checkTokenResult)) return checkTokenResult;
-        if(checkToken == null){
+        if(appPassword == null){
             if((int) checkTokenResult.get("appPw") == 10000)
                 return new SuccessResponse.Builder(SuccessResponse.of.CHECK_TOKEN_SUCCESS).build().getResponse();
             else throw new WrongArgException(WrongArgException.of.WRONG_APP_PASSWORD_EXCEPTION);
         }
         else{
-            int appPw = Integer.parseInt(checkToken.getAppPW());
+            int appPw = Integer.parseInt(appPassword.getAppPW());
             if((int) checkTokenResult.get("appPw") == appPw)
                 return new SuccessResponse.Builder(SuccessResponse.of.CHECK_TOKEN_SUCCESS).build().getResponse();
             else throw new WrongArgException(WrongArgException.of.WRONG_APP_PASSWORD_EXCEPTION);

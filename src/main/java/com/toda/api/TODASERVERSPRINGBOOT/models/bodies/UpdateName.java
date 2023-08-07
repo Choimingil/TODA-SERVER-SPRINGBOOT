@@ -7,7 +7,7 @@ import lombok.ToString;
 
 @Getter
 @ToString
-public class UpdateName {
+public final class UpdateName {
     @ValidUserName private String name;
     public UpdateName(){}
     @Builder

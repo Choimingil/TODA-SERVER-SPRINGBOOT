@@ -63,6 +63,7 @@ public class SecurityConfig {
                             .requestMatchers("/email/valid").permitAll()
                             .requestMatchers("/terms").permitAll()
                             .requestMatchers("/user").permitAll()
+                            .requestMatchers("/user/searchPW").permitAll()
                             .anyRequest().authenticated()
                     )
 

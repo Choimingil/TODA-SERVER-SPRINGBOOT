@@ -15,7 +15,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AnnouncementController extends AbstractController implements BaseController {
     private final AnnouncementService announcementService;
-    private final TokenProvider tokenProvider;
 
     //38. 공지사항 리스트 조회 API
     @GetMapping("/announcement")
@@ -23,8 +22,7 @@ public class AnnouncementController extends AbstractController implements BaseCo
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
             @RequestParam(name="page") int page
     ){
-        long userID = tokenProvider.getUserID(token);
-        List<Map<String,Object>> announcementList = announcementService.getAnnouncement(userID,page);
+        List<Map<String,Object>> announcementList = announcementService.getAnnouncement(token,page);
         return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
                 .add("result",announcementList)
                 .build().getResponse();
@@ -36,9 +34,8 @@ public class AnnouncementController extends AbstractController implements BaseCo
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
             @PathVariable("announcementID") String id
     ){
-        long userID = tokenProvider.getUserID(token);
         long announcementID = Long.parseLong(id);
-        List<Map<String,Object>> announcementDetails = announcementService.getAnnouncementDetail(userID,announcementID);
+        List<Map<String,Object>> announcementDetails = announcementService.getAnnouncementDetail(token,announcementID);
         return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
                 .add("result",announcementDetails.get(0))
                 .build().getResponse();
@@ -49,8 +46,7 @@ public class AnnouncementController extends AbstractController implements BaseCo
     public Map<String, ?> checkAnnouncement(
             @RequestHeader(TokenProvider.HEADER_NAME) String token
     ){
-        long userID = tokenProvider.getUserID(token);
-        boolean isAllAnnouncementRead = announcementService.isAllAnnouncementRead(userID);
+        boolean isAllAnnouncementRead = announcementService.isAllAnnouncementRead(token);
         return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
                 .add("result",isAllAnnouncementRead)
                 .build().getResponse();
