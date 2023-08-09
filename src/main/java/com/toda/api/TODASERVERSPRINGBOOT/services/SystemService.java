@@ -1,20 +1,12 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
-import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.FileCopyUtils;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 
 @Component("systemService")
 @RequiredArgsConstructor
@@ -48,15 +40,7 @@ public class SystemService extends AbstractService implements BaseService {
         return version.equals(aosVerPrev) || version.equals(aosVerCurr);
     }
     
-    public String readTxtFile(String filename) {
-        try{
-            ClassPathResource resource = new ClassPathResource(filename);
-            InputStream inputStream = resource.getInputStream();
-            byte[] fileData = FileCopyUtils.copyToByteArray(inputStream);
-            return new String(fileData, StandardCharsets.UTF_8);
-        }
-        catch (IOException e){
-            throw new WrongAccessException(WrongAccessException.of.READ_TXT_EXCEPTION);
-        }
+    public String readPrivacyTerm() {
+        return readTxtFile("privacy.txt");
     }
 }

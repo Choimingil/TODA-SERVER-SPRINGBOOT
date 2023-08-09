@@ -2,7 +2,8 @@ package com.toda.api.TODASERVERSPRINGBOOT.aspects;
 
 import com.toda.api.TODASERVERSPRINGBOOT.aspects.base.AbstractAspect;
 import com.toda.api.TODASERVERSPRINGBOOT.aspects.base.BaseAspect;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.LogProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.enums.LogFields;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -14,11 +15,14 @@ import org.springframework.validation.BindingResult;
 @Component
 @RequiredArgsConstructor
 public final class MdcAspect extends AbstractAspect implements BaseAspect {
-    private final LogProvider mdcProvider;
-
     @Around("@annotation(com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody)")
     public Object aspectParameter(final ProceedingJoinPoint joinPoint) throws Throwable{
-        mdcProvider.setBody(getResult(joinPoint,"bindingResult", BindingResult.class));
+        setBody(getResult(joinPoint,"bindingResult", BindingResult.class));
         return joinPoint.proceed();
+    }
+
+    private void setBody(BindingResult bindingResult){
+        if(bindingResult.hasErrors()) throw new WrongArgException(WrongArgException.of.WRONG_BODY_EXCEPTION);
+        LogFields.REQUEST_BODY.add(bindingResult, logger);
     }
 }

@@ -11,6 +11,7 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.relational.core.sql.In;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,7 +31,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public final class TokenProvider extends AbstractProvider implements BaseProvider {
+public final class TokenProvider extends AbstractProvider implements BaseProvider, InitializingBean {
     public static final String HEADER_NAME = "x-access-token";
     private static final String AUTHORITIES_KEY = "auth";
     public static String SKIP_VALUE;
@@ -48,46 +49,33 @@ public final class TokenProvider extends AbstractProvider implements BaseProvide
     }
 
     /**
-     * token 생성
-     * @param request
-     * @return
-     */
-    public String getToken(HttpServletRequest request){
-        return request.getHeader(HEADER_NAME);
-    }
-
-    /**
-     * Claims 생성
+     * 토큰을 유저 아이디로 변환
      * @param token
      * @return
      */
-    public Claims getClaims(String token){
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+    public long getUserID(String token){
+        Claims claims = getClaims(token);
+        return Long.parseLong(String.valueOf(claims.get(TokenFields.USER_ID.value)));
     }
 
     /**
-     * 헤더값이 존재하는지 확인
+     * 토큰 디코딩
      * @param token
      * @return
      */
-    public boolean isExistHeader(String token){
-        return StringUtils.hasText(token);
-    }
+    public UserData decodeToken(String token){
+        Claims claims = getClaims(token);
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
-    /**
-     * 헤더값의 형식이 올바른 경우 체크
-     * @param token
-     * @return
-     */
-    public boolean isValidHeader(String token){
-        JwtParser jwtParser = Jwts.parserBuilder()
-                .setSigningKey(key)
+        return UserData.builder()
+                .userID(Long.parseLong(String.valueOf(claims.get(TokenFields.USER_ID.value))))
+                .userCode(String.valueOf(claims.get(TokenFields.USER_CODE.value)))
+                .appPassword(Integer.parseInt(String.valueOf(claims.get(TokenFields.APP_PASSWORD.value))))
+                .email(String.valueOf(claims.get(TokenFields.EMAIL.value)))
+                .userName(String.valueOf(claims.get(TokenFields.USER_NAME.value)))
+                .createAt(LocalDateTime.parse(String.valueOf(claims.get(TokenFields.CREATE_AT.value)), formatter))
+                .profile(String.valueOf(claims.get(TokenFields.PROFILE.value)))
                 .build();
-        return jwtParser.isSigned(token);
     }
 
     /**
@@ -116,6 +104,63 @@ public final class TokenProvider extends AbstractProvider implements BaseProvide
     }
 
     /**
+     * Claims 생성
+     * @param token
+     * @return
+     */
+    public Claims getClaims(String token){
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    /**
+     * Claims 생성
+     * @param request
+     * @return
+     */
+    public Claims getClaims(HttpServletRequest request){
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(getToken(request))
+                .getBody();
+    }
+
+    /**
+     * 헤더값이 존재하는지 확인
+     * @param request
+     * @return
+     */
+    public boolean isExistHeader(HttpServletRequest request){
+        String token = getToken(request);
+        if(token == null) return false;
+        return StringUtils.hasText(token);
+    }
+
+    /**
+     * 헤더값의 형식이 올바른 경우 체크
+     * @param request
+     * @return
+     */
+    public boolean isValidHeader(HttpServletRequest request){
+        JwtParser jwtParser = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build();
+        return jwtParser.isSigned(getToken(request));
+    }
+
+    /**
+     * Authentication을 SecurityContextHolder에 저장
+     * @param request
+     */
+    public void setSecurityContextHolder(HttpServletRequest request){
+        SecurityContextHolder.getContext().setAuthentication(getAuthentication(getToken(request)));
+    }
+
+    /**
      * authorities 설정
      * @param authentication
      * @return
@@ -133,14 +178,6 @@ public final class TokenProvider extends AbstractProvider implements BaseProvide
     private Date getValidity(){
         long now = Instant.now().toEpochMilli();
         return new Date(now + tokenValidityInMilliseconds);
-    }
-
-    /**
-     * Authentication을 SecurityContextHolder에 저장
-     * @param token
-     */
-    public void setSecurityContextHolder(String token){
-        SecurityContextHolder.getContext().setAuthentication(getAuthentication(token));
     }
 
     /**
@@ -170,23 +207,14 @@ public final class TokenProvider extends AbstractProvider implements BaseProvide
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
 
-    public long getUserID(String token){
-        Claims claims = getClaims(token);
-        return Long.parseLong(String.valueOf(claims.get(TokenFields.USER_ID.value)));
-    }
 
-    public UserData decodeToken(String token){
-        Claims claims = getClaims(token);
-        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
-        return UserData.builder()
-                .userID(Long.parseLong(String.valueOf(claims.get(TokenFields.USER_ID.value))))
-                .userCode(String.valueOf(claims.get(TokenFields.USER_CODE.value)))
-                .appPassword(Integer.parseInt(String.valueOf(claims.get(TokenFields.APP_PASSWORD.value))))
-                .email(String.valueOf(claims.get(TokenFields.EMAIL.value)))
-                .userName(String.valueOf(claims.get(TokenFields.USER_NAME.value)))
-                .createAt(LocalDateTime.parse(String.valueOf(claims.get(TokenFields.CREATE_AT.value)), formatter))
-                .profile(String.valueOf(claims.get(TokenFields.PROFILE.value)))
-                .build();
+    /**
+     * token 생성
+     * @param request
+     * @return
+     */
+    private String getToken(HttpServletRequest request){
+        return request.getHeader(HEADER_NAME);
     }
 }

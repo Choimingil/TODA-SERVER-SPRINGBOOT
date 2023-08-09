@@ -4,10 +4,8 @@ import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.interceptors.base.AbstractInterceptor;
 import com.toda.api.TODASERVERSPRINGBOOT.interceptors.base.BaseInterceptor;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.User;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.RedisProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.providers.UserProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.UriProvider;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,16 +15,14 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public final class TokenInterceptor extends AbstractInterceptor implements BaseInterceptor {
-    private final UriProvider uriProvider;
     private final TokenProvider tokenProvider;
-    private final RedisProvider redisProvider;
+    private final UserProvider userProvider;
 
     @Override
     public boolean doPreHandleLogic(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        if(!uriProvider.isValidPass(request)){
-            String token = tokenProvider.getToken(request);
-            Claims claims = tokenProvider.getClaims(token);
-            UserData user = redisProvider.getUserInfo(claims.getSubject());
+        if(tokenProvider.isExistHeader(request) && tokenProvider.isValidHeader(request)){
+            Claims claims = tokenProvider.getClaims(request);
+            UserData user = userProvider.getUserInfo(claims.getSubject());
             if(!user.getEmail().equals(claims.getSubject())) throw new WrongArgException(WrongArgException.of.WRONG_TOKEN_DATA_EXCEPTION);
         }
         return true;

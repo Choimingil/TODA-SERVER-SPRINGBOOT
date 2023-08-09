@@ -77,7 +77,7 @@ public class SystemController extends AbstractController implements BaseControll
     //1-12. 약관 조회 API
     @GetMapping("/terms")
     public Map<String, ?> getTerms(){
-        String term = systemService.readTxtFile("privacy.txt");
+        String term = systemService.readPrivacyTerm();
         return new SuccessResponse.Builder(SuccessResponse.of.SUCCESS)
                 .add("result",term)
                 .build().getResponse();

@@ -1,9 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.handlers.base;
 
-import com.toda.api.TODASERVERSPRINGBOOT.providers.SlackProvider;
 import jakarta.servlet.http.HttpServletRequest;
-
-import java.util.HashMap;
 import java.util.Map;
 
 public interface BaseExceptionHandler {
@@ -32,10 +29,4 @@ public interface BaseExceptionHandler {
      * @return
      */
     Map<String,?> getResponse(HttpServletRequest request, Exception e, int elementCode, String errorMessage);
-
-    /**
-     * SlackProvider getter
-     * @return
-     */
-    SlackProvider getSlackProvider();
 }

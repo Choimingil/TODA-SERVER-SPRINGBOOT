@@ -1,7 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.RedisProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.providers.UserProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
 import lombok.RequiredArgsConstructor;
@@ -16,13 +16,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Component("userDetailsService")
 @RequiredArgsConstructor
 public class CustomUserDetailsService extends AbstractService implements BaseService, UserDetailsService {
-    private final RedisProvider redisProvider;
+    private final UserProvider userProvider;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        UserData userdata = redisProvider.getUserInfo(email);
+        UserData userdata = userProvider.getUserInfo(email);
         return User.builder()
                 .username(userdata.getEmail())
                 .password(passwordEncoder.encode(userdata.getPassword()))

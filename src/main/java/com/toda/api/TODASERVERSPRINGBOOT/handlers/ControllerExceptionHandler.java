@@ -77,9 +77,4 @@ public final class ControllerExceptionHandler extends AbstractExceptionHandler i
     public Map<String,?> getResponseOfRestException(Exception e) {
         return getResponse(e, FailResponse.of.UNKNOWN_EXCEPTION.getCode(), getErrorMsg(e));
     }
-
-    @Override
-    public SlackProvider getSlackProvider() {
-        return slackProvider;
-    }
 }

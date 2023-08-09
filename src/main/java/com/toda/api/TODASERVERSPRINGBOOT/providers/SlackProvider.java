@@ -1,5 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.providers;
 
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.SlackKeys;
@@ -7,16 +8,19 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import net.gpedro.integrations.slack.*;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class SlackProvider extends AbstractProvider implements BaseProvider {
-    private final LogProvider mdcProvider;
+public class SlackProvider extends AbstractProvider implements BaseProvider, InitializingBean {
     private final SlackApi slackApi;
     private final SlackAttachment slackAttachment;
     private final SlackMessage slackMessage;
@@ -27,24 +31,35 @@ public class SlackProvider extends AbstractProvider implements BaseProvider {
         slackKeysEnumSet.remove(SlackKeys.REQUEST_BODY);
     }
 
-    public void doSlack(HttpServletRequest request, Exception e) {
+    public void doSlack(HttpServletRequest request, Exception exception) {
         slackAttachment.setTitleLink(request.getContextPath());
         slackAttachment.setFields(getSlackFields(request));
-        send(e);
+
+        try {
+            send(exception).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new WrongAccessException(WrongAccessException.of.SEND_SLACK_EXCEPTION);
+        }
+    }
+
+
+    public void doSlack(Exception exception) {
+        slackAttachment.setTitleLink(MDC.get("request_context_path"));
+        slackAttachment.setFields(getSlackFields());
+
+        try {
+            send(exception).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new WrongAccessException(WrongAccessException.of.SEND_SLACK_EXCEPTION);
+        }
     }
 
     @Async
-    public void doSlack(Exception e) {
-        slackAttachment.setTitleLink(MDC.get("request_context_path"));
-        slackAttachment.setFields(getSlackFields());
-        send(e);
-        mdcProvider.removeMdc();
-    }
-
-    private void send(Exception e){
+    private Future<Void> send(Exception e){
         slackAttachment.setText(Arrays.toString(e.getStackTrace()));
         slackMessage.setAttachments(Collections.singletonList(slackAttachment));
         slackApi.call(slackMessage);
+        return CompletableFuture.completedFuture(null);
     }
 
     private List<SlackField> getSlackFields(HttpServletRequest request){

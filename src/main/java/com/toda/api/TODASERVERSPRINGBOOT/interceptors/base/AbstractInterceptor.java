@@ -1,16 +1,35 @@
 package com.toda.api.TODASERVERSPRINGBOOT.interceptors.base;
 
+import com.toda.api.TODASERVERSPRINGBOOT.enums.LogFields;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
-public abstract class AbstractInterceptor implements BaseInterceptor, HandlerInterceptor {
+import java.util.EnumSet;
+import java.util.Set;
+
+public abstract class AbstractInterceptor implements BaseInterceptor, HandlerInterceptor, InitializingBean {
     protected final Logger logger = LoggerFactory.getLogger(AbstractInterceptor.class);
+    private final Set<LogFields> logSet = EnumSet.allOf(LogFields.class);
+    private final Set<LogFields> mandatoryKeys = EnumSet.of(
+            LogFields.REQUEST_ID,
+            LogFields.REQUEST_CONTEXT_PATH,
+            LogFields.REQUEST_URL,
+            LogFields.REQUEST_METHOD,
+            LogFields.REQUEST_TIME,
+            LogFields.REQUEST_IP
+    );
+
+    @Override
+    public void afterPropertiesSet() {
+        logSet.remove(LogFields.REQUEST_BODY);
+    }
 
     /**
      * 컨트롤러 메서드가 실행되기 전 로직 수행하는 메소드 구현
@@ -51,4 +70,24 @@ public abstract class AbstractInterceptor implements BaseInterceptor, HandlerInt
     /*
      * API 서버이므로 afterCompletion 미구현
      */
+
+
+    /**
+     * 유효한 MDC 로그 키인지 검사
+     * @return
+     */
+    @Override
+    public boolean isMdcSet(){
+        return mandatoryKeys.stream()
+                .allMatch(keys -> keys.get() != null);
+    }
+
+    /**
+     * MDC에 값 추가
+     * @param request
+     */
+    @Override
+    public void setMdc(HttpServletRequest request){
+        for(LogFields keys : logSet) keys.add(request,logger);
+    }
 }

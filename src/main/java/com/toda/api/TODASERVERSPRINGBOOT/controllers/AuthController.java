@@ -41,8 +41,6 @@ public class AuthController extends AbstractController implements BaseController
             @RequestHeader(TokenProvider.HEADER_NAME) String token
     ) {
         Map<String,?> checkTokenResult = authService.decodeToken(token);
-        if(isFail(checkTokenResult)) return checkTokenResult;
-
         return new SuccessResponse.Builder(SuccessResponse.of.DECODE_TOKEN_SUCCESS)
                 .add("id",checkTokenResult.get("id"))
                 .add("pw",checkTokenResult.get("pw"))
@@ -59,7 +57,7 @@ public class AuthController extends AbstractController implements BaseController
             BindingResult bindingResult
     ) {
         Map<String,?> checkTokenResult = authService.decodeToken(token);
-        if(isFail(checkTokenResult)) return checkTokenResult;
+
         if(appPassword == null){
             if((int) checkTokenResult.get("appPw") == 10000)
                 return new SuccessResponse.Builder(SuccessResponse.of.CHECK_TOKEN_SUCCESS).build().getResponse();

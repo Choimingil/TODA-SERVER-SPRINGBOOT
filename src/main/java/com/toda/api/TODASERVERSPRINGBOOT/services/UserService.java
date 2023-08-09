@@ -5,6 +5,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreateUser;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.*;
+import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserInfoDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserLogDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserStickerDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.*;
@@ -12,16 +13,15 @@ import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 @Component("userService")
 @RequiredArgsConstructor
@@ -30,13 +30,9 @@ public class UserService extends AbstractService implements BaseService {
     private final UserImageRepository userImageRepository;
     private final UserStickerRepository userStickerRepository;
     private final UserLogRepository userLogRepository;
-    private final RedisProvider redisProvider;
+    private final UserProvider userProvider;
     private final TokenProvider tokenProvider;
-    private final DateProvider dateProvider;
-    private final MailProvider mailProvider;
-
-    @Value("${toda.sticker.basicNum}")
-    private String basicStickerNum;
+    private final JavaMailSender javaMailSender;
 
     @Transactional
     public long createUser(CreateUser createUser){
@@ -58,39 +54,10 @@ public class UserService extends AbstractService implements BaseService {
     }
 
     @Transactional
-    public void setBasicSticker(long userID){
+    public void setUserSticker(long userID, List<UserStickerDetail> haveStickerList){
+        Set<Long> check = haveStickerList==null ? new HashSet<>() : getObtainBasicStickers(haveStickerList);
         List<UserSticker> addList = new ArrayList<>();
-        for(long basicStickerID : StickerProvider.BASIC_STICKER_SET){
-            UserSticker userSticker = new UserSticker();
-            userSticker.setUserID(userID);
-            userSticker.setStickerPackID(basicStickerID);
-            addList.add(userSticker);
-        }
-        userStickerRepository.saveAll(addList);
-    }
-
-    @Transactional
-    public void resetBasicSticker(long userID){
-        List<UserSticker> haveStickerList = userStickerRepository.findByUserID(userID);
-
-        Set<Long> check = new HashSet<>();
-        for(UserSticker sticker : haveStickerList){
-            long stickerPackID = sticker.getStickerPackID();
-            if(check.contains(stickerPackID)){
-                userStickerRepository.deleteById(sticker.getUserStickerID());
-                break;
-            }
-
-            for(long basicStickerID : StickerProvider.BASIC_STICKER_SET){
-                if(stickerPackID == basicStickerID){
-                    check.add(stickerPackID);
-                    break;
-                }
-            }
-        }
-
-        List<UserSticker> addList = new ArrayList<>();
-        for(long basicStickerID : StickerProvider.BASIC_STICKER_SET){
+        for(long basicStickerID : basicStickers){
             if(!check.contains(basicStickerID)){
                 UserSticker userSticker = new UserSticker();
                 userSticker.setUserID(userID);
@@ -103,23 +70,23 @@ public class UserService extends AbstractService implements BaseService {
 
     @Transactional
     public void deleteUser(String token){
-        UserData userData = redisProvider.getUserInfo(token);
+        UserData userData = userProvider.getUserInfo(token);
         userRepository.deleteUser(userData.getUserID());
-        redisProvider.deleteUserInfo(userData.getEmail());
+        userProvider.deleteUserInfo(userData.getEmail());
     }
 
     @Transactional
     public void updateName(String token, String name){
-        UserData userData = redisProvider.getUserInfo(token);
+        UserData userData = userProvider.getUserInfo(token);
         User user = userData.toUser();
         user.setUserName(name);
         userRepository.save(user);
-        redisProvider.setUserInfo(userData);
+        userProvider.setUserInfo(userData);
     }
 
     @Transactional
     public void updatePassword(String token, String password){
-        UserData userData = redisProvider.getUserInfo(token);
+        UserData userData = userProvider.getUserInfo(token);
         User user = userData.toUser();
 
         if(userRepository.existsByUserIDAndPasswordAndAppPasswordNot(user.getUserID(), password, 99999))
@@ -130,12 +97,49 @@ public class UserService extends AbstractService implements BaseService {
 
         user.setPassword(password);
         userRepository.save(user);
-        redisProvider.setUserInfo(userData);
+        userProvider.setUserInfo(userData);
+    }
+
+    @Transactional
+    public UserData updateAppPassword(String token, int appPassword){
+        UserData userData = userProvider.getUserInfo(token);
+        User user = userData.toUser();
+        user.setAppPassword(appPassword);
+        userRepository.save(user);
+        userProvider.setUserInfo(userData);
+        return userData;
+    }
+
+    @Transactional
+    public void updateProfile(String token, String profile){
+        UserData userData = userProvider.getUserInfo(token);
+        long userID = userData.getUserID();
+
+        userImageRepository.deleteImage(userID);
+//        userImageRepository.deleteByUserID(userID);
+
+        createUserImage(userID,profile);
+        userProvider.setUserInfo(userData);
+    }
+
+    public UserData getUserInfo(String token){
+        return userProvider.getUserInfo(token);
+    }
+
+    public UserInfoDetail getUserInfoWithUserCode(String userCode){
+        return userRepository.getUserDataByUserCode(userCode);
+    }
+
+    public List<UserStickerDetail> getUserStickers(String token, int page){
+        long userID = tokenProvider.getUserID(token);
+        int start = (page-1)*10;
+        Pageable pageable = PageRequest.of(start,10);
+        return userStickerRepository.getUserStickers(userID,pageable);
     }
 
     @Transactional
     public void updateTempPassword(String email) {
-        UserData userData = redisProvider.getUserInfo(email);
+        UserData userData = userProvider.getUserInfo(email);
         User user = userData.toUser();
         String password = createUserCode();
 
@@ -147,90 +151,15 @@ public class UserService extends AbstractService implements BaseService {
 
         user.setPassword(password);
         userRepository.save(user);
-        redisProvider.deleteUserInfo(email);
-
-        try{
-            mailProvider.sendTempPassword(email,password).get();
-        }
-        catch (ExecutionException | InterruptedException e){
-            throw new WrongAccessException(WrongAccessException.of.SEND_MAIL_EXCEPTION);
-        }
+        userProvider.deleteUserInfo(email);
+        sendTempPassword(email,password);
     }
 
-    @Transactional
-    public void updateProfile(String token, String profile){
-        UserData userData = redisProvider.getUserInfo(token);
-        long userID = userData.getUserID();
-
-        userImageRepository.deleteImage(userID);
-//        userImageRepository.deleteByUserID(userID);
-
-        createUserImage(userID,profile);
-        redisProvider.setUserInfo(userData);
-    }
-
-    @Transactional
-    public UserData updateAppPassword(String token, int appPassword){
-        UserData userData = redisProvider.getUserInfo(token);
-        User user = userData.toUser();
-        user.setAppPassword(appPassword);
-        userRepository.save(user);
-        redisProvider.setUserInfo(userData);
-        return userData;
-    }
-
-    public Map<String,?> getUserInfo(String token){
-        UserData userData = tokenProvider.decodeToken(token);
-
-        Map<String,Object> map = new HashMap<>();
-        map.put("userID",userData.getUserID());
-        map.put("userCode",userData.getUserCode());
-        map.put("appPW",userData.getAppPassword());
-        map.put("email",userData.getEmail());
-        map.put("name",userData.getUserName());
-        map.put("birth",userData.getCreateAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-        map.put("selfie",userData.getProfile());
-        return map;
-    }
-
-    public Map<String,?> getUserInfoWithUserCode(String userCode){
-        User user = userRepository.findByUserCode(userCode);
-        UserImage userImage = userImageRepository.findByUserIDAndStatusNot(user.getUserID(),0);
-
-        Map<String,Object> map = new HashMap<>();
-        map.put("userID",user.getUserID());
-        map.put("userCode",user.getUserCode());
-        map.put("appPW",user.getAppPassword());
-        map.put("email",user.getEmail());
-        map.put("name",user.getUserName());
-        map.put("birth",user.getCreateAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-        map.put("selfie",userImage.getUrl());
-        return map;
-    }
-
-    public List<UserStickerDetail> getUserStickers(String token, int page){
-        UserData userData = tokenProvider.decodeToken(token);
-        int start = (page-1)*10;
-        Pageable pageable = PageRequest.of(start,10);
-        return userStickerRepository.getUserStickers(userData.getUserID(),pageable);
-    }
-
-    public List<Map<String,?>> getUserLog(String token, int page){
-        UserData userData = tokenProvider.decodeToken(token);
+    public List<UserLogDetail> getUserLog(String token, int page){
+        long userID = tokenProvider.getUserID(token);
         int start = (page-1)*20;
         Pageable pageable = PageRequest.of(start,20);
-        List<UserLogDetail> userLogDetails = userLogRepository.getUserLogs(userData.getUserID(),pageable);
-
-        return userLogDetails.stream().map(element -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("type", element.getType());
-            map.put("ID", element.getID());
-            map.put("name", element.getName());
-            map.put("selfie", element.getSelfie());
-            map.put("date", dateProvider.getTimeDiff(element.getDate()));
-            map.put("isReplied", element.getIsReplied());
-            return map;
-        }).collect(Collectors.toList());
+        return userLogRepository.getUserLogs(userID,pageable);
     }
 
     private String createUserCode(){
@@ -254,5 +183,41 @@ public class UserService extends AbstractService implements BaseService {
         }
 
         return sb.toString();
+    }
+
+    private void sendTempPassword(String email, String password) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        StringBuilder sb = new StringBuilder();
+        sb.append("임시 비밀번호를 발급했어요! 이 비밀번호로 로그인하시고 마이페이지 -> 비밀번호 변경 에 들어가셔서 비밀번호를 변경해주세요!\n\n").append(password);
+        message.setTo(email);
+        message.setSubject("TODA에서 편지왔어요 :)");
+        message.setText(sb.toString());
+
+        try {
+            sendMail(javaMailSender, message).get();
+        }
+        catch (ExecutionException | InterruptedException e){
+            throw new WrongAccessException(WrongAccessException.of.SEND_MAIL_EXCEPTION);
+        }
+    }
+
+    @Transactional
+    private Set<Long> getObtainBasicStickers(List<UserStickerDetail> haveStickerList){
+        Set<Long> set = new HashSet<>();
+        for(UserStickerDetail sticker : haveStickerList){
+            long stickerPackID = sticker.getStickerPackID();
+            if(set.contains(stickerPackID)){
+                userStickerRepository.deleteById(sticker.getUserStickerID());
+                break;
+            }
+
+            for(long basicStickerID : basicStickers){
+                if(stickerPackID == basicStickerID){
+                    set.add(stickerPackID);
+                    break;
+                }
+            }
+        }
+        return set;
     }
 }

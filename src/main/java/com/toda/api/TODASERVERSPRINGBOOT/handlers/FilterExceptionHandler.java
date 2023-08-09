@@ -16,8 +16,8 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public final class FilterExceptionHandler extends AbstractExceptionHandler implements BaseExceptionHandler {
-    private final SlackProvider slackProvider;
     private final ObjectMapper objectMapper;
+    private final SlackProvider slackProvider;
 
     public void getResponse(HttpServletRequest request, HttpServletResponse response, Exception e) {
         response.setStatus(200);
@@ -92,10 +92,5 @@ public final class FilterExceptionHandler extends AbstractExceptionHandler imple
             logger.error("IOException");
         }
 
-    }
-
-    @Override
-    public SlackProvider getSlackProvider() {
-        return slackProvider;
     }
 }

@@ -5,6 +5,8 @@ import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.*;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
+import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserInfoDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserLogDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserStickerDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.FailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
@@ -18,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +48,7 @@ public class UserController extends AbstractController implements BaseController
 
         long userID = userService.createUser(createUser);
         userService.createUserImage(userID,defaultProfile);
-        userService.setBasicSticker(userID);
+        userService.setUserSticker(userID, null);
         return new SuccessResponse.Builder(SuccessResponse.of.CREATE_USER_SUCCESS)
                 .build().getResponse();
     }
@@ -112,7 +115,17 @@ public class UserController extends AbstractController implements BaseController
     public Map<String,?> getUserInfo(
             @RequestHeader(TokenProvider.HEADER_NAME) String token
     ){
-        Map<String,?> userInfo = userService.getUserInfo(token);
+        UserData userData = userService.getUserInfo(token);
+
+        Map<String,Object> userInfo = new HashMap<>();
+        userInfo.put("userID",userData.getUserID());
+        userInfo.put("userCode",userData.getUserCode());
+        userInfo.put("email",userData.getEmail());
+        userInfo.put("birth",userData.getCreateAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+        userInfo.put("name",userData.getUserName());
+        userInfo.put("appPW",userData.getAppPassword());
+        userInfo.put("selfie",userData.getProfile());
+
         return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
                 .add("result",userInfo)
                 .build().getResponse();
@@ -124,7 +137,17 @@ public class UserController extends AbstractController implements BaseController
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
             @PathVariable("userCode") String userCode
     ){
-        Map<String,?> userInfo = userService.getUserInfoWithUserCode(userCode);
+        UserInfoDetail userData = userService.getUserInfoWithUserCode(userCode);
+
+        Map<String,Object> userInfo = new HashMap<>();
+        userInfo.put("userID",userData.getUserID());
+        userInfo.put("userCode",userData.getUserCode());
+        userInfo.put("email",userData.getEmail());
+        userInfo.put("birth",userData.getCreateAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+        userInfo.put("name",userData.getUserName());
+        userInfo.put("appPW",userData.getAppPassword());
+        userInfo.put("selfie",userData.getProfile());
+
         return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
                 .add("result",userInfo)
                 .build().getResponse();
@@ -193,14 +216,21 @@ public class UserController extends AbstractController implements BaseController
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
             @RequestParam(name="page") int page
     ){
-        List<Map<String,?>> userLogs = userService.getUserLog(token,page);
-        if(userLogs == null)
-            return new SuccessResponse.Builder(SuccessResponse.of.NO_USER_LOG_SUCCESS).build().getResponse();
-        else return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
-                .add("result",userLogs)
+        List<UserLogDetail> userLogs = userService.getUserLog(token,page);
+        if(userLogs == null) return new SuccessResponse.Builder(SuccessResponse.of.NO_USER_LOG_SUCCESS).build().getResponse();
+
+        List<Map<String,Object>> userLogDetails = userLogs.stream().map(element -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("type", element.getType());
+            map.put("ID", element.getID());
+            map.put("name", element.getName());
+            map.put("selfie", element.getSelfie());
+            map.put("date", getTimeDiff(element.getDate()));
+            map.put("isReplied", element.getIsReplied());
+            return map;
+        }).toList();
+        return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
+                .add("result",userLogDetails)
                 .build().getResponse();
     }
 }
-
-
-//        $r->addRoute('GET', '/user/stickers', ['StickerController', 'getUserStickers']);                                        //7-1. 유저 보유 스티커 조회 API(스티커 Controller에 존재)

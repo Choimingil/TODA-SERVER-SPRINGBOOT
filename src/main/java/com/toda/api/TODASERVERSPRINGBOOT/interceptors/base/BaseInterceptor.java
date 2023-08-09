@@ -19,4 +19,16 @@ public interface BaseInterceptor {
      * @param handler
      */
     void doPostHandleLogic(HttpServletRequest request, HttpServletResponse response, Object handler);
+
+    /**
+     * 유효한 MDC 로그 키인지 검사
+     * @return
+     */
+    boolean isMdcSet();
+
+    /**
+     * MDC에 값 추가
+     * @param request
+     */
+    void setMdc(HttpServletRequest request);
 }
