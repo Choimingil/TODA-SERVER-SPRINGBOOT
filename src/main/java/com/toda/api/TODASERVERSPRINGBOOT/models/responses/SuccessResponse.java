@@ -40,6 +40,11 @@ public class SuccessResponse extends Response {
         NO_USER_LOG_SUCCESS(100, "알림이 존재하지 않습니다."),
 
         /**
+         * NotificationController
+         */
+        SAVE_FCM_TOKEN_SUCCESS(100, "토큰이 저장되었습니다."),
+
+        /**
          * BASIC
          */
         SUCCESS(100, "성공"),

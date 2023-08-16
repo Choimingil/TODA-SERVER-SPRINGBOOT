@@ -20,6 +20,7 @@ public abstract class AbstractExceptionHandler implements BaseExceptionHandler {
     @Override
     public Map<String,?> getResponse(Exception e, int elementCode, String errorMessage){
         logger.error(e.getMessage());
+        logger.error(Arrays.toString(e.getStackTrace()));
 //        getSlackProvider().doSlack(e);
         return new FailResponse.Builder(elementCode, errorMessage)
                 .build()
@@ -37,6 +38,7 @@ public abstract class AbstractExceptionHandler implements BaseExceptionHandler {
     @Override
     public Map<String,?> getResponse(HttpServletRequest request, Exception e, int elementCode, String errorMessage){
         logger.error(e.getMessage());
+        logger.error(Arrays.toString(e.getStackTrace()));
 //        getSlackProvider().doSlack(request,e);
         return new FailResponse.Builder(elementCode, errorMessage)
                 .build()
@@ -55,6 +57,8 @@ public abstract class AbstractExceptionHandler implements BaseExceptionHandler {
         sb.append(e.getClass());
         sb.append(" \nexception text : ");
         sb.append(e.getMessage());
+        sb.append(" \nexception stack trace : ");
+        sb.append(Arrays.toString(e.getStackTrace()));
         return sb.toString();
     }
 
