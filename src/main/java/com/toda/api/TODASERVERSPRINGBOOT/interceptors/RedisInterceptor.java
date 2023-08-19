@@ -25,6 +25,7 @@ public final class RedisInterceptor extends AbstractInterceptor implements BaseI
         if(tokenProvider.isExistHeader(request) && tokenProvider.isValidHeader(request)){
             Claims claims = tokenProvider.getClaims(request);
             UserData user = userProvider.getUserInfo(claims.getSubject());
+            fcmProvider.checkFcmExist(user.getUserID());
             if(!user.getEmail().equals(claims.getSubject())) throw new WrongArgException(WrongArgException.of.WRONG_TOKEN_DATA_EXCEPTION);
         }
         return true;

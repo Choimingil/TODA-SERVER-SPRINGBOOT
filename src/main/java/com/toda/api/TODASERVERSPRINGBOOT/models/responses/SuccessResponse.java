@@ -43,6 +43,9 @@ public class SuccessResponse extends Response {
          * NotificationController
          */
         SAVE_FCM_TOKEN_SUCCESS(100, "토큰이 저장되었습니다."),
+        DO_FCM_ALLOWED_SUCCESS(100, "알림이 허용되었습니다."),
+        UNDO_FCM_ALLOWED_SUCCESS(200, "알림이 해제되었습니다."),
+        UPDATE_FCM_TIME_SUCCESS(100, "성공적으로 설정되었습니다."),
 
         /**
          * BASIC

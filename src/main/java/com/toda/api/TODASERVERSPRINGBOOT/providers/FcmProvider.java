@@ -1,6 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.providers;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.NoArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserFcm;
 import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.UserFcmProto;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -23,18 +25,31 @@ public class FcmProvider extends RedisProvider implements BaseProvider {
     private final NotificationRepository notificationRepository;
 
     /**
-     * Redis에 값이 없다면 DB 접속해서 값 최신화
+     * 인터셉터에서 Redis에 토큰이 없을 경우 등록
      * @param userID
+     */
+    public void checkFcmExist(long userID){
+        getUserFcmMap(userID);
+    }
+
+    /**
+     * Redis에 저장된 토큰 중 입력받은 토큰의 아이디 가져옴
+     * @param userID
+     * @param fcm
      * @return
      */
-    public Map<String,Long> getUserFcmMap(long userID){
-        Map<String,Long> userFcmMap = getUserFcm(userID);
-        if(userFcmMap == null){
-            List<UserFcm> userFcmList = notificationRepository.findByUserIDAndStatusNot(userID,0);
-            userFcmMap = convertUserFcm(userFcmList);
-            setUserFcm(userID, userFcmMap);
+    public long getNotificationID(long userID, String fcm){
+        Map<String,Long> userFcmMap = getUserFcmMap(userID);
+        if(userFcmMap.containsKey(fcm)) return userFcmMap.get(fcm);
+        else{
+            if(notificationRepository.existsByUserIDAndFcmAndStatusNot(userID,fcm,0)){
+                UserFcm userFcm = notificationRepository.findByUserIDAndFcmAndIsAllowedAndStatusNot(userID,fcm,"Y",0);
+                long notificationID = userFcm.getNotificationID();
+                setNewFcm(userID, notificationID, fcm);
+                return notificationID;
+            }
+            else throw new NoArgException(NoArgException.of.NO_FCM_EXCEPTION);
         }
-        return userFcmMap;
     }
 
     /**
@@ -44,11 +59,39 @@ public class FcmProvider extends RedisProvider implements BaseProvider {
      * @param fcm
      */
     public void setNewFcm(long userID, long notificationID, String fcm){
-        Map<String,Long> userFcmMap = getUserFcmMap(userID);
+        Map<String,Long> userFcmMap = new HashMap<>(getUserFcmMap(userID));
         if(!userFcmMap.containsKey(fcm)){
             userFcmMap.put(fcm,notificationID);
             setUserFcm(userID, userFcmMap);
         }
+    }
+
+    /**
+     * 특정 토큰 하나를 제거
+     * @param userID
+     * @param fcm
+     */
+    public void deleteFcm(long userID, String fcm){
+        Map<String,Long> userFcmMap = new HashMap<>(getUserFcmMap(userID));
+        if(userFcmMap.containsKey(fcm)){
+            userFcmMap.remove(fcm);
+            setUserFcm(userID, userFcmMap);
+        }
+    }
+
+    /**
+     * Redis에 값이 없다면 DB 접속해서 값 최신화
+     * @param userID
+     * @return
+     */
+    private Map<String,Long> getUserFcmMap(long userID){
+        Map<String,Long> userFcmMap = getUserFcm(userID);
+        if(userFcmMap == null){
+            List<UserFcm> userFcmList = notificationRepository.findByUserIDAndIsAllowedAndStatusNot(userID,"Y",0);
+            userFcmMap = convertUserFcm(userFcmList);
+            setUserFcm(userID, userFcmMap);
+        }
+        return userFcmMap;
     }
 
     /**
@@ -85,7 +128,7 @@ public class FcmProvider extends RedisProvider implements BaseProvider {
      * Redis에 저장되어 있는 유저 토큰 정보 삭제
      * @param userID
      */
-    public void deleteUserInfo(long userID){
+    public void deleteUserFcm(long userID){
         deleteRedis(getKey(userID));
     }
 
@@ -110,6 +153,10 @@ public class FcmProvider extends RedisProvider implements BaseProvider {
         return sb.toString();
     }
 
+    /**
+     * redisTemplate getter
+     * @return
+     */
     @Override
     protected RedisTemplate<String, byte[]> getRedisTemplate() {
         return redisTemplate;

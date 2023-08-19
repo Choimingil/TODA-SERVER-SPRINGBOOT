@@ -4,7 +4,11 @@ import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.GetAppPassword;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.SaveFcmToken;
+import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateFcmAllowed;
+import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateFcmTime;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
+import com.toda.api.TODASERVERSPRINGBOOT.models.entities.Notification;
+import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserFcmAllowed;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.services.NotificationService;
@@ -36,22 +40,50 @@ public class NotificationController extends AbstractController implements BaseCo
 
     ///7-5. 알림 허용 여부 확인 API(3개)
     @GetMapping("/alarm/ver2")
-    public Map<String, ?> getNotificationStatus(
+    public Map<String, ?> getNotificationAllowed(
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
             @RequestParam(name="fcmToken") String fcm
     ){
-
-
+        Notification notification = notificationService.getNotification(token,fcm);
         return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
+                .add("isBasicAllowed",notification.getIsAllowed())
+                .add("isRemindAllowed",notification.getIsRemindAllowed())
+                .add("isEventAllowed",notification.getIsEventAllowed())
                 .build().getResponse();
     }
 
+    //7-6. 알림 허용 여부 변경 API(3개)
+    @PatchMapping("/alarm/ver2")
+    public Map<String, ?> updateNotificationAllowed(
+            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestBody @Valid UpdateFcmAllowed updateFcmAllowed,
+            BindingResult bindingResult
+    ){
+        boolean updateNotificationAllowed = notificationService.updateFcmAllowed(token, updateFcmAllowed.getFcmToken(), updateFcmAllowed.getAlarmType());
+        if(updateNotificationAllowed) return new SuccessResponse.Builder(SuccessResponse.of.DO_FCM_ALLOWED_SUCCESS).build().getResponse();
+        else return new SuccessResponse.Builder(SuccessResponse.of.UNDO_FCM_ALLOWED_SUCCESS).build().getResponse();
+    }
 
-    // $r->addRoute('GET', '/alarm/ver2', ['NotificationController', 'checkAlarmVer2']);                                       //7-5. 알림 허용 여부 확인 API(3개)
-    // $r->addRoute('PATCH', '/alarm/ver2', ['NotificationController', 'updateAlarmVer2']);                                    //7-6. 알림 허용 여부 변경 API(3개)
-    // $r->addRoute('GET', '/alarm/time', ['NotificationController', 'getAlarmTime']);                                         //7-7. 알림 시간 조회 API
-    // $r->addRoute('PATCH', '/alarm/time', ['NotificationController', 'updateAlarmTime']);                                    //7-8. 알림 시간 변경 API
+    //7-7. 알림 시간 조회 API
+    @GetMapping("/alarm/time")
+    public Map<String, ?> getNotificationTime(
+            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestParam(name="fcmToken") String fcm
+    ){
+        Notification notification = notificationService.getNotification(token,fcm);
+        return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
+                .add("result",notification.getTime())
+                .build().getResponse();
+    }
 
-    // $r->addRoute('GET', '/alarm', ['NotificationController', 'checkAlarm']);                                                //1-7. 알림 허용 여부 확인 API
-    // $r->addRoute('PATCH', '/alarm', ['NotificationController', 'updateAlarm']);                                             //1-8. 알림 허용 여부 변경 API
+    //7-8. 알림 시간 변경 API
+    @PatchMapping("/alarm/time")
+    public Map<String, ?> updateNotificationTime(
+            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestBody @Valid UpdateFcmTime updateFcmTime,
+            BindingResult bindingResult
+    ){
+        notificationService.updateFcmTime(token, updateFcmTime.getFcmToken(), updateFcmTime.getTime());
+        return new SuccessResponse.Builder(SuccessResponse.of.UPDATE_FCM_TIME_SUCCESS).build().getResponse();
+    }
 }
