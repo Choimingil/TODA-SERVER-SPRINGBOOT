@@ -1,10 +1,8 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
-import com.toda.api.TODASERVERSPRINGBOOT.exceptions.NoArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.SaveFcmToken;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.Notification;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserFcmAllowed;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.NotificationRepository;

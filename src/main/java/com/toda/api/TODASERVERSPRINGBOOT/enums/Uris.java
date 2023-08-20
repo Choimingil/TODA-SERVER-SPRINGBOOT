@@ -26,6 +26,8 @@ public enum Uris {
     /** 8. 앱 비밀번호 설정 API */ POST_LOCK,
     /** 9. 앱 비밀번호 해제 API */ DELETE_LOCK,
     /** 10. 알림 조회 API */ GET_LOG,
+    /** 11. 다이어리 추가 API */ POST_DIARY,
+    /** 12. 다이어리 유저 추가 API */ POST_DIARIES_NUMBER_USER,
     /** 38. 공지사항 리스트 조회 API */ GET_ANNOUNCEMENT,
     /** 39. 공지사항 상세 조회 API */ GET_ANNOUNCEMENT_NUMBER,
     /** 40. 공지사항 읽었는지 안읽었는지 확인 API */ GET_ANNOUNCEMENT_CHECK;

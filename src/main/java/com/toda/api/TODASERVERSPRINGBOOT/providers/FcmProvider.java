@@ -12,9 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -23,14 +21,6 @@ import java.util.stream.Collectors;
 public class FcmProvider extends RedisProvider implements BaseProvider {
     private final RedisTemplate<String, byte[]> redisTemplate;
     private final NotificationRepository notificationRepository;
-
-    /**
-     * 인터셉터에서 Redis에 토큰이 없을 경우 등록
-     * @param userID
-     */
-    public void checkFcmExist(long userID){
-        getUserFcmMap(userID);
-    }
 
     /**
      * Redis에 저장된 토큰 중 입력받은 토큰의 아이디 가져옴
@@ -51,6 +41,21 @@ public class FcmProvider extends RedisProvider implements BaseProvider {
             else throw new NoArgException(NoArgException.of.NO_FCM_EXCEPTION);
         }
     }
+
+    /**
+     * 유저 리스트를 받아 한번에 전송할 FCM 리스트 가져오기
+     * Redis에 값이 없을 경우 null 리턴, 사용하는 클래스에서 예외 처리 해줘야 함
+     * @param userIDList
+     * @return
+     */
+    public List<String> getFcmList(List<Long> userIDList){
+        List<Map<String,Long>> userFcmMapList = getUserFcmList(userIDList);
+        if(userFcmMapList == null) return null;
+        return userFcmMapList.stream()
+                .flatMap(map -> map.keySet().stream())
+                .collect(Collectors.toList());
+    }
+
 
     /**
      * 새로운 토큰 하나를 추가
@@ -113,6 +118,34 @@ public class FcmProvider extends RedisProvider implements BaseProvider {
     }
 
     /**
+     * Redis에 저장된 여러 유저 토큰 정보 한번에 리스트로 조회
+     * @param userIDList
+     * @return
+     */
+    private List<Map<String,Long>> getUserFcmList(List<Long> userIDList) {
+        try {
+            List<String> keys = userIDList.stream()
+                    .map(this::getKey)
+                    .toList();
+
+            List<byte[]> bytes = getRedisList(keys).get();
+            if(bytes == null) return null;
+
+            return bytes.stream().map(element -> {
+                try{
+                    return UserFcmProto.UserFcm.parseFrom(element).getTokensMap();
+                }
+                catch (InvalidProtocolBufferException e){
+                    throw new WrongAccessException(WrongAccessException.of.REDIS_CONNECTION_EXCEPTION);
+                }
+            }).collect(Collectors.toList());
+        }
+        catch (ExecutionException | InterruptedException e){
+            throw new WrongAccessException(WrongAccessException.of.REDIS_CONNECTION_EXCEPTION);
+        }
+    }
+
+    /**
      * 유저 Fcm 정보 리스트 전체를 Redis에 저장
      * @param userID
      * @param userFcmMap
@@ -151,6 +184,14 @@ public class FcmProvider extends RedisProvider implements BaseProvider {
         StringBuilder sb = new StringBuilder();
         sb.append(userID).append("_Tokens");
         return sb.toString();
+    }
+
+    /**
+     * 인터셉터에서 Redis에 토큰이 없을 경우 등록
+     * @param userID
+     */
+    public void checkFcmExist(long userID){
+        getUserFcmMap(userID);
     }
 
     /**

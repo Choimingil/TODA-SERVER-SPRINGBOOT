@@ -48,6 +48,11 @@ public class SuccessResponse extends Response {
         UPDATE_FCM_TIME_SUCCESS(100, "성공적으로 설정되었습니다."),
 
         /**
+         * DiaryController
+         */
+        CREATE_DIARY_SUCCESS(100, "다이어리가 추가되었습니다."),
+
+        /**
          * BASIC
          */
         SUCCESS(100, "성공"),

@@ -21,9 +21,9 @@ public class Diary {
     private long diaryID;
 
     @Column(name="name", nullable = false)
-    private String name;
+    private String diaryName;
 
-    @Column(name="status", nullable = false, insertable = false)
+    @Column(name="status", nullable = false)
     private int status;
 
     @Temporal(TemporalType.TIMESTAMP)
