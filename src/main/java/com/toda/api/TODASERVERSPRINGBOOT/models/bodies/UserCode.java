@@ -5,13 +5,13 @@ import lombok.*;
 
 @Getter
 @ToString
-public final class GetUserCode {
+public final class UserCode {
     @ValidUserCode private String userCode;
 
-    public GetUserCode(){}
+    public UserCode(){}
 
     @Builder
-    public GetUserCode(String userCode){
+    public UserCode(String userCode){
         this.userCode = userCode;
     }
 }

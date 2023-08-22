@@ -34,7 +34,7 @@ public class NotificationService extends AbstractService implements BaseService 
                 .isRemindAllowed(allowable)
                 .status(status)
                 .build());
-        fcmProvider.setNewFcm(userID, newNotification.getNotificationID(), fcm);
+        fcmProvider.setNewFcm(userID, fcm, newNotification.getNotificationID(), status);
     }
 
     public Notification getNotification(String jwt, String fcm){
@@ -54,7 +54,12 @@ public class NotificationService extends AbstractService implements BaseService 
             case 0 -> {
                 curr = notification.getIsAllowed().equals("Y") ? "N" : "Y";
                 notification.setIsAllowed(curr);
-                if (curr.equals("Y")) fcmProvider.setNewFcm(notification.getUserID(), notification.getNotificationID(), notification.getFcm());
+                if (curr.equals("Y")) fcmProvider.setNewFcm(
+                        notification.getUserID(),
+                        notification.getFcm(),
+                        notification.getNotificationID(),
+                        notification.getStatus()
+                );
                 else fcmProvider.deleteFcm(notification.getUserID(), notification.getFcm());
             }
             case 1 -> {

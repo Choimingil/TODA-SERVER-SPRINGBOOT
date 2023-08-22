@@ -11,6 +11,8 @@ import java.util.List;
 
 @Repository
 public interface UserLogRepository extends JpaRepository<UserLog,Long> {
+    UserLog findByReceiveIDAndTypeID(long receiveID, long typeID);
+
     // @Query 내에는 ; 추가하면 안됨
     // @Query 내에는 엔티티 이름 그대로 사용하면 안됨
 

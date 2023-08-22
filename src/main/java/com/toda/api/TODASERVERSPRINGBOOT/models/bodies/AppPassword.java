@@ -5,11 +5,11 @@ import lombok.*;
 
 @Getter
 @ToString
-public final class GetAppPassword {
+public final class AppPassword {
     @ValidAppPw private String appPW;
-    public GetAppPassword(){}
+    public AppPassword(){}
     @Builder
-    public GetAppPassword(String appPw){
+    public AppPassword(String appPw){
         this.appPW = appPw;
     }
 }

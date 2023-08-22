@@ -3,5 +3,6 @@ option java_package = "com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers";
 option java_outer_classname = "UserFcmProto";
 
 message UserFcm {
-  map<string, int64> tokens = 1;
+  map<string, int64> tokenID = 1;
+  map<string, int32> tokenStatus = 2;
 }

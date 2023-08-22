@@ -33,7 +33,7 @@ public class UserController extends AbstractController implements BaseController
     private final SystemService systemService;
     private final AuthService authService;
 
-    @Value("${toda.url.alarmServer}")
+    @Value("${toda.url.userImage}")
     private String defaultProfile;
 
     //2. 자체 회원가입 API
@@ -188,7 +188,7 @@ public class UserController extends AbstractController implements BaseController
     @PostMapping("/lock")
     public Map<String, ?> setAppPassword(
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
-            @RequestBody @Valid GetAppPassword appPassword,
+            @RequestBody @Valid AppPassword appPassword,
             BindingResult bindingResult
     ){
         UserData userData = userService.updateAppPassword(token, Integer.parseInt(appPassword.getAppPW()));

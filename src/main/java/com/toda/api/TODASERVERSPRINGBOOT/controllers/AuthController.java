@@ -5,7 +5,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.GetAppPassword;
+import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.AppPassword;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.LoginRequest;
 import com.toda.api.TODASERVERSPRINGBOOT.services.AuthService;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
@@ -53,7 +53,7 @@ public class AuthController extends AbstractController implements BaseController
     @SetMdcBody
     public Map<String,?> checkToken(
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
-            @RequestBody @Nullable GetAppPassword appPassword,
+            @RequestBody @Nullable AppPassword appPassword,
             BindingResult bindingResult
     ) {
         Map<String,?> checkTokenResult = authService.decodeToken(token);

@@ -3,12 +3,10 @@ package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreateDiary;
-import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.GetUserCode;
-import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.SaveFcmToken;
+import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UserCode;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.services.DiaryService;
-import com.toda.api.TODASERVERSPRINGBOOT.services.NotificationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
@@ -36,7 +34,22 @@ public class DiaryController extends AbstractController implements BaseControlle
                 .build().getResponse();
     }
 
+    //12. 다이어리 유저 추가 API
+    @PostMapping("/diaries/{diaryID}/user")
+    public Map<String, ?> setDiaryFriend(
+            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @PathVariable("diaryID") long diaryID,
+            @RequestParam(name="type", required = false) String type,
+            @RequestBody @Valid UserCode userCode,
+            BindingResult bindingResult
+    ){
+        boolean isSendRequest = diaryService.isSendRequest(token,diaryID);
+        if(isSendRequest) diaryService.acceptDiary(token,diaryID,userCode.getUserCode());
+        else diaryService.inviteDiary(token,diaryID,userCode.getUserCode());
 
+        return new SuccessResponse.Builder(SuccessResponse.of.CREATE_DIARY_SUCCESS)
+                .build().getResponse();
+    }
 
     // $r->addRoute('POST', '/diaries/{diaryID:\d+}/user', ['DiaryController', 'addDiaryFriend']);                             //12. 다이어리 유저 추가 API
     // $r->addRoute('GET', '/log/{diaryID:\d+}', ['DiaryController', 'getRequestByUserCode']);                                 //12-1. 유저에게 온 다이어리 초대 요청 조회 API
