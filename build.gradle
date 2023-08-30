@@ -72,7 +72,7 @@ dependencies {
 	implementation 'org.apache.commons:commons-lang3:3.12.0'
 
 	// Protobuf
-	implementation 'com.google.protobuf:protobuf-java:3.19.6'
+	implementation 'com.google.protobuf:protobuf-java:3.22.0'
 
 	// Caffeine
 	implementation("com.github.ben-manes.caffeine:caffeine:3.1.7")
@@ -81,6 +81,9 @@ dependencies {
 
 	// Mail
 	implementation "org.springframework.boot:spring-boot-starter-mail"
+
+	// Kafka
+	implementation 'org.springframework.kafka:spring-kafka'
 }
 
 tasks.named('test') {

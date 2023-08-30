@@ -1,0 +1,12 @@
+syntax = "proto3";
+option java_package = "com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers";
+option java_outer_classname = "KafkaFcmProto";
+
+message KafkaFcm {
+  string title = 1;
+  string body = 2;
+  int32 typeNum = 3;
+  int64 dataID = 4;
+  repeated string aosFcmList = 5;
+  repeated string iosFcmList = 6;
+}

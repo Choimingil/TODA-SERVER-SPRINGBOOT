@@ -14,6 +14,7 @@ public final class WrongAccessException extends IllegalStateException {
         SEND_MAIL_EXCEPTION(500,"메일이 정상적으로 발송되지 않았습니다."),
         SEND_SLACK_EXCEPTION(500,"SLACK 메시지가 정상적으로 발송되지 않았습니다."),
         REDIS_CONNECTION_EXCEPTION(500,"Redis에 정상적으로 등록되지 않았습니다."),
+        KAFKA_CONNECTION_EXCEPTION(500,"Kafka에 정상적으로 접속되지 않았습니다."),
         MDC_SETTING_EXCEPTION(500,"MDC가 정상적으로 설정되지 않았습니다."),
         SET_BODY_TO_MDC_EXCEPTION(500,"MDC에 Request_body를 넣는 중 오류가 발생했습니다."),
         READ_TXT_EXCEPTION(500,"텍스트 파일을 읽는 중 오류가 발생했습니다."),

@@ -2,34 +2,33 @@ package com.toda.api.TODASERVERSPRINGBOOT.services;
 
 import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryColors;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryStatus;
-import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.Fcms.FcmGroup;
-import com.toda.api.TODASERVERSPRINGBOOT.models.Fcms.FcmParams;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.Diary;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.DiaryNotice;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.UserDiary;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.UserLog;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserInfoDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.KafkaFcmProto;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.HttpProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
+import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
+import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.relational.core.sql.In;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 
 @Component("diaryService")
 @RequiredArgsConstructor
-public class DiaryService {
+public class DiaryService extends AbstractService implements BaseService {
     private final UserRepository userRepository;
     private final DiaryRepository diaryRepository;
     private final UserDiaryRepository userDiaryRepository;
@@ -38,6 +37,7 @@ public class DiaryService {
     private final TokenProvider tokenProvider;
     private final FcmProvider fcmProvider;
     private final HttpProvider httpProvider;
+    private final KafkaTemplate<String,byte[]> kafkaTemplate;
     private final Set<DiaryColors> colorSet = EnumSet.allOf(DiaryColors.class);
     private final Set<DiaryStatus> statusSet = EnumSet.allOf(DiaryStatus.class);
 
@@ -114,20 +114,31 @@ public class DiaryService {
 
         FcmGroup fcmGroup = fcmProvider.getSingleUserFcmList(receiveUserID);
 
-        FcmParams params = FcmParams.builder()
-                .title(title)
-                .body(body)
-                .fcmGroup(fcmGroup)
-                .dataID(diaryID)
-                .typeNum(1)
-                .build();
+//        FcmParams params = FcmParams.builder()
+//                .title(title)
+//                .body(body)
+//                .fcmGroup(fcmGroup)
+//                .dataID(diaryID)
+//                .typeNum(1)
+//                .build();
+//        httpProvider.sendFcmSingleUser(params);
 
-        try{
-            httpProvider.sendFcmSingleUser(params).get();
-        }
-        catch (ExecutionException | InterruptedException e){
-            throw new WrongAccessException(WrongAccessException.of.HTTP_CONNECTION_EXCEPTION);
-        }
+//        try{
+//            httpProvider.sendFcmSingleUser(params).get();
+//        }
+//        catch (ExecutionException | InterruptedException e){
+//            throw new WrongAccessException(WrongAccessException.of.HTTP_CONNECTION_EXCEPTION);
+//        }
+
+        KafkaFcmProto.KafkaFcm params = KafkaFcmProto.KafkaFcm.newBuilder()
+                .setTitle(title)
+                .setBody(body)
+                .setTypeNum(1)
+                .setDataID(diaryID)
+                .addAllAosFcmList(fcmGroup.getAosFcmList())
+                .addAllIosFcmList(fcmGroup.getIosFcmList())
+                .build();
+        kafkaTemplate.send("toda-fcm-topic", params.toByteArray());
     }
 
     @Transactional
@@ -164,7 +175,7 @@ public class DiaryService {
 
         long userID = tokenProvider.getUserID(token);
         UserDiary userDiary = userDiaryRepository.findByUserIDAndDiaryID(userID,diaryID);
-        return (userDiary == null || userDiary.getStatus()%10 != 0);
+        return !(userDiary == null || userDiary.getStatus()%10 != 0);
     }
 
     @Transactional
