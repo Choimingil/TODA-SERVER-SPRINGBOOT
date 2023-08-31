@@ -5,6 +5,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryStatus;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.Fcms.FcmGroup;
+import com.toda.api.TODASERVERSPRINGBOOT.models.Fcms.FcmParams;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.Diary;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.DiaryNotice;
@@ -113,32 +114,14 @@ public class DiaryService extends AbstractService implements BaseService {
                 .toString();
 
         FcmGroup fcmGroup = fcmProvider.getSingleUserFcmList(receiveUserID);
-
-//        FcmParams params = FcmParams.builder()
-//                .title(title)
-//                .body(body)
-//                .fcmGroup(fcmGroup)
-//                .dataID(diaryID)
-//                .typeNum(1)
-//                .build();
-//        httpProvider.sendFcmSingleUser(params);
-
-//        try{
-//            httpProvider.sendFcmSingleUser(params).get();
-//        }
-//        catch (ExecutionException | InterruptedException e){
-//            throw new WrongAccessException(WrongAccessException.of.HTTP_CONNECTION_EXCEPTION);
-//        }
-
-        KafkaFcmProto.KafkaFcm params = KafkaFcmProto.KafkaFcm.newBuilder()
-                .setTitle(title)
-                .setBody(body)
-                .setTypeNum(1)
-                .setDataID(diaryID)
-                .addAllAosFcmList(fcmGroup.getAosFcmList())
-                .addAllIosFcmList(fcmGroup.getIosFcmList())
+        FcmParams fcmParams = FcmParams.builder()
+                .title(title)
+                .body(body)
+                .typeNum(1)
+                .dataID(diaryID)
+                .fcmGroup(fcmGroup)
                 .build();
-        kafkaTemplate.send("toda-fcm-topic", params.toByteArray());
+        httpProvider.getFcmKafkaProducer(receiveUserID, fcmParams);
     }
 
     @Transactional
