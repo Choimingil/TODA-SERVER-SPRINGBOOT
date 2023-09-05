@@ -9,7 +9,6 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.KafkaFcmProto;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.FcmResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.repositories.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.http.Consts;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -17,6 +16,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -60,7 +60,8 @@ public class HttpProvider extends AbstractProvider implements BaseProvider {
                 .addAllAosFcmList(fcmParams.getFcmGroup().getAosFcmList())
                 .addAllIosFcmList(fcmParams.getFcmGroup().getIosFcmList())
                 .build();
-        kafkaTemplate.send("toda-fcm-topic", params.toByteArray());
+        kafkaTemplate.send("fcm", params.toByteArray());
+//        kafkaTemplate.send(new ProducerRecord<>("fcm", params.toByteArray()));
     }
 
     /**
@@ -68,8 +69,9 @@ public class HttpProvider extends AbstractProvider implements BaseProvider {
      * byte array 역직렬화 후 알림 발송
      * @param byteCode
      */
-    @KafkaListener(topics = "toda-fcm-topic")
-    public void getFcmKafkaConsumer(byte[] byteCode){
+    @KafkaListener(topics = "fcm")
+    private void getFcmKafkaConsumer(byte[] byteCode){
+        logger.info("kafka pass");
         try {
             KafkaFcmProto.KafkaFcm kafkaFcm = KafkaFcmProto.KafkaFcm.parseFrom(byteCode);
             long userID = kafkaFcm.getUserID();

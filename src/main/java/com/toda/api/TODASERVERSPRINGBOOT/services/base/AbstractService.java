@@ -51,16 +51,4 @@ public abstract class AbstractService implements BaseService{
             throw new WrongAccessException(WrongAccessException.of.READ_TXT_EXCEPTION);
         }
     }
-
-    /**
-     * 비동기 메일 전송
-     * @param javaMailSender
-     * @param message
-     * @return
-     */
-    @Async
-    protected Future<Void> sendMail(JavaMailSender javaMailSender, SimpleMailMessage message){
-        javaMailSender.send(message);
-        return CompletableFuture.completedFuture(null);
-    }
 }

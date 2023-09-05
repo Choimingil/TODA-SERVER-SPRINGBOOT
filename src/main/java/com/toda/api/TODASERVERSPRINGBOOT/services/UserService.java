@@ -1,6 +1,5 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
-import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreateUser;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
@@ -15,13 +14,10 @@ import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 
 @Component("userService")
 @RequiredArgsConstructor
@@ -32,7 +28,7 @@ public class UserService extends AbstractService implements BaseService {
     private final UserLogRepository userLogRepository;
     private final UserProvider userProvider;
     private final TokenProvider tokenProvider;
-    private final JavaMailSender javaMailSender;
+    private final MailProvider mailProvider;
 
     @Transactional
     public long createUser(CreateUser createUser){
@@ -186,19 +182,10 @@ public class UserService extends AbstractService implements BaseService {
     }
 
     private void sendTempPassword(String email, String password) {
-        SimpleMailMessage message = new SimpleMailMessage();
         StringBuilder sb = new StringBuilder();
         sb.append("임시 비밀번호를 발급했어요! 이 비밀번호로 로그인하시고 마이페이지 -> 비밀번호 변경 에 들어가셔서 비밀번호를 변경해주세요!\n\n").append(password);
-        message.setTo(email);
-        message.setSubject("TODA에서 편지왔어요 :)");
-        message.setText(sb.toString());
-
-        try {
-            sendMail(javaMailSender, message).get();
-        }
-        catch (ExecutionException | InterruptedException e){
-            throw new WrongAccessException(WrongAccessException.of.SEND_MAIL_EXCEPTION);
-        }
+        String subject = "TODA에서 편지왔어요 :)";
+        mailProvider.getMailKafkaProducer(email, subject, sb.toString());
     }
 
     @Transactional

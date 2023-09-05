@@ -40,6 +40,7 @@ public class KafkaConfig {
         configProps.put(ConsumerConfig.GROUP_ID_CONFIG, consumerGroup);
         configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class);
+        configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG,true);
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
@@ -52,6 +53,7 @@ public class KafkaConfig {
     public ConcurrentKafkaListenerContainerFactory<String, byte[]> kafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, byte[]> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
+        factory.setBatchListener(false);
         return factory;
     }
 }

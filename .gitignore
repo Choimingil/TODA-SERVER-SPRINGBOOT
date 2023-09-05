@@ -40,6 +40,7 @@ out/
 .vscode/
 
 ### Proto Buffer ###
+/src/main/java/com/toda/api/TODASERVERSPRINGBOOT/models/protobuffers/KafkaMailProto.java
 /src/main/java/com/toda/api/TODASERVERSPRINGBOOT/models/protobuffers/KafkaFcmProto.java
 /src/main/java/com/toda/api/TODASERVERSPRINGBOOT/models/protobuffers/UserInfoProto.java
 /src/main/java/com/toda/api/TODASERVERSPRINGBOOT/models/protobuffers/UserFcmProto.java

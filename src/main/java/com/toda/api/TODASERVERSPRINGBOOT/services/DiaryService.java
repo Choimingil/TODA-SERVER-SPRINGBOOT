@@ -12,7 +12,6 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.entities.DiaryNotice;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.UserDiary;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.UserLog;
 import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserInfoDetail;
-import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.KafkaFcmProto;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.HttpProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
@@ -20,7 +19,6 @@ import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +36,6 @@ public class DiaryService extends AbstractService implements BaseService {
     private final TokenProvider tokenProvider;
     private final FcmProvider fcmProvider;
     private final HttpProvider httpProvider;
-    private final KafkaTemplate<String,byte[]> kafkaTemplate;
     private final Set<DiaryColors> colorSet = EnumSet.allOf(DiaryColors.class);
     private final Set<DiaryStatus> statusSet = EnumSet.allOf(DiaryStatus.class);
 
