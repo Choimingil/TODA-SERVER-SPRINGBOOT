@@ -1,267 +1,273 @@
 package com.toda.api.TODASERVERSPRINGBOOT.providers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.toda.api.TODASERVERSPRINGBOOT.exceptions.NoArgException;
+import com.toda.api.TODASERVERSPRINGBOOT.enums.FcmTypes;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
-import com.toda.api.TODASERVERSPRINGBOOT.models.Fcms.FcmGroup;
-import com.toda.api.TODASERVERSPRINGBOOT.models.Fcms.FcmMap;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserFcm;
-import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.UserFcmProto;
+import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.*;
+import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.KafkaFcmProto;
+import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.base.RedisProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.repositories.NotificationRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
+
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+
+
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.springframework.web.client.RestTemplate;
+
+
+//import org.apache.http.client.methods.CloseableHttpResponse;
+//import org.apache.http.client.methods.HttpPost;
+//import org.apache.http.entity.StringEntity;
+//import org.apache.http.impl.client.CloseableHttpClient;
+//import org.apache.http.impl.client.HttpClientBuilder;
+//import org.apache.http.Consts;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
+import java.util.concurrent.Future;
 
 @Component
 @RequiredArgsConstructor
-public class FcmProvider extends RedisProvider implements BaseProvider {
-    private final RedisTemplate<String, byte[]> redisTemplate;
-    private final NotificationRepository notificationRepository;
+public class FcmProvider extends AbstractProvider implements BaseProvider {
+    private final FcmTokenProvider fcmTokenProvider;
+
+    @Value("${toda.server.fcm.url}")
+    private String fcmServerDomain;
+    @Value("${toda.server.alarm.content-type}")
+    private String contentType;
+    @Value("${toda.server.alarm.authorization}")
+    private String authorization;
 
     /**
-     * 인터셉터에서 Redis에 토큰이 없을 경우 등록
-     * @param userID
+     * Fcm Kafka Consumer
+     * byte array 역직렬화 후 알림 발송
+     * @param byteCode
      */
-    public void checkFcmExist(long userID){
-        getFcmMap(userID);
-    }
-
-    /**
-     * Redis에 저장된 토큰 중 입력받은 토큰의 아이디 가져옴
-     * @param userID
-     * @param fcm
-     * @return
-     */
-    public long getNotificationID(long userID, String fcm){
-        FcmMap fcmMap = getFcmMap(userID);
-        Map<String,Long> tokenIDs = fcmMap.getTokenIDs();
-        if(tokenIDs.containsKey(fcm)) return tokenIDs.get(fcm);
-        else{
-            if(notificationRepository.existsByUserIDAndFcmAndStatusNot(userID,fcm,0)){
-                UserFcm userFcm = notificationRepository.findByUserIDAndFcmAndIsAllowedAndStatusNot(userID,fcm,"Y",0);
-                long notificationID = userFcm.getNotificationID();
-                setNewFcm(userID,fcm,notificationID,userFcm.getStatus());
-                return notificationID;
-            }
-            else throw new NoArgException(NoArgException.of.NO_FCM_EXCEPTION);
-        }
-    }
-
-    public Map<String,Integer> getTokenStatus(long userID){
-        FcmMap fcmMap = getFcmMap(userID);
-        return fcmMap.getTokenStatus();
-    }
-
-    /**
-     * 유저 리스트를 받아 한번에 전송할 FCM 리스트 가져오기
-     * Redis에 값이 없을 경우 null 리턴, 사용하는 클래스에서 예외 처리 해줘야 함
-     * @param userID
-     * @return
-     */
-    public FcmGroup getSingleUserFcmList(long userID){
-        List<String> aosFcmList = new ArrayList<>();
-        List<String> iosFcmList = new ArrayList<>();
-
-        Map<String,Integer> tokenStatus = getTokenStatus(userID);
-        for(String fcm : tokenStatus.keySet()){
-            int status = tokenStatus.get(fcm);
-            if(status == 100) iosFcmList.add(fcm);
-            else if(status == 200) aosFcmList.add(fcm);
-        }
-
-        return FcmGroup.builder()
-                .aosFcmList(aosFcmList)
-                .iosFcmList(iosFcmList)
-                .build();
-    }
-
-    /**
-     * 유저 리스트를 받아 한번에 전송할 FCM 리스트 가져오기
-     * Redis에 값이 없을 경우 null 리턴, 사용하는 클래스에서 예외 처리 해줘야 함
-     * @param userIDList
-     * @return
-     */
-    public List<String> getMultiUserFcmList(List<Long> userIDList){
-        List<FcmMap> fcmMapList = getFcmMapList(userIDList);
-        if(fcmMapList == null) return null;
-
-        Set<String> fcmSet = new HashSet<>();
-        for(FcmMap fcmMap : fcmMapList) fcmSet.addAll(getFcmSet(fcmMap));
-        return new ArrayList<>(fcmSet);
-    }
-
-    private Set<String> getFcmSet(FcmMap fcmMap){
-        Map<String, Long> tokenIDs = fcmMap.getTokenIDs();
-        Map<String, Integer> tokenStatus = fcmMap.getTokenStatus();
-        Set<String> fcmSet = tokenIDs.keySet();
-        fcmSet.addAll(tokenStatus.keySet());
-        return fcmSet;
-    }
-
-    /**
-     * 새로운 토큰 하나를 추가
-     * @param userID
-     * @param notificationID
-     * @param fcm
-     */
-    public void setNewFcm(long userID, String fcm, long notificationID, int status){
-        FcmMap fcmMap = getFcmMap(userID);
-        Map<String,Long> tokenIDs = new HashMap<>(fcmMap.getTokenIDs());
-        if(!tokenIDs.containsKey(fcm)) tokenIDs.put(fcm,notificationID);
-        else tokenIDs.replace(fcm,notificationID);
-
-        Map<String,Integer> tokenStatus = new HashMap<>(fcmMap.getTokenStatus());
-        if(!tokenStatus.containsKey(fcm)) tokenStatus.put(fcm,status);
-        else tokenStatus.replace(fcm,status);
-
-        setUserFcm(userID,FcmMap.builder().tokenIDs(tokenIDs).tokenStatus(tokenStatus).build());
-    }
-
-    /**
-     * 특정 토큰 하나를 제거
-     * @param userID
-     * @param fcm
-     */
-    public void deleteFcm(long userID, String fcm){
-        FcmMap fcmMap = getFcmMap(userID);
-        Map<String,Long> tokenIDs = new HashMap<>(fcmMap.getTokenIDs());
-        Map<String,Integer> tokenStatus = new HashMap<>(fcmMap.getTokenStatus());
-        tokenIDs.remove(fcm);
-        tokenStatus.remove(fcm);
-        setUserFcm(userID,FcmMap.builder().tokenIDs(tokenIDs).tokenStatus(tokenStatus).build());
-    }
-
-    /**
-     * Redis에 값이 없다면 DB 접속해서 값 최신화
-     * @param userID
-     * @return
-     */
-    private FcmMap getFcmMap(long userID){
-        FcmMap userFcmMap = convertRedisToFcmMap(userID);
-        if(userFcmMap == null){
-            List<UserFcm> userFcmList = notificationRepository.findByUserIDAndIsAllowedAndStatusNot(userID,"Y",0);
-            Map<String,Long> tokenIDs = convertUserFcmListToTokenIDs(userFcmList);
-            Map<String,Integer> tokenStatus = convertUserFcmListToTokenStatus(userFcmList);
-            userFcmMap = FcmMap.builder()
-                    .tokenIDs(tokenIDs)
-                    .tokenStatus(tokenStatus)
-                    .build();
-            setUserFcm(userID, userFcmMap);
-        }
-        return userFcmMap;
-    }
-
-    /**
-     * Redis에 저장된 FCM 맵 2개 리턴(토큰 아이디, 토큰 상태)
-     * @param userID
-     * @return
-     */
-    private FcmMap convertRedisToFcmMap(long userID) {
+    @KafkaListener(topics = "fcm")
+    private void getFcmKafkaConsumer(byte[] byteCode){
         try {
-            byte[] byteCode = getRedis(getKey(userID)).get();
-            if(byteCode == null) return null;
-
-            UserFcmProto.UserFcm userFcm = UserFcmProto.UserFcm.parseFrom(byteCode);
-            Map<String,Long> tokenIDs = userFcm.getTokenIDMap();
-            Map<String,Integer> tokenStatus = userFcm.getTokenStatusMap();
-            return FcmMap.builder()
-                    .tokenIDs(tokenIDs)
-                    .tokenStatus(tokenStatus)
+            KafkaFcmProto.KafkaFcmRequest kafkaFcm = KafkaFcmProto.KafkaFcmRequest.parseFrom(byteCode);
+            long userID = kafkaFcm.getUserID();
+            FcmGroup group = FcmGroup.builder()
+                    .aosFcmList(kafkaFcm.getAosFcmList())
+                    .iosFcmList(kafkaFcm.getIosFcmList())
                     .build();
+            FcmParams params = FcmParams.builder()
+                    .title(kafkaFcm.getTitle())
+                    .body(kafkaFcm.getBody())
+                    .typeNum(kafkaFcm.getTypeNum())
+                    .dataID(kafkaFcm.getDataID())
+                    .fcmGroup(group)
+                    .build();
+
+            sendFcmSingleUser(userID, params).get();
         }
         catch (ExecutionException | InterruptedException | InvalidProtocolBufferException e){
-            throw new WrongAccessException(WrongAccessException.of.REDIS_CONNECTION_EXCEPTION);
+            throw new WrongAccessException(WrongAccessException.of.KAFKA_CONNECTION_EXCEPTION);
         }
     }
 
-    private Map<String,Long> convertUserFcmListToTokenIDs(List<UserFcm> userFcmList){
-        return userFcmList.stream()
-                .collect(Collectors.toMap(UserFcm::getFcm, UserFcm::getNotificationID));
-    }
-
-    private Map<String,Integer> convertUserFcmListToTokenStatus(List<UserFcm> userFcmList){
-        return userFcmList.stream()
-                .collect(Collectors.toMap(UserFcm::getFcm, UserFcm::getStatus));
-    }
-
     /**
-     * Redis에 저장된 여러 유저 토큰 정보 한번에 리스트로 조회
-     * @param userIDList
+     * 하나의 유저에게 알림 발송
+     * @param userID
+     * @param params
      * @return
      */
-    private List<FcmMap> getFcmMapList(List<Long> userIDList) {
-        try {
-            List<String> keys = userIDList.stream()
-                    .map(this::getKey)
-                    .toList();
+    private Future<Void> sendFcmSingleUser(long userID, FcmParams params) {
+        String fcmType = getFcmType(params.getTypeNum());
+        List<String> aosFcmList = params.getFcmGroup().getAosFcmList();
+        List<String> iosFcmList = params.getFcmGroup().getIosFcmList();
 
-            List<byte[]> bytes = getRedisList(keys).get();
-            if(bytes == null) return null;
+        FcmResponse aosResponse =
+                !aosFcmList.isEmpty() ?
+                        sendUrl(getFcmAosBody(aosFcmList, params.getTitle(), params.getBody(), fcmType, params.getDataID())) :
+                        null;
 
-            return bytes.stream().map(element -> {
-                try{
-                    UserFcmProto.UserFcm userFcm = UserFcmProto.UserFcm.parseFrom(element);
-                    Map<String,Long> tokenIDs = userFcm.getTokenIDMap();
-                    Map<String,Integer> tokenStatus = userFcm.getTokenStatusMap();
-                    return FcmMap.builder()
-                            .tokenIDs(tokenIDs)
-                            .tokenStatus(tokenStatus)
-                            .build();
-                }
-                catch (InvalidProtocolBufferException e){
-                    throw new WrongAccessException(WrongAccessException.of.REDIS_CONNECTION_EXCEPTION);
-                }
-            }).collect(Collectors.toList());
-        }
-        catch (ExecutionException | InterruptedException e){
-            throw new WrongAccessException(WrongAccessException.of.REDIS_CONNECTION_EXCEPTION);
-        }
+        FcmResponse iosResponse =
+                !iosFcmList.isEmpty() ?
+                        sendUrl(getFcmIosBody(iosFcmList, params.getTitle(), params.getBody(), fcmType, params.getDataID())) :
+                        null;
+
+        if(aosResponse != null) checkExpiredTokens(aosResponse, userID, aosFcmList);
+        if(iosResponse != null) checkExpiredTokens(iosResponse, userID, iosFcmList);
+
+        return CompletableFuture.completedFuture(null);
     }
 
     /**
-     * 유저 Fcm 정보 리스트 전체를 Redis에 저장
+     * 만료된 토큰이 있을 경우 DB 및 Redis에서 삭제
+     * @param response
      * @param userID
-     * @param fcmMap
+     * @param tokenList
      */
-    private void setUserFcm(long userID, FcmMap fcmMap){
-        UserFcmProto.UserFcm userFcm = UserFcmProto.UserFcm.newBuilder()
-                .putAllTokenID(fcmMap.getTokenIDs())
-                .putAllTokenStatus(fcmMap.getTokenStatus())
-                .build();
-        setRedis(getKey(userID), userFcm.toByteArray());
+    private void checkExpiredTokens(FcmResponse response, long userID, List<String> tokenList){
+        List<FcmResponse.Result> results = response.getResults();
+        for(int i=0;i<results.size();i++){
+            if(results.get(i).getError() != null && results.get(i).getError().equals("NotRegistered"))
+                fcmTokenProvider.deleteFcm(userID,tokenList.get(i));
+        }
     }
 
     /**
-     * Redis에 저장되어 있는 유저 토큰 정보 삭제
-     * @param userID
-     */
-    public void deleteUserFcm(long userID){
-        deleteRedis(getKey(userID));
-    }
-
-    /**
-     * Redis에 저장될 키 생성 : {userID}_Tokens
-     * @param userID
+     * FCM Server로 FCM 발송 API 전송
+     * @param body
      * @return
      */
-    private String getKey(long userID){
+    @Async
+    private FcmResponse sendUrl(Object body){
+//        ObjectMapper objectMapper = new ObjectMapper();
+//
+//        try{
+//            HttpPost postRequest = new HttpPost(fcmServerDomain);
+//            postRequest.setHeader("Authorization", authorization);
+//            postRequest.setHeader("Content-Type", contentType);
+//            postRequest.setEntity(new StringEntity(objectMapper.writeValueAsString(body), Consts.UTF_8));
+//            ResponseEntity<String> responseEntity = restTemplate.postForEntity(fcmServerDomain, postRequest, String.class);
+//
+//            HttpStatusCode statusCode = responseEntity.getStatusCode();
+//            String responseBody = responseEntity.getBody();
+//
+//            logger.info("HTTP status code : "+statusCode);
+//            logger.info("HTTP response body : "+responseBody);
+//
+//            return new ObjectMapper().readValue(responseBody, FcmResponse.class);
+//        }
+//        catch (JsonProcessingException e){
+//            throw new WrongAccessException(WrongAccessException.of.HTTP_CONNECTION_EXCEPTION);
+//        }
+
+
+
+
+
+        // HttpClient 5.x 사용 버전
+        ObjectMapper mapper = new ObjectMapper();
+        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+        connectionManager.setMaxTotal(50);
+        connectionManager.setDefaultMaxPerRoute(20);
+
+        try (CloseableHttpClient client = HttpClientBuilder.create().setConnectionManager(connectionManager).build()) {
+            HttpPost postRequest = new HttpPost(fcmServerDomain);
+            postRequest.setHeader("Authorization", authorization);
+            postRequest.setHeader("Content-Type", contentType);
+            postRequest.setEntity(new StringEntity(mapper.writeValueAsString(body), ContentType.APPLICATION_JSON.withCharset(StandardCharsets.UTF_8)));
+
+            try(CloseableHttpResponse response = client.execute(postRequest)){
+                return getFcmResponse(response);
+            }
+        }
+        catch (IOException e){
+            throw new WrongAccessException(WrongAccessException.of.HTTP_CONNECTION_EXCEPTION);
+        }
+
+
+
+//        // HttpClient 4.x 사용 버전
+//        ObjectMapper mapper = new ObjectMapper();
+//        try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
+//            HttpPost postRequest = new HttpPost(fcmServerDomain);
+//            postRequest.setHeader("Authorization", authorization);
+//            postRequest.setHeader("Content-Type", contentType);
+//            postRequest.setEntity(new StringEntity(mapper.writeValueAsString(body), Consts.UTF_8));
+//
+//            try(CloseableHttpResponse response = client.execute(postRequest)){
+//                return getFcmResponse(response);
+//            }
+//        } catch (Exception e) {
+//            throw new WrongAccessException(WrongAccessException.of.HTTP_CONNECTION_EXCEPTION);
+//        }
+    }
+
+    /**
+     * FCM API Response 받아 FcmResponse로 매핑
+     * @param response
+     * @return
+     * @throws IOException
+     */
+    private FcmResponse getFcmResponse(CloseableHttpResponse response) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
         StringBuilder sb = new StringBuilder();
-        sb.append(userID).append("_Tokens");
-        return sb.toString();
+        String line;
+        while ((line = reader.readLine()) != null) sb.append(line);
+        return new ObjectMapper().readValue(sb.toString(), FcmResponse.class);
     }
 
     /**
-     * redisTemplate getter
+     * 파라미터들을 FcmIosBody로 매핑
+     * @param fcmList
+     * @param title
+     * @param body
+     * @param type
+     * @param dataID
      * @return
      */
-    @Override
-    protected RedisTemplate<String, byte[]> getRedisTemplate() {
-        return redisTemplate;
+    private FcmIos getFcmIosBody(List<String> fcmList, String title, String body, String type, long dataID){
+        FcmIosNotification notification = FcmIosNotification.builder()
+                .title(title)
+                .body(body)
+                .type(type)
+                .build();
+        FcmIosData data = FcmIosData.builder().data(dataID).build();
+        return FcmIos.builder()
+                .registration_ids(fcmList)
+                .notification(notification)
+                .data(data)
+                .build();
+    }
+
+    /**
+     * 파라미터들을 FcmAosBody로 매핑
+     * @param fcmList
+     * @param title
+     * @param body
+     * @param type
+     * @param dataID
+     * @return
+     */
+    private FcmAos getFcmAosBody(List<String> fcmList, String title, String body, String type, long dataID){
+        FcmAosData data = FcmAosData.builder()
+                .title(title)
+                .body(body)
+                .type(type)
+                .data(dataID)
+                .build();
+        return FcmAos.builder()
+                .registration_ids(fcmList)
+                .data(data)
+                .build();
+    }
+
+    /**
+     * FcmType 생성
+     * @param typeNum
+     * @return
+     */
+    private String getFcmType(int typeNum){
+        StringBuilder sb = new StringBuilder();
+        String key = sb.append("TYPE_").append(typeNum).toString();
+        return FcmTypes.valueOf(key).type;
     }
 }

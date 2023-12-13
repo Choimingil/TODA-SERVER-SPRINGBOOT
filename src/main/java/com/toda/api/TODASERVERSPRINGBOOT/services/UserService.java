@@ -1,12 +1,16 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
+import com.toda.api.TODASERVERSPRINGBOOT.entities.User;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.UserImage;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.UserSticker;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreateUser;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.*;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserInfoDetail;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserLogDetail;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserStickerDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserLogDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserStickerDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.KafkaMailProto;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.*;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
@@ -18,6 +22,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 @Component("userService")
 @RequiredArgsConstructor
@@ -28,7 +33,7 @@ public class UserService extends AbstractService implements BaseService {
     private final UserLogRepository userLogRepository;
     private final UserProvider userProvider;
     private final TokenProvider tokenProvider;
-    private final MailProvider mailProvider;
+    private final KafkaProducerProvider kafkaProducerProvider;
 
     @Transactional
     public long createUser(CreateUser createUser){
@@ -185,7 +190,19 @@ public class UserService extends AbstractService implements BaseService {
         StringBuilder sb = new StringBuilder();
         sb.append("임시 비밀번호를 발급했어요! 이 비밀번호로 로그인하시고 마이페이지 -> 비밀번호 변경 에 들어가셔서 비밀번호를 변경해주세요!\n\n").append(password);
         String subject = "TODA에서 편지왔어요 :)";
-        mailProvider.getMailKafkaProducer(email, subject, sb.toString());
+
+        KafkaMailProto.KafkaMailRequest params = KafkaMailProto.KafkaMailRequest.newBuilder()
+                .setTo(email)
+                .setSubject(subject)
+                .setText(sb.toString())
+                .build();
+
+        try{
+            kafkaProducerProvider.getKafkaProducer("mail", params).get();
+        }
+        catch (InterruptedException | ExecutionException e){
+            throw new WrongAccessException(WrongAccessException.of.SEND_MAIL_EXCEPTION);
+        }
     }
 
     @Transactional

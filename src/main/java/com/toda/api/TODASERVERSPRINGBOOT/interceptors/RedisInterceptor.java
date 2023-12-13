@@ -4,7 +4,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.interceptors.base.AbstractInterceptor;
 import com.toda.api.TODASERVERSPRINGBOOT.interceptors.base.BaseInterceptor;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmTokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.UserProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import io.jsonwebtoken.Claims;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public final class RedisInterceptor extends AbstractInterceptor implements BaseInterceptor {
-    private final FcmProvider fcmProvider;
+    private final FcmTokenProvider fcmTokenProvider;
     private final TokenProvider tokenProvider;
     private final UserProvider userProvider;
 
@@ -25,7 +25,7 @@ public final class RedisInterceptor extends AbstractInterceptor implements BaseI
         if(tokenProvider.isExistHeader(request) && tokenProvider.isValidHeader(request)){
             Claims claims = tokenProvider.getClaims(request);
             UserData user = userProvider.getUserInfo(claims.getSubject());
-            fcmProvider.checkFcmExist(user.getUserID());
+            fcmTokenProvider.checkFcmExist(user.getUserID());
             if(!user.getEmail().equals(claims.getSubject())) throw new WrongArgException(WrongArgException.of.WRONG_TOKEN_DATA_EXCEPTION);
         }
         return true;

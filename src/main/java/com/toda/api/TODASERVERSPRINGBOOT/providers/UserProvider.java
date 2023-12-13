@@ -5,7 +5,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.enums.TokenFields;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserInfoDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.UserInfoProto;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.RedisProvider;

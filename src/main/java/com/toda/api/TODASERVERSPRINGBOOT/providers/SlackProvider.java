@@ -1,6 +1,8 @@
 package com.toda.api.TODASERVERSPRINGBOOT.providers;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
+import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.KafkaMailProto;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.SlackKeys;
@@ -9,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import net.gpedro.integrations.slack.*;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -31,6 +35,27 @@ public class SlackProvider extends AbstractProvider implements BaseProvider, Ini
         slackKeysEnumSet.remove(SlackKeys.REQUEST_BODY);
     }
 
+//    /**
+//     * Slack Kafka Consumer
+//     * byte array 역직렬화 후 메일 발송
+//     * @param byteCode
+//     */
+//    @KafkaListener(topics = "slack")
+//    private void getSlackKafkaConsumer(byte[] byteCode){
+//        try {
+//            KafkaMailProto.KafkaMailRequest kafkaMail = KafkaMailProto.KafkaMailRequest.parseFrom(byteCode);
+//            SimpleMailMessage message = new SimpleMailMessage();
+//            message.setTo(kafkaMail.getTo());
+//            message.setSubject(kafkaMail.getSubject());
+//            message.setText(kafkaMail.getText());
+//            sendMail(message).get();
+//        }
+//        catch (ExecutionException | InterruptedException | InvalidProtocolBufferException e){
+//            throw new WrongAccessException(WrongAccessException.of.KAFKA_CONNECTION_EXCEPTION);
+//        }
+//    }
+
+    // Spring Container Level
     public void doSlack(HttpServletRequest request, Exception exception) {
         slackAttachment.setTitleLink(request.getContextPath());
         slackAttachment.setFields(getSlackFields(request));
@@ -42,7 +67,7 @@ public class SlackProvider extends AbstractProvider implements BaseProvider, Ini
         }
     }
 
-
+    // Filter Level
     public void doSlack(Exception exception) {
         slackAttachment.setTitleLink(MDC.get("request_context_path"));
         slackAttachment.setFields(getSlackFields());
@@ -55,7 +80,7 @@ public class SlackProvider extends AbstractProvider implements BaseProvider, Ini
     }
 
     @Async
-    private Future<Void> send(Exception e){
+    private CompletableFuture<Void> send(Exception e){
         slackAttachment.setText(Arrays.toString(e.getStackTrace()));
         slackMessage.setAttachments(Collections.singletonList(slackAttachment));
         slackApi.call(slackMessage);

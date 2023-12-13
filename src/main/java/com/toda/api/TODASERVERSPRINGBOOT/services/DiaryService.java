@@ -1,29 +1,29 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
+import com.toda.api.TODASERVERSPRINGBOOT.entities.*;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.DiaryRequestOfUser;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryColors;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryStatus;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
-import com.toda.api.TODASERVERSPRINGBOOT.models.Fcms.FcmGroup;
-import com.toda.api.TODASERVERSPRINGBOOT.models.Fcms.FcmParams;
+import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmGroup;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.Diary;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.DiaryNotice;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.UserDiary;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.UserLog;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserInfoDetail;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.HttpProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.KafkaFcmProto;
+import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmTokenProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.providers.KafkaProducerProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.EnumSet;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 @Component("diaryService")
 @RequiredArgsConstructor
@@ -34,8 +34,8 @@ public class DiaryService extends AbstractService implements BaseService {
     private final UserLogRepository userLogRepository;
     private final DiaryNoticeRepository diaryNoticeRepository;
     private final TokenProvider tokenProvider;
-    private final FcmProvider fcmProvider;
-    private final HttpProvider httpProvider;
+    private final FcmTokenProvider fcmTokenProvider;
+    private final KafkaProducerProvider kafkaProducerProvider;
     private final Set<DiaryColors> colorSet = EnumSet.allOf(DiaryColors.class);
     private final Set<DiaryStatus> statusSet = EnumSet.allOf(DiaryStatus.class);
 
@@ -49,8 +49,7 @@ public class DiaryService extends AbstractService implements BaseService {
     }
 
     @Transactional
-    public void setUserDiary(String token, long diaryID, String diaryName, int status){
-        long userID = tokenProvider.getUserID(token);
+    public void setUserDiary(long userID, long diaryID, String diaryName, int status){
         UserDiary userDiary = new UserDiary();
         userDiary.setUserID(userID);
         userDiary.setDiaryID(diaryID);
@@ -60,8 +59,7 @@ public class DiaryService extends AbstractService implements BaseService {
     }
 
     @Transactional
-    public void setDiaryNotice(String token, long diaryID, String notice){
-        long userID = tokenProvider.getUserID(token);
+    public void setDiaryNotice(long userID, long diaryID, String notice){
         DiaryNotice diaryNotice = new DiaryNotice();
         diaryNotice.setUserID(userID);
         diaryNotice.setDiaryID(diaryID);
@@ -70,72 +68,104 @@ public class DiaryService extends AbstractService implements BaseService {
     }
 
     @Transactional
-    public void inviteDiary(String token, long diaryID, String userCode){
-        UserData sendUserData = tokenProvider.decodeToken(token);
+    public void inviteDiary(UserData sendUserData, UserInfoDetail receiveUserData, Diary diary){
         long sendUserID = sendUserData.getUserID();
-        UserInfoDetail receiveUserData = userRepository.getUserDataByUserCode(userCode);
         long receiveUserID = receiveUserData.getUserID();
-        if(sendUserID == receiveUserID) throw new BusinessLogicException(BusinessLogicException.of.SELF_INVITE_EXCEPTION);
-
-        Diary diary = diaryRepository.findByDiaryID(diaryID);
-        if(diary == null) throw new WrongArgException(WrongArgException.of.WRONG_DIARY_EXCEPTION);
-        if(getDiaryStatus(diary.getStatus()) == 2) throw new BusinessLogicException(BusinessLogicException.of.ALONE_DIARY_INVITATION_EXCEPTION);
+        long diaryID = diary.getDiaryID();
         String diaryName = diary.getDiaryName();
+        int status = (int)(sendUserID*10);
 
-        UserDiary sendUserDiary = userDiaryRepository.findByUserIDAndDiaryID(sendUserID,diaryID);
-        if(sendUserDiary == null) throw new BusinessLogicException(BusinessLogicException.of.NO_DIARY_EXCEPTION);
-        UserDiary receiveUserDiary = userDiaryRepository.findByUserIDAndDiaryID(receiveUserID,diaryID);
-        if(receiveUserDiary != null){
-            if(receiveUserDiary.getStatus()%10 == 0) throw new BusinessLogicException(BusinessLogicException.of.ALREADY_INVITE_EXCEPTION);
-            else throw new BusinessLogicException(BusinessLogicException.of.EXIST_USER_DIARY_EXCEPTION);
+        // 이미 다이어리를 탈퇴한 기록이 있는 경우 해당 값을 초대값으로 변경
+        List<UserDiary> deleteList = userDiaryRepository.findByUserIDAndDiaryIDAndStatus(receiveUserID,diaryID,999);
+        if(!deleteList.isEmpty()){
+            boolean isEdited = false;
+            for(UserDiary userDiary : deleteList){
+                if(!isEdited){
+                    userDiary.setStatus((int)(sendUserID*10));
+                    userDiaryRepository.save(userDiary);
+                    isEdited = true;
+                }
+                else userDiaryRepository.delete(userDiary);
+            }
         }
+        else setUserDiary(receiveUserID,diaryID,diaryName,status);
 
-        setUserDiary(receiveUserID,diaryID,diaryName,(int) (receiveUserID*10));
+        // 로그 추가
         setUserLog(sendUserID,receiveUserID,diaryID,1,100);
 
-        // "To. ".$receivename."님";
-        String title = new StringBuilder()
-                .append("To. ")
-                .append(receiveUserData.getUserName())
-                .append("님")
-                .toString();
-
-        // $sendname."님(".$usercode.")이 ".$diaryname."에 초대합니다:)";
-        String body = new StringBuilder()
-                .append(sendUserData.getUserName())
-                .append("님(")
-                .append(sendUserData.getUserCode())
-                .append(")이 ")
-                .append(diaryName)
-                .append("에 초대합니다:)")
-                .toString();
-
-        FcmGroup fcmGroup = fcmProvider.getSingleUserFcmList(receiveUserID);
-        FcmParams fcmParams = FcmParams.builder()
-                .title(title)
-                .body(body)
-                .typeNum(1)
-                .dataID(diaryID)
-                .fcmGroup(fcmGroup)
-                .build();
-        httpProvider.getFcmKafkaProducer(receiveUserID, fcmParams);
+        // 초대 FCM 전송
+        String title = getFcmTitle(receiveUserData.getUserName());                                              // "To. ".$receivename."님";
+        String body = getFcmBodyInvite(sendUserData.getUserName(), sendUserData.getUserCode(), diaryName);      // $sendname."님(".$usercode.")이 ".$diaryname."에 초대합니다:)";
+        FcmGroup fcmGroup = fcmTokenProvider.getSingleUserFcmList(receiveUserID);
+        sendFcm(receiveUserID, title, body, 1, diaryID, fcmGroup);
     }
 
     @Transactional
-    public void acceptDiary(String token, long diaryID, String userCode){
-        UserData sendUserData = tokenProvider.decodeToken(token);
-        long sendUserID = sendUserData.getUserID();
-        UserInfoDetail receiveUserData = userRepository.getUserDataByUserCode(userCode);
-        long receiveUserID = receiveUserData.getUserID();
-        if(sendUserID == receiveUserID) throw new BusinessLogicException(BusinessLogicException.of.SELF_INVITE_EXCEPTION);
+    public void acceptDiary(List<UserDiary> acceptableDiaryList, long receiveUserID, int status){
+        // receiveUserID에 해당하는 요청만 수락하고, 나머지 요청은 삭제
+        if(!acceptableDiaryList.isEmpty()){
+            for(UserDiary userDiary : acceptableDiaryList){
+                int originStatus = userDiary.getStatus();
+                if(originStatus/10 == receiveUserID){
+                    userDiary.setStatus(status);
+                    userDiaryRepository.save(userDiary);
 
-        Diary diary = diaryRepository.findByDiaryID(diaryID);
-        if(diary == null) throw new WrongArgException(WrongArgException.of.WRONG_DIARY_EXCEPTION);
-        if(getDiaryStatus(diary.getStatus()) == 2) throw new BusinessLogicException(BusinessLogicException.of.ALONE_DIARY_INVITATION_EXCEPTION);
+                    // 초대 완료 로그 추가
+                    setUserLog(userDiary.getUserID(),receiveUserID,userDiary.getDiaryID(),1,999);
 
-        setUserDiary(receiveUserID,diaryID,diary.getDiaryName(),diary.getStatus());
-        setUserLog(receiveUserID,sendUserID,diaryID,1,999);
-        setUserLog(sendUserID,receiveUserID,diaryID,2,100);
+                    // 리스트 값을 이전값으로 원상복구
+                    userDiary.setStatus(originStatus);
+                }
+                else userDiaryRepository.delete(userDiary);
+            }
+        }
+    }
+
+    @Transactional
+    public void setFcmAndLogToAcceptDiary(List<UserDiary> acceptableDiaryList, UserData sendUserData, Diary diary){
+        // 초대를 보낸 모든 유저들 로그에 모두 초대 완료 설정
+        Set<Long> receiveUserIDList = new HashSet<>();
+        for(UserDiary userDiary : acceptableDiaryList){
+            long receiveUserID = userDiary.getStatus()/10;
+            receiveUserIDList.add(receiveUserID);
+        }
+
+        // FCM 받을 유저들 아이디를 기준으로 이름값 가져오기
+        List<User> receiveUserData = userRepository.findByUserIDIn(receiveUserIDList);
+
+        // 푸시 알림 발송 메시지 세팅
+        String body = getFcmBodyAccept(sendUserData.getUserName(), sendUserData.getUserCode(), diary.getDiaryName());      // $sendname."님(".$usercode.")이 ".$diaryname." 초대에 수락하셨습니다:)";
+        for(User receiveUser : receiveUserData){
+            // 상대방 유저가 다이어리에 존재할 경우 FCM 메시지 발송 및 로그 체크
+            int userDiaryStatus = getUserDiaryStatus(receiveUser.getUserID(),diary.getDiaryID());
+            if(userDiaryStatus == 100){
+                setUserLog(receiveUser.getUserID(),sendUserData.getUserID(),diary.getDiaryID(),2,100);
+                String title = getFcmTitle(receiveUser.getUserName());                                              // "To. ".$receivename."님";
+                FcmGroup fcmGroup = fcmTokenProvider.getSingleUserFcmList(receiveUser.getUserID());
+                sendFcm(receiveUser.getUserID(), title, body, 2, diary.getDiaryID(), fcmGroup);
+            }
+        }
+    }
+
+    public DiaryRequestOfUser getRequestOfUser(long userID, long diaryID){
+        List<DiaryRequestOfUser> requestList = userDiaryRepository.getDiaryRequestOfUser(diaryID,userID);
+        return requestList.get(0);
+    }
+
+    /**
+     * 유저가 다이어리에 어떤 상태로 존재하는지 확인
+     * @param userID
+     * @param diaryID
+     * @return 404,100,200
+     * 404 : 유저가 다이어리에 속하지 않을 경우
+     * 100 : 유저가 다이어리에 속할 경우
+     * 200 : 유저가 다이어리에 속하지 않고 초대 요청이 온 경우
+     */
+    public int getUserDiaryStatus(long userID, long diaryID){
+        List<UserDiary> userDiaryList = userDiaryRepository.findByUserIDAndDiaryIDAndStatusNot(userID,diaryID,999);
+        if(userDiaryList.isEmpty()) return 404;
+        for(UserDiary userDiary : userDiaryList) if(userDiary.getStatus()%10 != 0) return 100;
+        return 200;
     }
 
     public int getDiaryStatus(int status, int color){
@@ -144,31 +174,56 @@ public class DiaryService extends AbstractService implements BaseService {
         return color*100 + status;
     }
 
-    public boolean isSendRequest(String token, long diaryID){
-//        if($data['id'] == $receiveID){
-//            $res['isSuccess'] = FALSE;
-//            $res['code'] = 501;
-//            $res['message'] = '자기 자신을 등록할 수 없습니다.';
-//            echo json_encode($res, JSON_NUMERIC_CHECK);
-//            return;
-//        }
-
-        long userID = tokenProvider.getUserID(token);
-        UserDiary userDiary = userDiaryRepository.findByUserIDAndDiaryID(userID,diaryID);
-        return !(userDiary == null || userDiary.getStatus()%10 != 0);
+    public List<UserDiary> getAcceptableDiaryList(long userID, long diaryID){
+        List<UserDiary> res = new ArrayList<>();
+        List<UserDiary> userDiaryList = userDiaryRepository.findByUserIDAndDiaryID(userID,diaryID);
+        for(UserDiary userDiary : userDiaryList) if((userDiary.getStatus()%10) == 0) res.add(userDiary);
+        return res;
     }
 
-    @Transactional
-    private void setUserDiary(long userID, long diaryID, String diaryName, int status){
-        UserDiary userDiary = userDiaryRepository.findByUserIDAndDiaryID(userID,diaryID);
-        if(userDiary == null){
-            userDiary = new UserDiary();
-            userDiary.setUserID(userID);
-            userDiary.setDiaryID(diaryID);
-            userDiary.setDiaryName(diaryName);
+    public UserData getSendUserData(String token){
+        return tokenProvider.decodeToken(token);
+    }
+
+    public UserInfoDetail getReceiveUserData(String userCode){
+        return userRepository.getUserDataByUserCode(userCode);
+    }
+
+    public Diary getDiary(long diaryID){
+        Diary diary = diaryRepository.findByDiaryID(diaryID);
+        if(diary == null) throw new WrongArgException(WrongArgException.of.WRONG_DIARY_EXCEPTION);
+        if(getDiaryStatus(diary.getStatus()) == 2) throw new BusinessLogicException(BusinessLogicException.of.ALONE_DIARY_INVITATION_EXCEPTION);
+        return diary;
+    }
+
+    public long getUserID(String token){
+        return tokenProvider.getUserID(token);
+    }
+
+    private void sendFcm(
+            long receiveUserID,
+            String title,
+            String body,
+            int typeNum,
+            long diaryID,
+            FcmGroup fcmGroup
+    ){
+        KafkaFcmProto.KafkaFcmRequest params = KafkaFcmProto.KafkaFcmRequest.newBuilder()
+                .setUserID(receiveUserID)
+                .setTitle(title)
+                .setBody(body)
+                .setTypeNum(typeNum)
+                .setDataID(diaryID)
+                .addAllAosFcm(fcmGroup.getAosFcmList())
+                .addAllIosFcm(fcmGroup.getIosFcmList())
+                .build();
+
+        try{
+            kafkaProducerProvider.getKafkaProducer("fcm", params).get();
         }
-        userDiary.setStatus(status);
-        userDiaryRepository.save(userDiary);
+        catch (InterruptedException | ExecutionException e){
+            throw new WrongAccessException(WrongAccessException.of.SEND_FCM_EXCEPTION);
+        }
     }
 
     @Transactional
@@ -183,6 +238,36 @@ public class DiaryService extends AbstractService implements BaseService {
         }
         userLog.setStatus(status);
         userLogRepository.save(userLog);
+    }
+
+    private String getFcmTitle(String userName){
+        return new StringBuilder()
+                .append("To. ")
+                .append(userName)
+                .append("님")
+                .toString();
+    }
+
+    private String getFcmBodyInvite(String userName, String userCode, String diaryName){
+        return new StringBuilder()
+                .append(userName)
+                .append("님(")
+                .append(userCode)
+                .append(")이 ")
+                .append(diaryName)
+                .append("에 초대합니다:)")
+                .toString();
+    }
+
+    private String getFcmBodyAccept(String userName, String userCode, String diaryName){
+        return new StringBuilder()
+                .append(userName)
+                .append("님(")
+                .append(userCode)
+                .append(")이 ")
+                .append(diaryName)
+                .append(" 초대에 수락하셨습니다:)")
+                .toString();
     }
 
     private String getDiaryColorCode(int color){

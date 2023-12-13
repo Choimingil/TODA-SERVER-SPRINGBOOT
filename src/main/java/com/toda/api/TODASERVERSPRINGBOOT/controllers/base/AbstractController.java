@@ -1,22 +1,10 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers.base;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 
 public abstract class AbstractController implements BaseController {
     protected final Logger logger = LoggerFactory.getLogger(AbstractController.class);

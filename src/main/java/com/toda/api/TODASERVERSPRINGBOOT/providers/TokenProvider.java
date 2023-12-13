@@ -2,7 +2,6 @@ package com.toda.api.TODASERVERSPRINGBOOT.providers;
 
 import com.toda.api.TODASERVERSPRINGBOOT.enums.TokenFields;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.User;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
 import io.jsonwebtoken.*;
@@ -10,10 +9,8 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.relational.core.sql.In;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;

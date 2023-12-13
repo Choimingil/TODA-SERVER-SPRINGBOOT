@@ -1,6 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.models.dtos;
 
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.User;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.User;
 import lombok.*;
 
 import java.time.LocalDateTime;

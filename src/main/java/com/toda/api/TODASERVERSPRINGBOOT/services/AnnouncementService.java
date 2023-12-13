@@ -1,8 +1,8 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.UserAnnouncement;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.AnnouncementDetail;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.AnnouncementList;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.UserAnnouncement;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.AnnouncementDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.AnnouncementList;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.AnnouncementRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserAnnouncementRepository;

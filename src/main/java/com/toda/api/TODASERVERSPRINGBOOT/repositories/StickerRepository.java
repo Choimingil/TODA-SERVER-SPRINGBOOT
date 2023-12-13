@@ -1,6 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.repositories;
 
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.Sticker;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.Sticker;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

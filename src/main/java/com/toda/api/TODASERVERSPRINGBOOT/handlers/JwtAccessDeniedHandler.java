@@ -24,7 +24,7 @@ public final class JwtAccessDeniedHandler implements AccessDeniedHandler {
             filterExceptionHandler.getResponse(request, response, new JwtAccessDeniedException(accessDeniedException.getMessage()));
         }
         catch (Exception e){
-            System.out.println("Exception");
+            return;
         }
     }
 }

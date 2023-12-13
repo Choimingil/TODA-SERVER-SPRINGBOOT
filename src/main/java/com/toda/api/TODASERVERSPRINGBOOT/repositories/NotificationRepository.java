@@ -1,8 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.repositories;
 
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.Notification;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserFcm;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserFcmAllowed;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.Notification;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserFcm;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

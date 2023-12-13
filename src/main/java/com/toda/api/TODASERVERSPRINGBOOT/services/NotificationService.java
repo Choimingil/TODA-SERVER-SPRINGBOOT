@@ -2,8 +2,8 @@ package com.toda.api.TODASERVERSPRINGBOOT.services;
 
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.SaveFcmToken;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.Notification;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.Notification;
+import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmTokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.NotificationRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class NotificationService extends AbstractService implements BaseService {
     private final NotificationRepository notificationRepository;
     private final TokenProvider tokenProvider;
-    private final FcmProvider fcmProvider;
+    private final FcmTokenProvider fcmTokenProvider;
 
     @Transactional
     public void saveFcmToken(String jwt, int status, SaveFcmToken saveFcmToken){
@@ -34,19 +34,19 @@ public class NotificationService extends AbstractService implements BaseService 
                 .isRemindAllowed(allowable)
                 .status(status)
                 .build());
-        fcmProvider.setNewFcm(userID, fcm, newNotification.getNotificationID(), status);
+        fcmTokenProvider.setNewFcm(userID, fcm, newNotification.getNotificationID(), status);
     }
 
     public Notification getNotification(String jwt, String fcm){
         long userID = tokenProvider.getUserID(jwt);
-        long notificationID = fcmProvider.getNotificationID(userID,fcm);
+        long notificationID = fcmTokenProvider.getNotificationID(userID,fcm);
         return notificationRepository.findByNotificationID(notificationID);
     }
 
     @Transactional
     public boolean updateFcmAllowed(String jwt, String fcm, int status) {
         long userID = tokenProvider.getUserID(jwt);
-        long notificationID = fcmProvider.getNotificationID(userID, fcm);
+        long notificationID = fcmTokenProvider.getNotificationID(userID, fcm);
         Notification notification = notificationRepository.findByNotificationID(notificationID);
 
         String curr;
@@ -54,13 +54,13 @@ public class NotificationService extends AbstractService implements BaseService 
             case 0 -> {
                 curr = notification.getIsAllowed().equals("Y") ? "N" : "Y";
                 notification.setIsAllowed(curr);
-                if (curr.equals("Y")) fcmProvider.setNewFcm(
+                if (curr.equals("Y")) fcmTokenProvider.setNewFcm(
                         notification.getUserID(),
                         notification.getFcm(),
                         notification.getNotificationID(),
                         notification.getStatus()
                 );
-                else fcmProvider.deleteFcm(notification.getUserID(), notification.getFcm());
+                else fcmTokenProvider.deleteFcm(notification.getUserID(), notification.getFcm());
             }
             case 1 -> {
                 curr = notification.getIsRemindAllowed().equals("Y") ? "N" : "Y";
@@ -80,7 +80,7 @@ public class NotificationService extends AbstractService implements BaseService 
     @Transactional
     public void updateFcmTime(String jwt, String fcm, String time){
         long userID = tokenProvider.getUserID(jwt);
-        long notificationID = fcmProvider.getNotificationID(userID, fcm);
+        long notificationID = fcmTokenProvider.getNotificationID(userID, fcm);
         if(notificationRepository.existsByNotificationIDAndIsRemindAllowed(notificationID,"N"))
             throw new WrongArgException(WrongArgException.of.WRONG_REMIND_FCM_EXCEPTION);
 

@@ -5,7 +5,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.SaveFcmToken;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateFcmAllowed;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateFcmTime;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.Notification;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.Notification;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.services.NotificationService;

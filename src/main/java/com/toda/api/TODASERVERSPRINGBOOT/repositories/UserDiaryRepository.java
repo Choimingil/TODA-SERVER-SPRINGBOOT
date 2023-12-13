@@ -1,18 +1,36 @@
 package com.toda.api.TODASERVERSPRINGBOOT.repositories;
 
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.UserDiary;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.UserDiary;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.DiaryRequestOfUser;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Repository
 public interface UserDiaryRepository extends JpaRepository<UserDiary,Long> {
-    UserDiary findByUserIDAndDiaryID(long userID, long diaryID);
+    List<UserDiary> findByUserIDAndDiaryIDAndStatus(long userID, long diaryID, int status);
+    List<UserDiary> findByUserIDAndDiaryIDAndStatusNot(long userID, long diaryID, int status);
+    List<UserDiary> findByUserIDAndDiaryID(long userID, long diaryID);
 
-    @Query("SELECT EXISTS(SELECT 1 FROM UserDiary WHERE userID = :userID and diaryID = :diaryID and status%10 like 0)")
-    boolean isSendRequest(long userID, long diaryID);
+//    @Query("SELECT ud FROM UserDiary ud WHERE ud.userID = :userID AND ud.diaryID = :diaryID AND ud.status%10 = 0")
+//    List<UserDiary> getAcceptableDiaryList(long userID, long diaryID);
+
+    @Query("select u.userID as userID, u.userCode as userCode, u.email as email, u.userName as userName, " +
+            "ui.url as selfie, ud.diaryID as diaryID, ud.diaryName as diaryName, 1 as date from User u " +
+            "inner join UserImage ui on u.userID = ui.userID and ui.status not like 0 " +
+            "inner join UserDiary ud on ud.status/10 = u.userID and ud.diaryID= :diaryID " +
+            "where ud.userID = :userID")
+    List<DiaryRequestOfUser> getDiaryRequestOfUser(long diaryID, long userID);
+
+//    @Query("select u.userID as userID, u.userCode as userCode, u.email as email, u.userName as userName, " +
+//            "ui.url as selfie, ud.diaryID as diaryID, ud.diaryName as diaryName, TIMESTAMPDIFF(SECOND, ud.createAt, now()) as date " +
+//            "from User u " +
+//            "inner join UserImage ui on u.userID = ui.userID and ui.status not like 0 " +
+//            "inner join UserDiary ud on ud.status/10 = u.userID and ud.diaryID= :diaryID " +
+//            "where ud.userID = :userID")
+//    List<DiaryRequestOfUser> getDiaryRequestOfUser(long diaryID, long userID);
 
 
 

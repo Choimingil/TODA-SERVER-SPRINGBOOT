@@ -1,7 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.repositories;
 
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.UserSticker;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserStickerDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.UserSticker;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserStickerDetail;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

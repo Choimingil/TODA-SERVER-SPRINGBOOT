@@ -51,6 +51,8 @@ public class SuccessResponse extends Response {
          * DiaryController
          */
         CREATE_DIARY_SUCCESS(100, "다이어리가 추가되었습니다."),
+        ACCEPT_DIARY_SUCCESS(100, "다이어리 초대 요청을 승낙하였습니다."),
+        INVITE_DIARY_SUCCESS(200, "다이어리 초대 요청이 발송되었습니다."),
 
         /**
          * BASIC

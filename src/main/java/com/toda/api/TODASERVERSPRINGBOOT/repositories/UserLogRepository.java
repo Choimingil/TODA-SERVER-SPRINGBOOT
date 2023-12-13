@@ -1,7 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.repositories;
 
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.UserLog;
-import com.toda.api.TODASERVERSPRINGBOOT.models.entities.mappings.UserLogDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.UserLog;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserLogDetail;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
