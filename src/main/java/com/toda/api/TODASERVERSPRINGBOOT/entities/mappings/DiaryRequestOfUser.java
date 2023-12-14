@@ -14,5 +14,5 @@ public interface DiaryRequestOfUser {
     String getSelfie();
     long getDiaryID();
     String getDiaryName();
-    LocalDateTime getDate();
+    long getDate();
 }

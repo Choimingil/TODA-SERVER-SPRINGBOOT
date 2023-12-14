@@ -28,6 +28,9 @@ public enum Uris {
     /** 10. 알림 조회 API */ GET_LOG,
     /** 11. 다이어리 추가 API */ POST_DIARY,
     /** 12. 다이어리 유저 추가 API */ POST_DIARIES_NUMBER_USER,
+    /** 12-1. 유저에게 온 다이어리 초대 요청 조회 API */ GET_LOG_NUMBER,
+    /** 13. 다이어리 퇴장 및 초대 거절 API */ DELETE_DIARY_NUMBER,
+    /** 14. 다이어리 수정 API */ PATCH_DIARY,
     /** 38. 공지사항 리스트 조회 API */ GET_ANNOUNCEMENT,
     /** 39. 공지사항 상세 조회 API */ GET_ANNOUNCEMENT_NUMBER,
     /** 40. 공지사항 읽었는지 안읽었는지 확인 API */ GET_ANNOUNCEMENT_CHECK;
