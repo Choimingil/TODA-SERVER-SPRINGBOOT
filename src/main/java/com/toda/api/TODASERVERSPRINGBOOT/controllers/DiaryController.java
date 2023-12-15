@@ -9,7 +9,11 @@ import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreateDiary;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateDiary;
+import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateNotice;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UserCode;
+import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.DiaryListResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.DiaryMemberListResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.DiaryNoticeResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
@@ -19,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -148,10 +153,95 @@ public class DiaryController extends AbstractController implements BaseControlle
         else throw new BusinessLogicException(BusinessLogicException.of.NO_DIARY_EXCEPTION);
     }
 
+    //15. 다이어리 조회 API
+    @GetMapping("/diaries")
+    public Map<String, ?> getDiaryList(
+            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestParam(name="page", required = true) int page,
+            @RequestParam(name="status", required = true) int status,
+            @RequestParam(name="keyword", required = false) String keyword
+    ){
+        List<DiaryListResponse> res = keyword==null ?
+                diaryService.getDiaryList(diaryService.getUserID(token), status, page) :
+                diaryService.getDiaryListWithKeyword(diaryService.getUserID(token), status, page, keyword);
 
-    // $r->addRoute('GET', '/diaries', ['DiaryController', 'getDiaries']);                                                     //15. 다이어리 조회 API
-    // $r->addRoute('GET', '/diaries/{diaryID:\d+}/users', ['DiaryController', 'getDiariesMember']);                           //15-0. 다이어리 멤버 조회 API
+        // 다이어리가 존재하지 않을 경우 메시지 출력
+        if(res.isEmpty()){
+            Map<String,String> emptyRes = new HashMap<>();
+            emptyRes.put("message","등록된 다이어리가 없습니다.");
+            return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
+                    .add("result",emptyRes)
+                    .build().getResponse();
+        }
+        // 다이어리 존재할 경우 다이어리 데이터 리턴
+        else return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
+                .add("result",res)
+                .build().getResponse();
+    }
 
-    // $r->addRoute('PATCH', '/notice', ['NoticeController', 'updateNotice']);                                                 //15-3. 다이어리 공지 수정 API
-    // $r->addRoute('GET', '/notice/{diaryID:\d+}', ['NoticeController', 'getNotice']);                                        //15-4. 다이어리 공지 조회 API
+    //15-0. 다이어리 멤버 조회 API
+    @GetMapping("/diaries/{diaryID}/users")
+    public Map<String, ?> getDiaryMember(
+            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @PathVariable("diaryID") long diaryID,
+            @RequestParam(name="page", required = true) int page,
+            @RequestParam(name="status", required = true) int status
+    ){
+        long userID = diaryService.getUserID(token);
+        int userDiaryStatus = diaryService.getUserDiaryStatus(userID,diaryID);
+
+        // 현재 다이어리에 속해 있는 경우 조회 진행
+        if(userDiaryStatus == 100){
+            List<DiaryMemberListResponse> res = diaryService.getDiaryMemberList(diaryID, status, page);
+
+            // 다이어리가 존재하지 않을 경우 메시지 출력
+            if(res.isEmpty()){
+                Map<String,String> emptyRes = new HashMap<>();
+                emptyRes.put("message","등록된 친구가 없습니다.");
+                return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
+                        .add("result",emptyRes)
+                        .build().getResponse();
+            }
+            // 다이어리 존재할 경우 다이어리 데이터 리턴
+            else return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
+                    .add("result",res)
+                    .build().getResponse();
+        }
+
+        // 그 외의 경우 존재하지 않는 다이어리 리턴
+        else throw new BusinessLogicException(BusinessLogicException.of.NO_DIARY_EXCEPTION);
+    }
+
+    //15-3. 다이어리 공지 수정 API
+    @PatchMapping("/notice")
+    public Map<String, ?> updateNotice(
+            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestBody @Valid UpdateNotice updateNotice,
+            BindingResult bindingResult
+    ){
+        long userID = diaryService.getUserID(token);
+        diaryService.updateNotice(userID, updateNotice.getDiary(), updateNotice.getNotice());
+        return new SuccessResponse.Builder(SuccessResponse.of.UPDATE_DIARY_NOTICE_SUCCESS).build().getResponse();
+    }
+
+    //15-4. 다이어리 공지 조회 API
+    @GetMapping("/notice/{diaryID}")
+    public Map<String, ?> getNotice(
+            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @PathVariable("diaryID") long diaryID
+    ){
+        long userID = diaryService.getUserID(token);
+        int userDiaryStatus = diaryService.getUserDiaryStatus(userID,diaryID);
+
+        // 현재 다이어리에 속해 있는 경우 조회 진행
+        if(userDiaryStatus == 100){
+            DiaryNoticeResponse res = diaryService.getDiaryNotice(userID, diaryID);
+            return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
+                    .add("result",res)
+                    .build().getResponse();
+        }
+
+        // 그 외의 경우 존재하지 않는 다이어리 리턴
+        else throw new BusinessLogicException(BusinessLogicException.of.NO_DIARY_EXCEPTION);
+    }
 }

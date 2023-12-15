@@ -31,6 +31,10 @@ public enum Uris {
     /** 12-1. 유저에게 온 다이어리 초대 요청 조회 API */ GET_LOG_NUMBER,
     /** 13. 다이어리 퇴장 및 초대 거절 API */ DELETE_DIARY_NUMBER,
     /** 14. 다이어리 수정 API */ PATCH_DIARY,
+    /** 15. 다이어리 조회 API */ GET_DIARIES,
+    /** 15-0. 다이어리 멤버 조회 API */ GET_DIARIES_NUMBER_USERS,
+    /** 15-3. 다이어리 공지 수정 API */ PATCH_NOTICE,
+    /** 15-4. 다이어리 공지 조회 API */ GET_NOTICE_NUMBER,
     /** 38. 공지사항 리스트 조회 API */ GET_ANNOUNCEMENT,
     /** 39. 공지사항 상세 조회 API */ GET_ANNOUNCEMENT_NUMBER,
     /** 40. 공지사항 읽었는지 안읽었는지 확인 API */ GET_ANNOUNCEMENT_CHECK;
