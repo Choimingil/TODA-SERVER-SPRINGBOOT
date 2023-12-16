@@ -47,10 +47,6 @@ public class DiaryProvider extends AbstractProvider implements BaseProvider {
     public final Set<DiaryColors> colorSet = EnumSet.allOf(DiaryColors.class);
     public final Set<DiaryStatus> statusSet = EnumSet.allOf(DiaryStatus.class);
 
-    public interface CustomParams<T>{
-        void method(T params);
-    }
-
     @Transactional
     public void addUserDiary(long userID, long diaryID, String diaryName, int status){
         UserDiary userDiary = new UserDiary();
@@ -81,35 +77,7 @@ public class DiaryProvider extends AbstractProvider implements BaseProvider {
         userLogRepository.save(userLog);
     }
 
-    @Transactional
-    public <T> void updateList(List<T> entityList, CustomParams<T> params, JpaRepository<T, Long> repository) {
-        if (!entityList.isEmpty()) {
-            boolean isEdited = false;
-            for (T entity : entityList) {
-                if (!isEdited) {
-                    params.method(entity);
-                    repository.save(entity);
-                    isEdited = true;
-                } else {
-                    repository.delete(entity);
-                }
-            }
-        }
-    }
 
-    @Transactional
-    public void updateUserLog(long receiveUserID, long diaryID, int type, int status){
-        List<UserLog> userLogList = userLogRepository.findByReceiveIDAndTypeAndTypeIDAndStatusNot(receiveUserID,type,diaryID,999);
-        for(UserLog userLog : userLogList){
-            userLog.setStatus(status);
-            userLogRepository.save(userLog);
-        }
-    }
-
-    public long getTimeDiffSec(LocalDateTime currentDateTime, LocalDateTime targetDateTime) {
-        Duration duration = Duration.between(targetDateTime, currentDateTime);
-        return duration.getSeconds();
-    }
 
 
 
@@ -229,6 +197,7 @@ public class DiaryProvider extends AbstractProvider implements BaseProvider {
                 .build();
 
         try{
+            System.out.println(params.toString());
             kafkaProducerProvider.getKafkaProducer("fcm", params).get();
         }
         catch (InterruptedException | ExecutionException e){

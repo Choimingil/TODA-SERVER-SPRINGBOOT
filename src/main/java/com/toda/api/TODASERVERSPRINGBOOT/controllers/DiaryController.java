@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,7 +81,12 @@ public class DiaryController extends AbstractController implements BaseControlle
 
             // 상대방 유저가 다이어리에 존재하지 않을 경우 다이어리 초대 진행
             if(receiveUserDiaryStatus == 404){
+                // 다이어리 초대
                 diaryService.inviteDiary(sendUserData,receiveUserData,diary);
+
+                // FCM 발송
+                Map<Long,String> fcmDiaryInviteUserMap = diaryService.getFcmDiaryInviteUserMap(List.of(receiveUserData));
+                diaryService.setFcmAndLogToAcceptDiary(fcmDiaryInviteUserMap, sendUserData, diary, 1);
                 return new SuccessResponse.Builder(SuccessResponse.of.INVITE_DIARY_SUCCESS).build().getResponse();
             }
 
@@ -91,9 +97,13 @@ public class DiaryController extends AbstractController implements BaseControlle
 
         // 현재 유저가 다이어리 초대를 받은 경우 항상 다이어리 수락 진행
         else{
+            // 다이어리 수락
             List<UserDiary> acceptableDiaryList = diaryService.getAcceptableDiaryList(sendUserID,diaryID);
             diaryService.acceptDiary(acceptableDiaryList, receiveUserID, diary.getStatus());
-            diaryService.setFcmAndLogToAcceptDiary(acceptableDiaryList, sendUserData, diary);
+
+            // FCM 발송
+            Map<Long,String> acceptableDiaryMap = diaryService.getFcmDiaryAcceptUserMap(acceptableDiaryList);
+            diaryService.setFcmAndLogToAcceptDiary(acceptableDiaryMap, sendUserData, diary, 2);
             return new SuccessResponse.Builder(SuccessResponse.of.ACCEPT_DIARY_SUCCESS).build().getResponse();
         }
     }

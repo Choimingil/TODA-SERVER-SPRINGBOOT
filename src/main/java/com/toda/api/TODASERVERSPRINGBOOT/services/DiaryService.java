@@ -2,7 +2,6 @@ package com.toda.api.TODASERVERSPRINGBOOT.services;
 
 import com.toda.api.TODASERVERSPRINGBOOT.entities.*;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.*;
-import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateDiary;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.DiaryListResponse;
@@ -12,24 +11,23 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmGroup;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.DiaryProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmTokenProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
-import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
+import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractFcmService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component("diaryService")
 @RequiredArgsConstructor
-public class DiaryService extends AbstractService implements BaseService {
-    private final UserRepository userRepository;
+public class DiaryService extends AbstractFcmService implements BaseService {
+    private final UserLogRepository userLogRepository;
     private final DiaryRepository diaryRepository;
     private final UserDiaryRepository userDiaryRepository;
     private final DiaryProvider diaryProvider;
@@ -61,88 +59,113 @@ public class DiaryService extends AbstractService implements BaseService {
 
         // 이미 다이어리를 탈퇴한 기록이 있는 경우 해당 값을 초대값으로 변경
         List<UserDiary> deleteList = userDiaryRepository.findByUserIDAndDiaryIDAndStatus(receiveUserID,diaryID,999);
-        diaryProvider.updateList(deleteList, userDiary -> userDiary.setStatus(status),userDiaryRepository);
+        AtomicBoolean isEdit = new AtomicBoolean(false);
+        updateListAndDelete(
+                userDiary -> isEdit.get(),
+                userDiary -> {
+                    userDiary.setStatus(status);
+                    isEdit.set(true);
+                },
+                deleteList,
+                userDiaryRepository
+        );
 
-        // 로그 추가
-        diaryProvider.addUserLog(sendUserID,receiveUserID,diaryID,1,100);
-
-        // 초대 FCM 전송
-        String title = diaryProvider.getFcmTitle(receiveUserData.getUserName());                                              // "To. ".$receivename."님";
-        String body = diaryProvider.getFcmBodyInvite(sendUserData.getUserName(), sendUserData.getUserCode(), diaryName);      // $sendname."님(".$usercode.")이 ".$diaryname."에 초대합니다:)";
-        FcmGroup fcmGroup = fcmTokenProvider.getSingleUserFcmList(receiveUserID);
-        diaryProvider.sendFcm(receiveUserID, title, body, 1, diaryID, fcmGroup);
+        // 다이어리 탈퇴 기록이 없다면 새롭게 추가 진행
+        if(!isEdit.get()) diaryProvider.addUserDiary(receiveUserID,diaryID,diaryName,status);
     }
 
     @Transactional
     public void acceptDiary(List<UserDiary> acceptableDiaryList, long receiveUserID, int status){
-        // receiveUserID에 해당하는 요청만 수락하고, 나머지 요청은 삭제
-        if(!acceptableDiaryList.isEmpty()){
-            for(UserDiary userDiary : acceptableDiaryList){
-                int originStatus = userDiary.getStatus();
-                if(originStatus/10 == receiveUserID){
+        List<UserDiary> copy = new ArrayList<>();
+        Collections.copy(acceptableDiaryList, copy);
+
+        updateListAndDelete(
+                userDiary -> {
+                    int originStatus = userDiary.getStatus();
+                    return originStatus/10 == receiveUserID;
+                },
+                userDiary -> {
                     userDiary.setStatus(status);
-                    userDiaryRepository.save(userDiary);
 
                     // 초대 완료 로그 추가
-                    diaryProvider.updateUserLog(receiveUserID,userDiary.getDiaryID(),1,999);
-
-                    // 리스트 값을 이전값으로 원상복구
-                    userDiary.setStatus(originStatus);
-                }
-                else userDiaryRepository.delete(userDiary);
-            }
-        }
+                    List<UserLog> userLogList = userLogRepository.findByReceiveIDAndTypeAndTypeIDAndStatusNot(receiveUserID,1,userDiary.getDiaryID(),999);
+                    updateList(userLogList,userLog -> userLog.setStatus(status),userLogRepository);
+                },
+                copy, userDiaryRepository
+        );
     }
 
     @Transactional
-    public void setFcmAndLogToAcceptDiary(List<UserDiary> acceptableDiaryList, UserData sendUserData, Diary diary){
-        // 초대를 보낸 모든 유저들 로그에 모두 초대 완료 설정
-        Map<Long,String> receiveUserMap = new HashMap<>();
-        for(UserDiary userDiary : acceptableDiaryList){
-            long receiveUserID = userDiary.getStatus()/10;
-            receiveUserMap.put(receiveUserID,userDiary.getUser().getUserName());
-        }
-
+    public void setFcmAndLogToAcceptDiary(Map<Long,String> receiveUserMap, UserData sendUserData, Diary diary, int type){
         // 푸시 알림 발송 메시지 세팅
-        String body = diaryProvider.getFcmBodyAccept(sendUserData.getUserName(), sendUserData.getUserCode(), diary.getDiaryName());      // $sendname."님(".$usercode.")이 ".$diaryname." 초대에 수락하셨습니다:)";
-        for(Map.Entry<Long, String> entry : receiveUserMap.entrySet()){
-            long userID = entry.getKey();
-            String userName = entry.getValue();
-
-            // 상대방 유저가 다이어리에 존재할 경우 FCM 메시지 발송 및 로그 체크
-            int userDiaryStatus = getUserDiaryStatus(userID,diary.getDiaryID());
-            if(userDiaryStatus == 100){
-                diaryProvider.addUserLog(userID,sendUserData.getUserID(),diary.getDiaryID(),2,100);
-                String title = diaryProvider.getFcmTitle(userName);                                              // "To. ".$receivename."님";
-                FcmGroup fcmGroup = fcmTokenProvider.getSingleUserFcmList(userID);
-                diaryProvider.sendFcm(userID, title, body, 2, diary.getDiaryID(), fcmGroup);
-            }
-        }
+        String body = getFcmBody(sendUserData.getUserName(), sendUserData.getUserCode(), diary.getDiaryName(), type);      // $sendname."님(".$usercode.")이 ".$diaryname." 초대에 수락하셨습니다:)";
+        sendFcmForSingleUser(
+                (userID, userName) -> {
+                    // 초대 시 발송 조건 : 상대방 유저가 다이어리 초대를 받았을 경우
+                    if(type == 1) return getUserDiaryStatus(userID,diary.getDiaryID()) == 200;
+                    // 승낙 시 발송 조건 : 상대방 유저가 다이어리에 존재할 경우
+                    else if(type == 2) return getUserDiaryStatus(userID,diary.getDiaryID()) == 100;
+                    else throw new BusinessLogicException(BusinessLogicException.of.NO_DIARY_EXCEPTION);
+                },
+                // 조건 만족 시 FCM 발송
+                (userID, userName) -> {
+                    diaryProvider.addUserLog(userID,sendUserData.getUserID(),diary.getDiaryID(),type,100);
+                    String title = getFcmTitle(userName);                                              // "To. ".$receivename."님";
+                    FcmGroup fcmGroup = fcmTokenProvider.getSingleUserFcmList(userID);
+                    diaryProvider.sendFcm(userID, title, body, 2, diary.getDiaryID(), fcmGroup);
+                },
+                receiveUserMap
+        );
     }
 
     @Transactional
     public void deleteDiary(long userID, long diaryID){
         List<UserDiary> userDiaryList = userDiaryRepository.findByUserIDAndDiaryIDAndStatusNot(userID,diaryID,999);
-        diaryProvider.updateList(userDiaryList,userDiary -> userDiary.setStatus(999),userDiaryRepository);
+        AtomicBoolean isEdit = new AtomicBoolean(false);
+        updateListAndDelete(
+                userDiary -> isEdit.get(),
+                userDiary -> {
+                    userDiary.setStatus(999);
+                    isEdit.set(true);
+                },
+                userDiaryList,
+                userDiaryRepository
+        );
     }
 
     @Transactional
     public void rejectInvitation(long userID, long diaryID){
         List<UserDiary> userDiaryList = userDiaryRepository.findByUserIDAndDiaryIDAndStatusNot(userID,diaryID,999);
-        diaryProvider.updateList(userDiaryList,userDiary -> userDiary.setStatus(999),userDiaryRepository);
-        diaryProvider.updateUserLog(userID,diaryID,1,999);
+        AtomicBoolean isEdit = new AtomicBoolean(false);
+        updateListAndDelete(
+                userDiary -> isEdit.get(),
+                userDiary -> {
+                    userDiary.setStatus(999);
+                    isEdit.set(true);
+                },
+                userDiaryList,
+                userDiaryRepository
+        );
+
+        List<UserLog> userLogList = userLogRepository.findByReceiveIDAndTypeAndTypeIDAndStatusNot(userID,1,diaryID,999);
+        updateList(userLogList,userLog -> userLog.setStatus(999),userLogRepository);
     }
 
     @Transactional
     public void updateDiary(long userID, UpdateDiary updateDiary){
         List<UserDiary> userDiaryList = userDiaryRepository.findByUserIDAndDiaryIDAndStatusNot(userID,updateDiary.getDiary(),999);
         int newStatus = diaryProvider.getDiaryStatus(updateDiary.getStatus(), updateDiary.getColor());
-
-        diaryProvider.updateList(userDiaryList,userDiary -> {
-            diaryProvider.checkDiaryStatus(userDiary,newStatus);
-            userDiary.setDiaryName(updateDiary.getTitle());
-            userDiary.setStatus(newStatus);
-        },userDiaryRepository);
+        AtomicBoolean isEdit = new AtomicBoolean(false);
+        updateListAndDelete(
+                userDiary -> isEdit.get(),
+                userDiary -> {
+                    diaryProvider.checkDiaryStatus(userDiary,newStatus);
+                    userDiary.setDiaryName(updateDiary.getTitle());
+                    userDiary.setStatus(newStatus);
+                },
+                userDiaryList,
+                userDiaryRepository
+        );
     }
 
     public DiaryRequestOfUser getRequestOfUser(long userID, long diaryID){
@@ -225,7 +248,16 @@ public class DiaryService extends AbstractService implements BaseService {
     @Transactional
     public void updateNotice(long userID, long diaryID, String notice){
         List<DiaryNotice> noticeList = diaryNoticeRepository.findByUserIDAndDiaryIDAndStatusNot(userID,diaryID,0);
-        diaryProvider.updateList(noticeList,diaryNotice -> diaryNotice.setNotice(notice),diaryNoticeRepository);
+        AtomicBoolean isEdit = new AtomicBoolean(false);
+        updateListAndDelete(
+                diaryNotice -> isEdit.get(),
+                diaryNotice -> {
+                    diaryNotice.setNotice(notice);
+                    isEdit.set(true);
+                },
+                noticeList,
+                diaryNoticeRepository
+        );
     }
 
     @Transactional
@@ -249,7 +281,7 @@ public class DiaryService extends AbstractService implements BaseService {
                 .userID(curr.getUserID())
                 .userName(curr.getUser().getUserName())
                 .notice(curr.getNotice().equals("") ? defaultNotice : curr.getNotice())
-                .date(diaryProvider.getTimeDiffSec(LocalDateTime.now(),curr.getCreateAt()))
+                .date(getTimeDiffSec(LocalDateTime.now(),curr.getCreateAt()))
                 .build();
 
         // 1개 이상의 미사용 공지 삭제
@@ -264,31 +296,46 @@ public class DiaryService extends AbstractService implements BaseService {
 
 
 
-    public int getUserDiaryStatus(long userID, long diaryID){
-        return diaryProvider.getUserDiaryStatus(userID, diaryID);
+
+
+
+    /**
+     * 다이어리 초대 요청 시 FCM 발송받을 유저 데이터 getter
+     * @param receiveUserDataList
+     * @return
+     */
+    public Map<Long,String> getFcmDiaryInviteUserMap(List<UserInfoDetail> receiveUserDataList){
+        return getFcmReceiveUserMap(
+                (userInfoDetail,map)-> !map.containsKey(userInfoDetail.getUserID()),
+                (userInfoDetail,map)-> map.put(
+                        userInfoDetail.getUserID(),
+                        userInfoDetail.getUserName()
+                ),
+                receiveUserDataList
+        );
     }
 
-    public int getDiaryStatus(int status, int color){
-        return diaryProvider.getDiaryStatus(status,color);
+    /**
+     * 다이어리 초대 승낙 시 FCM 발송받을 유저 데이터 getter
+     * @param entityList
+     * @return
+     */
+    public Map<Long,String> getFcmDiaryAcceptUserMap(List<UserDiary> entityList){
+        return getFcmReceiveUserMap(
+                (userDiary,map)-> !map.containsKey((long)userDiary.getStatus()/10),
+                (userDiary,map)-> map.put(
+                        (long)userDiary.getStatus()/10,
+                        userDiary.getUser().getUserName()
+                ),
+                entityList
+        );
     }
 
-    public List<UserDiary> getAcceptableDiaryList(long userID, long diaryID){
-        return diaryProvider.getAcceptableDiaryList(userID, diaryID);
-    }
-
-    public UserData getSendUserData(String token){
-        return diaryProvider.getSendUserData(token);
-    }
-
-    public UserInfoDetail getReceiveUserData(String userCode){
-        return diaryProvider.getReceiveUserData(userCode);
-    }
-
-    public Diary getDiary(long diaryID){
-        return diaryProvider.getDiary(diaryID);
-    }
-
-    public long getUserID(String token){
-        return diaryProvider.getUserID(token);
-    }
+    public int getUserDiaryStatus(long userID, long diaryID){return diaryProvider.getUserDiaryStatus(userID, diaryID);}
+    public int getDiaryStatus(int status, int color){return diaryProvider.getDiaryStatus(status,color);}
+    public List<UserDiary> getAcceptableDiaryList(long userID, long diaryID){return diaryProvider.getAcceptableDiaryList(userID, diaryID);}
+    public UserData getSendUserData(String token){return diaryProvider.getSendUserData(token);}
+    public UserInfoDetail getReceiveUserData(String userCode){return diaryProvider.getReceiveUserData(userCode);}
+    public Diary getDiary(long diaryID){return diaryProvider.getDiary(diaryID);}
+    public long getUserID(String token){return diaryProvider.getUserID(token);}
 }

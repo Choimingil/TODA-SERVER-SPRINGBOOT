@@ -12,6 +12,7 @@ public final class WrongAccessException extends IllegalStateException {
     public enum of{
         HTTP_CONNECTION_EXCEPTION(500,"다른 서버로 정상적으로 요청이 발송되지 않았습니다."),
         SEND_FCM_EXCEPTION(500,"FCM 메시지가 정상적으로 발송되지 않았습니다."),
+        FCM_BODY_EXCEPTION(500,"잘못된 FCM 바디 형식입니다."),
         SEND_MAIL_EXCEPTION(500,"메일이 정상적으로 발송되지 않았습니다."),
         SEND_SLACK_EXCEPTION(500,"SLACK 메시지가 정상적으로 발송되지 않았습니다."),
         REDIS_CONNECTION_EXCEPTION(500,"Redis에 정상적으로 등록되지 않았습니다."),
