@@ -152,6 +152,7 @@ public abstract class AbstractFcmService extends AbstractService implements Base
                     new StringBuilder().append(userName).append("님(").append(userCode).append(")이 ").append(diaryName).append("에 초대합니다:)").toString();
             case 2 ->
                     new StringBuilder().append(userName).append("님(").append(userCode).append(")이 ").append(diaryName).append(" 초대에 수락하셨습니다:)").toString();
+            case 3 -> new StringBuilder().append(userName).append("님이 일기를 남겼습니다:)").toString();
             default -> throw new WrongAccessException(WrongAccessException.of.FCM_BODY_EXCEPTION);
         };
     }

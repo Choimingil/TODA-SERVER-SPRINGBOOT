@@ -86,7 +86,7 @@ public class DiaryController extends AbstractController implements BaseControlle
 
                 // FCM 발송
                 Map<Long,String> fcmDiaryInviteUserMap = diaryService.getFcmDiaryInviteUserMap(List.of(receiveUserData));
-                diaryService.setFcmAndLogToAcceptDiary(fcmDiaryInviteUserMap, sendUserData, diary, 1);
+                diaryService.setFcmAndLog(fcmDiaryInviteUserMap, sendUserData, diary, 1);
                 return new SuccessResponse.Builder(SuccessResponse.of.INVITE_DIARY_SUCCESS).build().getResponse();
             }
 
@@ -103,7 +103,7 @@ public class DiaryController extends AbstractController implements BaseControlle
 
             // FCM 발송
             Map<Long,String> acceptableDiaryMap = diaryService.getFcmDiaryAcceptUserMap(acceptableDiaryList);
-            diaryService.setFcmAndLogToAcceptDiary(acceptableDiaryMap, sendUserData, diary, 2);
+            diaryService.setFcmAndLog(acceptableDiaryMap, sendUserData, diary, 2);
             return new SuccessResponse.Builder(SuccessResponse.of.ACCEPT_DIARY_SUCCESS).build().getResponse();
         }
     }

@@ -2,7 +2,10 @@ package com.toda.api.TODASERVERSPRINGBOOT.services;
 
 import com.toda.api.TODASERVERSPRINGBOOT.entities.*;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.*;
+import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryColors;
+import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryStatus;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateDiary;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.DiaryListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.DiaryMemberListResponse;
@@ -11,6 +14,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmGroup;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.DiaryProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmTokenProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractFcmService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
@@ -32,6 +36,7 @@ public class DiaryService extends AbstractFcmService implements BaseService {
     private final UserDiaryRepository userDiaryRepository;
     private final DiaryProvider diaryProvider;
     private final DiaryNoticeRepository diaryNoticeRepository;
+    private final TokenProvider tokenProvider;
     private final FcmTokenProvider fcmTokenProvider;
 
     @Transactional
@@ -96,7 +101,7 @@ public class DiaryService extends AbstractFcmService implements BaseService {
     }
 
     @Transactional
-    public void setFcmAndLogToAcceptDiary(Map<Long,String> receiveUserMap, UserData sendUserData, Diary diary, int type){
+    public void setFcmAndLog(Map<Long,String> receiveUserMap, UserData sendUserData, Diary diary, int type){
         // 푸시 알림 발송 메시지 세팅
         String body = getFcmBody(sendUserData.getUserName(), sendUserData.getUserCode(), diary.getDiaryName(), type);      // $sendname."님(".$usercode.")이 ".$diaryname." 초대에 수락하셨습니다:)";
         sendFcmForSingleUser(
@@ -154,7 +159,7 @@ public class DiaryService extends AbstractFcmService implements BaseService {
     @Transactional
     public void updateDiary(long userID, UpdateDiary updateDiary){
         List<UserDiary> userDiaryList = userDiaryRepository.findByUserIDAndDiaryIDAndStatusNot(userID,updateDiary.getDiary(),999);
-        int newStatus = diaryProvider.getDiaryStatus(updateDiary.getStatus(), updateDiary.getColor());
+        int newStatus = getDiaryStatus(updateDiary.getStatus(), updateDiary.getColor());
         AtomicBoolean isEdit = new AtomicBoolean(false);
         updateListAndDelete(
                 userDiary -> isEdit.get(),
@@ -188,7 +193,7 @@ public class DiaryService extends AbstractFcmService implements BaseService {
                     .userName(curr.getUserDiary().getUser().getUserName())
                     .diaryID(curr.getUserDiary().getDiaryID())
                     .name(curr.getUserDiary().getDiaryName())
-                    .color(diaryProvider.getDiaryColorCode(itemColor))
+                    .color(diaryProvider.getDiaryColorCode(colorSet,itemColor))
                     .colorCode(itemColor)
                     .status(itemStatus)
                     .userNum(curr.getUserNum())
@@ -213,7 +218,7 @@ public class DiaryService extends AbstractFcmService implements BaseService {
                     .userName(curr.getUserDiary().getUser().getUserName())
                     .diaryID(curr.getUserDiary().getDiaryID())
                     .name(curr.getUserDiary().getDiaryName())
-                    .color(diaryProvider.getDiaryColorCode(itemColor))
+                    .color(diaryProvider.getDiaryColorCode(colorSet,itemColor))
                     .colorCode(itemColor)
                     .status(itemStatus)
                     .userNum(curr.getUserNum())
@@ -331,11 +336,16 @@ public class DiaryService extends AbstractFcmService implements BaseService {
         );
     }
 
-    public int getUserDiaryStatus(long userID, long diaryID){return diaryProvider.getUserDiaryStatus(userID, diaryID);}
-    public int getDiaryStatus(int status, int color){return diaryProvider.getDiaryStatus(status,color);}
+    public int getUserDiaryStatus(long userID, long diaryID){return getUserDiaryStatus(userID, diaryID, userDiaryRepository);}
+    public int getDiaryStatus(int status, int color){
+        return getStatus(color,status,() -> {
+            if(status<1 || status>statusSet.size()) throw new WrongArgException(WrongArgException.of.WRONG_DIARY_STATUS_EXCEPTION);
+            if(color<1 || color>colorSet.size()) throw new WrongArgException(WrongArgException.of.WRONG_DIARY_COLOR_EXCEPTION);
+        });
+    }
     public List<UserDiary> getAcceptableDiaryList(long userID, long diaryID){return diaryProvider.getAcceptableDiaryList(userID, diaryID);}
     public UserData getSendUserData(String token){return diaryProvider.getSendUserData(token);}
     public UserInfoDetail getReceiveUserData(String userCode){return diaryProvider.getReceiveUserData(userCode);}
     public Diary getDiary(long diaryID){return diaryProvider.getDiary(diaryID);}
-    public long getUserID(String token){return diaryProvider.getUserID(token);}
+    public long getUserID(String token){return getUserID(token, tokenProvider);}
 }

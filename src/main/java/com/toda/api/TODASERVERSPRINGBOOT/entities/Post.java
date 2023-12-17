@@ -37,10 +37,10 @@ public class Post {
     @Column(name="title", nullable = false)
     private String title;
 
-    @Column(name="status", nullable = false, insertable = false)
+    @Column(name="status", nullable = false)
     private int status;
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name="createAt", nullable = false, insertable = false, updatable = false)
+    @Column(name="createAt", nullable = false)
     private LocalDateTime createAt;
 }

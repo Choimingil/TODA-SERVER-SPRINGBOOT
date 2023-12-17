@@ -4,14 +4,11 @@ import com.toda.api.TODASERVERSPRINGBOOT.entities.Diary;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.DiaryNotice;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.UserDiary;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.UserLog;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.DiaryList;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryColors;
-import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryStatus;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.DiaryListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmGroup;
 import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.KafkaFcmProto;
@@ -19,18 +16,10 @@ import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 @Component
@@ -44,8 +33,6 @@ public class DiaryProvider extends AbstractProvider implements BaseProvider {
     private final UserDiaryRepository userDiaryRepository;
     private final UserLogRepository userLogRepository;
     private final DiaryNoticeRepository diaryNoticeRepository;
-    public final Set<DiaryColors> colorSet = EnumSet.allOf(DiaryColors.class);
-    public final Set<DiaryStatus> statusSet = EnumSet.allOf(DiaryStatus.class);
 
     @Transactional
     public void addUserDiary(long userID, long diaryID, String diaryName, int status){
@@ -90,22 +77,6 @@ public class DiaryProvider extends AbstractProvider implements BaseProvider {
      */
 
     /**
-     * 유저가 다이어리에 어떤 상태로 존재하는지 확인
-     * @param userID
-     * @param diaryID
-     * @return 404,100,200
-     * 404 : 유저가 다이어리에 속하지 않을 경우
-     * 100 : 유저가 다이어리에 속할 경우
-     * 200 : 유저가 다이어리에 속하지 않고 초대 요청이 온 경우
-     */
-    public int getUserDiaryStatus(long userID, long diaryID){
-        List<UserDiary> userDiaryList = userDiaryRepository.findByUserIDAndDiaryIDAndStatusNot(userID,diaryID,999);
-        if(userDiaryList.isEmpty()) return 404;
-        for(UserDiary userDiary : userDiaryList) if(userDiary.getStatus()%10 != 0) return 100;
-        return 200;
-    }
-
-    /**
      * 다이어리 상태값 유효성 검증
      * 1 : 함께 쓰는 다이어리
      * 2 : 혼자 쓰는 다이어리
@@ -126,13 +97,7 @@ public class DiaryProvider extends AbstractProvider implements BaseProvider {
         }
     }
 
-    public int getDiaryStatus(int status, int color){
-        if(status<1 || status>statusSet.size()) throw new WrongArgException(WrongArgException.of.WRONG_DIARY_STATUS_EXCEPTION);
-        if(color<1 || color>colorSet.size()) throw new WrongArgException(WrongArgException.of.WRONG_DIARY_COLOR_EXCEPTION);
-        return color*100 + status;
-    }
-
-    public int getDiaryColorCode(int color){
+    public int getDiaryColorCode(Set<DiaryColors> colorSet, int color){
         StringBuilder sb = new StringBuilder();
         sb.append("CODE_").append(color);
         String key = sb.toString();
@@ -161,10 +126,6 @@ public class DiaryProvider extends AbstractProvider implements BaseProvider {
         if(diary == null) throw new WrongArgException(WrongArgException.of.WRONG_DIARY_EXCEPTION);
         if(diary.getStatus()%100 == 2) throw new BusinessLogicException(BusinessLogicException.of.ALONE_DIARY_INVITATION_EXCEPTION);
         return diary;
-    }
-
-    public long getUserID(String token){
-        return tokenProvider.getUserID(token);
     }
 
 
@@ -203,35 +164,5 @@ public class DiaryProvider extends AbstractProvider implements BaseProvider {
         catch (InterruptedException | ExecutionException e){
             throw new WrongAccessException(WrongAccessException.of.SEND_FCM_EXCEPTION);
         }
-    }
-
-    public String getFcmTitle(String userName){
-        return new StringBuilder()
-                .append("To. ")
-                .append(userName)
-                .append("님")
-                .toString();
-    }
-
-    public String getFcmBodyInvite(String userName, String userCode, String diaryName){
-        return new StringBuilder()
-                .append(userName)
-                .append("님(")
-                .append(userCode)
-                .append(")이 ")
-                .append(diaryName)
-                .append("에 초대합니다:)")
-                .toString();
-    }
-
-    public String getFcmBodyAccept(String userName, String userCode, String diaryName){
-        return new StringBuilder()
-                .append(userName)
-                .append("님(")
-                .append(userCode)
-                .append(")이 ")
-                .append(diaryName)
-                .append(" 초대에 수락하셨습니다:)")
-                .toString();
     }
 }

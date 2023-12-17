@@ -21,6 +21,12 @@ public final class WrongArgException extends IllegalArgumentException{
         WRONG_DIARY_EXCEPTION(104,"존재하지 않는 다이어리입니다."),
         WRONG_DIARY_STATUS_EXCEPTION(103,"존재하지 않는 코드입니다."),
         WRONG_DIARY_COLOR_EXCEPTION(104,"존재하지 않는 색입니다."),
+
+        WRONG_MOOD_EXCEPTION(104,"존재하지 않는 감정입니다."),
+        WRONG_BACKGROUND_EXCEPTION(104,"존재하지 않는 속지입니다."),
+        WRONG_ALIGNED_EXCEPTION(103,"잘못된 정렬 코드값입니다."),
+        WRONG_FONT_EXCEPTION(103,"잘못된 글꼴 형식입니다."),
+
         WRONG_TYPE_EXCEPTION(500,"입력 타입과 다른 타입입니다.");
 
         private final int code;

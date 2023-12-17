@@ -59,6 +59,11 @@ public class SuccessResponse extends Response {
         UPDATE_DIARY_NOTICE_SUCCESS(100, "다이어리 공지 수정이 완료되었습니다."),
 
         /**
+         * PostController
+         */
+        CREATE_POST_SUCCESS(100, "게시물 작성이 완료되었습니다."),
+
+        /**
          * BASIC
          */
         SUCCESS(100, "성공"),
