@@ -1,14 +1,20 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
+import com.toda.api.TODASERVERSPRINGBOOT.entities.Diary;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.Post;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.PostImage;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.PostText;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreatePost;
+import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.FcmDto;
+import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
+import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmGroup;
+import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmParams;
+import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.KafkaFcmProto;
+import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmTokenProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.providers.KafkaProducerProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.repositories.PostImageRepository;
-import com.toda.api.TODASERVERSPRINGBOOT.repositories.PostRepository;
-import com.toda.api.TODASERVERSPRINGBOOT.repositories.PostTextRepository;
-import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserDiaryRepository;
+import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractFcmService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Component("postService")
 @RequiredArgsConstructor
@@ -25,11 +32,14 @@ public class PostService extends AbstractFcmService implements BaseService {
     private final PostRepository postRepository;
     private final PostTextRepository postTextRepository;
     private final PostImageRepository postImageRepository;
+    private final UserLogRepository userLogRepository;
 
     private final TokenProvider tokenProvider;
+    private final KafkaProducerProvider kafkaProducerProvider;
+    private final FcmTokenProvider fcmTokenProvider;
 
     @Transactional
-    public long addPost(long userID, CreatePost createPost){
+    public Post addPost(long userID, CreatePost createPost){
         int status = getStatus(createPost.getBackground(), createPost.getMood(), () -> {});
 
         Post post = new Post();
@@ -39,10 +49,9 @@ public class PostService extends AbstractFcmService implements BaseService {
         post.setStatus(status);
         post.setCreateAt(toLocalDateTime(createPost.getDate()));
         Post newPost = postRepository.save(post);
+        addPostText(newPost.getPostID(),createPost);
 
-        long postID = newPost.getPostID();
-        addPostText(postID,createPost);
-        return postID;
+        return post;
     }
 
     @Transactional
@@ -68,11 +77,44 @@ public class PostService extends AbstractFcmService implements BaseService {
         postImageRepository.saveAll(postImageList);
     }
 
+    @Transactional
+    public void setFcmAndLog(UserData sendUserData, Post post, int type){
+        // 발송 대상 : 다이어리에 존재하면서 탈퇴하거나 초대받지 않은 유저들 제외
+        Map<Long,String> fcmReceiveUserMap = getFcmReceiveUserMap(
+                (userDiary,map)-> !map.containsKey(userDiary.getUserID()),
+                (userDiary,map)-> map.put(
+                        userDiary.getUserID(),
+                        userDiary.getUser().getUserName()
+                ),
+                userDiaryRepository.findByDiaryIDAndStatusNot(post.getDiaryID(),999)
+        );
+
+        setKafkaTopicFcm(
+                (userID, userName) -> {
+                    // 발송 조건 : 상대방 유저가 다이어리에 존재할 경우
+                    return getUserDiaryStatus(userID,post.getDiaryID()) == 100;
+                },
+                // 조건 만족 시 FCM 발송
+                (userID, userName) -> {
+                    addUserLog(userLogRepository,userID,sendUserData.getUserID(),post.getPostID(),type,100);
+                    return fcmTokenProvider.getSingleUserFcmList(userID);
+                },
+                FcmDto.builder()
+                        .title(getFcmTitle())
+                        .body(getFcmBody(sendUserData.getUserName(), sendUserData.getUserCode(), "", type))
+                        .typeNum(type)
+                        .dataID(post.getPostID())
+                        .map(fcmReceiveUserMap)
+                        .provider(kafkaProducerProvider)
+                        .build()
+        );
+    }
 
 
 
 
 
     public long getUserID(String token){return getUserID(token, tokenProvider);}
+    public UserData getSendUserData(String token){return tokenProvider.decodeToken(token);}
     public int getUserDiaryStatus(long userID, long diaryID){return getUserDiaryStatus(userID, diaryID, userDiaryRepository);}
 }

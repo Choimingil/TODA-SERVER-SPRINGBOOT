@@ -70,7 +70,6 @@ public class FcmProvider extends AbstractProvider implements BaseProvider {
     private void getFcmKafkaConsumer(byte[] byteCode){
         try {
             KafkaFcmProto.KafkaFcmRequest kafkaFcm = KafkaFcmProto.KafkaFcmRequest.parseFrom(byteCode);
-            long userID = kafkaFcm.getUserID();
             FcmGroup group = FcmGroup.builder()
                     .aosFcmList(kafkaFcm.getAosFcmList())
                     .iosFcmList(kafkaFcm.getIosFcmList())
@@ -83,7 +82,7 @@ public class FcmProvider extends AbstractProvider implements BaseProvider {
                     .fcmGroup(group)
                     .build();
 
-            sendFcmSingleUser(userID, params).get();
+            sendFcm(params).get();
         }
         catch (ExecutionException | InterruptedException | InvalidProtocolBufferException e){
             throw new WrongAccessException(WrongAccessException.of.KAFKA_CONNECTION_EXCEPTION);
@@ -91,28 +90,31 @@ public class FcmProvider extends AbstractProvider implements BaseProvider {
     }
 
     /**
-     * 하나의 유저에게 알림 발송
-     * @param userID
+     * AOS, IOS 별로 알림 발송
      * @param params
      * @return
      */
-    private Future<Void> sendFcmSingleUser(long userID, FcmParams params) {
+    private Future<Void> sendFcm(FcmParams params) {
         String fcmType = getFcmType(params.getTypeNum());
         List<String> aosFcmList = params.getFcmGroup().getAosFcmList();
         List<String> iosFcmList = params.getFcmGroup().getIosFcmList();
 
-        FcmResponse aosResponse =
-                !aosFcmList.isEmpty() ?
-                        sendUrl(getFcmAosBody(aosFcmList, params.getTitle(), params.getBody(), fcmType, params.getDataID())) :
-                        null;
+        if(!aosFcmList.isEmpty()) connectFcmUrl(getFcmAosBody(aosFcmList, params.getTitle(), params.getBody(), fcmType, params.getDataID()));
+        if(!iosFcmList.isEmpty()) connectFcmUrl(getFcmIosBody(iosFcmList, params.getTitle(), params.getBody(), fcmType, params.getDataID()));
 
-        FcmResponse iosResponse =
-                !iosFcmList.isEmpty() ?
-                        sendUrl(getFcmIosBody(iosFcmList, params.getTitle(), params.getBody(), fcmType, params.getDataID())) :
-                        null;
+        // 리턴 타입 검증이 필요할 경우 아래 코드 사용
+//        FcmResponse aosResponse =
+//                !aosFcmList.isEmpty() ?
+//                        connectFcmUrl(getFcmAosBody(aosFcmList, params.getTitle(), params.getBody(), fcmType, params.getDataID())) :
+//                        null;
+//
+//        FcmResponse iosResponse =
+//                !iosFcmList.isEmpty() ?
+//                        connectFcmUrl(getFcmIosBody(iosFcmList, params.getTitle(), params.getBody(), fcmType, params.getDataID())) :
+//                        null;
 
-        if(aosResponse != null) checkExpiredTokens(aosResponse, userID, aosFcmList);
-        if(iosResponse != null) checkExpiredTokens(iosResponse, userID, iosFcmList);
+//        if(aosResponse != null) checkExpiredTokens(aosResponse, userID, aosFcmList);
+//        if(iosResponse != null) checkExpiredTokens(iosResponse, userID, iosFcmList);
 
         return CompletableFuture.completedFuture(null);
     }
@@ -137,32 +139,7 @@ public class FcmProvider extends AbstractProvider implements BaseProvider {
      * @return
      */
     @Async
-    private FcmResponse sendUrl(Object body){
-//        ObjectMapper objectMapper = new ObjectMapper();
-//
-//        try{
-//            HttpPost postRequest = new HttpPost(fcmServerDomain);
-//            postRequest.setHeader("Authorization", authorization);
-//            postRequest.setHeader("Content-Type", contentType);
-//            postRequest.setEntity(new StringEntity(objectMapper.writeValueAsString(body), Consts.UTF_8));
-//            ResponseEntity<String> responseEntity = restTemplate.postForEntity(fcmServerDomain, postRequest, String.class);
-//
-//            HttpStatusCode statusCode = responseEntity.getStatusCode();
-//            String responseBody = responseEntity.getBody();
-//
-//            logger.info("HTTP status code : "+statusCode);
-//            logger.info("HTTP response body : "+responseBody);
-//
-//            return new ObjectMapper().readValue(responseBody, FcmResponse.class);
-//        }
-//        catch (JsonProcessingException e){
-//            throw new WrongAccessException(WrongAccessException.of.HTTP_CONNECTION_EXCEPTION);
-//        }
-
-
-
-
-
+    private FcmResponse connectFcmUrl(Object body){
         // HttpClient 5.x 사용 버전
         ObjectMapper mapper = new ObjectMapper();
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();

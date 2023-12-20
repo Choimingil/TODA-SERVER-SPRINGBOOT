@@ -16,6 +16,7 @@ public interface UserDiaryRepository extends JpaRepository<UserDiary,Long> {
     List<UserDiary> findByUserIDAndDiaryIDAndStatus(long userID, long diaryID, int status);
     List<UserDiary> findByUserIDAndDiaryIDAndStatusNot(long userID, long diaryID, int status);
     List<UserDiary> findByUserIDAndDiaryID(long userID, long diaryID);
+    List<UserDiary> findByDiaryIDAndStatusNot(long diaryID, int status);
 
     @Query("select u.userID as userID, u.userCode as userCode, u.email as email, u.userName as userName, " +
             "ui.url as selfie, ud.diaryID as diaryID, ud.diaryName as diaryName, TIMESTAMPDIFF(SECOND, ud.createAt, now()) as date from User u " +

@@ -1,25 +1,16 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services.base;
 
 import com.toda.api.TODASERVERSPRINGBOOT.entities.UserDiary;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.UserLog;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserFcm;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryColors;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryStatus;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
-import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmGroup;
-import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmMap;
-import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.KafkaFcmProto;
-import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.UserFcmProto;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.DiaryProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserDiaryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileCopyUtils;
@@ -49,6 +40,7 @@ public abstract class AbstractService implements BaseService{
     protected interface CheckParams<T> { boolean check(T params); }
     protected interface MethodParams2Params<T,U>{ void method(T param1, U param2); }
     protected interface CheckParams2Params<T, U> { boolean check(T param1, U param2); }
+    protected interface FcmMethod<T, U>{ FcmGroup method(T param1, U param2); }
 
     /**
      * 리스트 중 하나만 로직을 수행하고 나머지는 폐기시켜야 할 때 사용
