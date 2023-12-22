@@ -1,6 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.validators;
 
-import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidBackground;
+import com.toda.api.TODASERVERSPRINGBOOT.validators.annotations.ValidBackground;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.RequiredArgsConstructor;

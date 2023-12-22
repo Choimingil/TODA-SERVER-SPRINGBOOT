@@ -37,8 +37,6 @@ public abstract class AbstractFcmService extends AbstractService implements Base
 
         try{
             KafkaFcmProto.KafkaFcmRequest request = KafkaFcmProto.KafkaFcmRequest.newBuilder()
-                    // 유저 아이디 부분 테스트 이후 제거하기
-                    .setUserID(1L)
                     .setTitle(fcmDto.getTitle())
                     .setBody(fcmDto.getBody())
                     .setTypeNum(fcmDto.getTypeNum())
@@ -125,11 +123,10 @@ public abstract class AbstractFcmService extends AbstractService implements Base
 
     protected String getFcmBody(String userName, String userCode, String objName, int type){
         return switch (type) {
-            case 1 ->
-                    new StringBuilder().append(userName).append("님(").append(userCode).append(")이 ").append(objName).append("에 초대합니다:)").toString();
-            case 2 ->
-                    new StringBuilder().append(userName).append("님(").append(userCode).append(")이 ").append(objName).append(" 초대에 수락하셨습니다:)").toString();
+            case 1 -> new StringBuilder().append(userName).append("님(").append(userCode).append(")이 ").append(objName).append("에 초대합니다:)").toString();
+            case 2 -> new StringBuilder().append(userName).append("님(").append(userCode).append(")이 ").append(objName).append(" 초대에 수락하셨습니다:)").toString();
             case 3 -> new StringBuilder().append(userName).append("님이 일기를 남겼습니다:)").toString();
+            case 4 -> new StringBuilder().append(userName).append("님(").append(userCode).append(")이 ").append(objName).append("님의 일기를 좋아합니다:)").toString();
             default -> throw new WrongAccessException(WrongAccessException.of.FCM_BODY_EXCEPTION);
         };
     }

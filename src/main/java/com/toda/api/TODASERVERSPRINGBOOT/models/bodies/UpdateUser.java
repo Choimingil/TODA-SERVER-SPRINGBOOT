@@ -1,7 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.models.bodies;
 
-import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidUrl;
-import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidUserName;
+import com.toda.api.TODASERVERSPRINGBOOT.validators.annotations.ValidUrl;
+import com.toda.api.TODASERVERSPRINGBOOT.validators.annotations.ValidUserName;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import lombok.Builder;
 import lombok.Getter;

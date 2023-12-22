@@ -62,6 +62,11 @@ public class SuccessResponse extends Response {
          * PostController
          */
         CREATE_POST_SUCCESS(100, "게시물 작성이 완료되었습니다."),
+        DELETE_POST_SUCCESS(100, "게시물 삭제가 완료되었습니다."),
+        UPDATE_POST_SUCCESS(100, "게시물 수정이 완료되었습니다."),
+        DO_HEART_SUCCESS(100, "좋아요가 등록되었습니다."),
+        UNDO_HEART_SUCCESS(200, "좋아요가 취소되었습니다."),
+        REDO_HEART_SUCCESS(100, "좋아요가 재등록되었습니다."),
 
         /**
          * BASIC

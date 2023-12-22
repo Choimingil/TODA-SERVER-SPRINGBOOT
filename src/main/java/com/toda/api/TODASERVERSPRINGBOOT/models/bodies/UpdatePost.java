@@ -6,31 +6,27 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @ToString
-public final class CreatePost {
-    private long diary;
-    @ValidDate
-    private String date;
+public final class UpdatePost {
+    private long post;
+    @ValidDate private String date;
     @ValidTitle private String title;
     private String text;
     @ValidMood private int mood;
-    @ValidBackground
-    private int background;
-    @ValidAligned
-    private int aligned;
-    @ValidFont
-    private int font;
-    @ValidImageList
-    private List<String> imageList;
+    @ValidBackground private int background;
+    @ValidAligned private int aligned;
+    @ValidFont private int font;
+    @ValidImageList private List<String> imageList;
 
-    public CreatePost(){}
+    public UpdatePost(){}
 
     @Builder
-    public CreatePost(
-            long diary,
+    public UpdatePost(
+            long post,
             String date,
             String title,
             String text,
@@ -40,22 +36,23 @@ public final class CreatePost {
             int font,
             List<String> imageList
     ){
-        this.diary = diary;
+        this.post = post;
         this.title = title;
         this.text = text;
         this.mood = mood;
-        this.background = background;
+        this.background =background;
         this.aligned = aligned;
         this.font = font;
 
         if(date != null) this.date = date;
-        else{
-            LocalDateTime curr = LocalDateTime.now();
-            this.date = new StringBuilder()
-                    .append(curr.getYear()).append("-")
-                    .append(curr.getMonthValue()).append("-")
-                    .append(curr.getDayOfMonth()).toString();
-        }
+        else this.date = "1901-01-01";
+//        else{
+//            LocalDateTime curr = LocalDateTime.now();
+//            this.date = new StringBuilder()
+//                    .append(curr.getYear()).append("-")
+//                    .append(curr.getMonthValue()).append("-")
+//                    .append(curr.getDayOfMonth()).toString();
+//        }
 
         if(imageList != null) this.imageList = imageList;
         else this.imageList = new ArrayList<>();

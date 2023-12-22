@@ -4,13 +4,12 @@ option java_outer_classname = "KafkaFcmProto";
 package com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers;
 
 message KafkaFcmRequest {
-  int64 userID = 1;
-  string title = 2;
-  string body = 3;
-  int32 typeNum = 4;
-  int64 dataID = 5;
-  repeated string aosFcm = 6;
-  repeated string iosFcm = 7;
+  string title = 1;
+  string body = 2;
+  int32 typeNum = 3;
+  int64 dataID = 4;
+  repeated string aosFcm = 5;
+  repeated string iosFcm = 6;
 }
 
 message KafkaFcmResponse {

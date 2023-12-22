@@ -1,6 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.models.bodies;
 
-import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidTime;
+import com.toda.api.TODASERVERSPRINGBOOT.validators.annotations.ValidTime;
 import lombok.*;
 
 @Getter

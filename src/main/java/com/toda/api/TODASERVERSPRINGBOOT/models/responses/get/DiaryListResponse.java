@@ -1,4 +1,4 @@
-package com.toda.api.TODASERVERSPRINGBOOT.models.dtos;
+package com.toda.api.TODASERVERSPRINGBOOT.models.responses.get;
 
 import lombok.Builder;
 import lombok.Getter;

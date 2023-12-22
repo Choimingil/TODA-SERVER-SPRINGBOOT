@@ -1,11 +1,10 @@
 package com.toda.api.TODASERVERSPRINGBOOT.validators;
 
-import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidUserName;
+import com.toda.api.TODASERVERSPRINGBOOT.validators.annotations.ValidUserName;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component

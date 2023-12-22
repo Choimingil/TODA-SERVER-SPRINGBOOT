@@ -1,17 +1,17 @@
-package com.toda.api.TODASERVERSPRINGBOOT.annotations;
+package com.toda.api.TODASERVERSPRINGBOOT.validators.annotations;
 
-import com.toda.api.TODASERVERSPRINGBOOT.validators.AlignedValidator;
+import com.toda.api.TODASERVERSPRINGBOOT.validators.EmailValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
 import java.lang.annotation.*;
 
 @Documented
-@Constraint(validatedBy = AlignedValidator.class)
+@Constraint(validatedBy = EmailValidator.class)
 @Target({ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ValidAligned {
-    String message() default "Valid Background";
+public @interface ValidEmail {
+    String message() default "Valid Email";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

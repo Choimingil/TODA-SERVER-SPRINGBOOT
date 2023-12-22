@@ -1,6 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.validators;
 
-import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidMood;
+import com.toda.api.TODASERVERSPRINGBOOT.validators.annotations.ValidMood;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,7 @@ public final class MoodValidator implements ConstraintValidator<ValidMood,Intege
 
     @Override
     public boolean isValid(Integer value, ConstraintValidatorContext constraintValidatorContext) {
-//        return !(value > 7 || value < 1) || (value == 999);
-        return !(value > 7 || value < 1);
+        return !(value > 7 || value < 1) || (value == 999);
+//        return !(value > 7 || value < 1);
     }
 }

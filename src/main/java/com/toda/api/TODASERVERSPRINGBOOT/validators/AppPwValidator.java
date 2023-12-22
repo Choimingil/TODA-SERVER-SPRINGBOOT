@@ -1,7 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.validators;
 
 import com.toda.api.TODASERVERSPRINGBOOT.enums.RegularExpressions;
-import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidAppPw;
+import com.toda.api.TODASERVERSPRINGBOOT.validators.annotations.ValidAppPw;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.RequiredArgsConstructor;

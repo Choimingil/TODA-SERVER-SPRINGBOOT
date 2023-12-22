@@ -1,6 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.models.bodies;
 
-import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidBinaryChoice;
+import com.toda.api.TODASERVERSPRINGBOOT.validators.annotations.ValidBinaryChoice;
 import lombok.*;
 
 @Getter

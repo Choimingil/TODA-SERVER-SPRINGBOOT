@@ -18,8 +18,6 @@ public interface UserRepository extends JpaRepository<User,Long> {
     boolean existsByUserCodeAndAppPasswordNot(String userCode, int appPassword);
     boolean existsByUserIDAndPasswordAndAppPasswordNot(long userID, String password, int appPassword);
 
-    List<User> findByUserIDIn(Set<Long> userIDList);
-
     @Query("select u.userID as userID, u.userCode as userCode, u.email as email, u.password as password, u.createAt as createAt, u.userName as userName, u.appPassword as appPassword, ui.url as profile from User u " +
             "inner join UserImage ui on ui.userID = u.userID where u.userCode like :userCode and ui.status not like 0")
     UserInfoDetail getUserDataByUserCode(String userCode);

@@ -1,4 +1,4 @@
-package com.toda.api.TODASERVERSPRINGBOOT.models.dtos;
+package com.toda.api.TODASERVERSPRINGBOOT.models.responses.get;
 
 import com.toda.api.TODASERVERSPRINGBOOT.entities.DiaryNotice;
 import lombok.Builder;

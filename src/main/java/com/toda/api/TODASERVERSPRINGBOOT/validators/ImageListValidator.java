@@ -1,6 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.validators;
 
-import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidImageList;
+import com.toda.api.TODASERVERSPRINGBOOT.validators.annotations.ValidImageList;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;

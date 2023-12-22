@@ -1,17 +1,17 @@
-package com.toda.api.TODASERVERSPRINGBOOT.annotations;
+package com.toda.api.TODASERVERSPRINGBOOT.validators.annotations;
 
-import com.toda.api.TODASERVERSPRINGBOOT.validators.DateValidator;
+import com.toda.api.TODASERVERSPRINGBOOT.validators.UserCodeValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
 import java.lang.annotation.*;
 
 @Documented
-@Constraint(validatedBy = DateValidator.class)
+@Constraint(validatedBy = UserCodeValidator.class)
 @Target({ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ValidDate {
-    String message() default "Valid Date";
+public @interface ValidUserCode {
+    String message() default "Valid UserCode";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

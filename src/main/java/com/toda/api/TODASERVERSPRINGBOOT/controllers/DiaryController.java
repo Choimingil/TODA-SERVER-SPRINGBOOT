@@ -11,9 +11,9 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreateDiary;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateDiary;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateNotice;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UserCode;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.DiaryListResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.DiaryMemberListResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.DiaryNoticeResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryListResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryMemberListResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryNoticeResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
@@ -23,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +42,11 @@ public class DiaryController extends AbstractController implements BaseControlle
         long userID = diaryService.getUserID(token);
         int status = diaryService.getDiaryStatus(createDiary.getStatus(), createDiary.getColor());
         long diaryID = diaryService.addDiary(createDiary.getTitle(), status);
-        diaryService.setDiaryInfo(userID,diaryID, createDiary.getTitle(),status);
+
+        // 생성된 다이어리 유저 등록 & 공지 세팅
+        diaryService.addUserDiary(userID,diaryID,createDiary.getTitle(),status);
+        diaryService.addDiaryNotice(userID,diaryID,"");
+
         return new SuccessResponse.Builder(SuccessResponse.of.CREATE_DIARY_SUCCESS)
                 .build().getResponse();
     }

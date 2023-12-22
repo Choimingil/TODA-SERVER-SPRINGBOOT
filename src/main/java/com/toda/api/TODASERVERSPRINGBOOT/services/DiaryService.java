@@ -7,6 +7,9 @@ import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateDiary;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.*;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryListResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryMemberListResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryNoticeResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmTokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.KafkaProducerProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
@@ -46,7 +49,7 @@ public class DiaryService extends AbstractFcmService implements BaseService {
     }
 
     @Transactional
-    private void addUserDiary(long userID, long diaryID, String diaryName, int status){
+    public void addUserDiary(long userID, long diaryID, String diaryName, int status){
         UserDiary userDiary = new UserDiary();
         userDiary.setUserID(userID);
         userDiary.setDiaryID(diaryID);
@@ -56,20 +59,12 @@ public class DiaryService extends AbstractFcmService implements BaseService {
     }
 
     @Transactional
-    private void addDiaryNotice(long userID, long diaryID, String notice){
+    public void addDiaryNotice(long userID, long diaryID, String notice){
         DiaryNotice diaryNotice = new DiaryNotice();
         diaryNotice.setUserID(userID);
         diaryNotice.setDiaryID(diaryID);
         diaryNotice.setNotice(notice);
         diaryNoticeRepository.save(diaryNotice);
-    }
-
-
-
-    @Transactional
-    public void setDiaryInfo(long userID, long diaryID, String diaryName, int status){
-        addUserDiary(userID, diaryID, diaryName, status);
-        addDiaryNotice(userID, diaryID, "");
     }
 
     @Transactional

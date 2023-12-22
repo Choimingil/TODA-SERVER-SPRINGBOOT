@@ -1,4 +1,4 @@
-package com.toda.api.TODASERVERSPRINGBOOT.annotations;
+package com.toda.api.TODASERVERSPRINGBOOT.validators.annotations;
 
 import com.toda.api.TODASERVERSPRINGBOOT.validators.ImageListValidator;
 import jakarta.validation.Constraint;

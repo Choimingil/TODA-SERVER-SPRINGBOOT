@@ -1,11 +1,13 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services.base;
 
+import com.toda.api.TODASERVERSPRINGBOOT.entities.Post;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.UserDiary;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryColors;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryStatus;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmGroup;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.repositories.PostRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserDiaryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +43,13 @@ public abstract class AbstractService implements BaseService{
     protected interface MethodParams2Params<T,U>{ void method(T param1, U param2); }
     protected interface CheckParams2Params<T, U> { boolean check(T param1, U param2); }
     protected interface FcmMethod<T, U>{ FcmGroup method(T param1, U param2); }
+
+
+
+
+
+
+
 
     /**
      * 리스트 중 하나만 로직을 수행하고 나머지는 폐기시켜야 할 때 사용
@@ -115,6 +124,29 @@ public abstract class AbstractService implements BaseService{
         if(userDiaryList.isEmpty()) return 404;
         for(UserDiary userDiary : userDiaryList) if(userDiary.getStatus()%10 != 0) return 100;
         return 200;
+    }
+
+    /**
+     * 유저의 게시글 접근 권한 확인
+     * @param userID
+     * @param postID
+     * @param userDiaryRepository
+     * @param postRepository
+     * @return 404,100,200
+     * 404 : 유저가 다이어리에 속하지 않을 경우
+     * 100 : 유저가 작성한 게시글일 경우
+     * 200 : 유저가 게시글이 존재하는 다이어리에 속하지만 유저가 작성한 게시글이 아닌 경우
+     */
+    protected int getUserPostStatus(long userID, long postID, UserDiaryRepository userDiaryRepository, PostRepository postRepository){
+        Post post = postRepository.findByPostID(postID);
+        if(post == null) return 404;
+
+        if(post.getUserID() == userID) return 100;
+        else{
+            List<UserDiary> userDiaryList = userDiaryRepository.findByUserIDAndDiaryIDAndStatusNot(userID,post.getDiaryID(),999);
+            if(userDiaryList.isEmpty()) return 404;
+            else return 200;
+        }
     }
 
     /**

@@ -1,6 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.models.bodies;
 
-import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidTitle;
+import com.toda.api.TODASERVERSPRINGBOOT.validators.annotations.ValidTitle;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;

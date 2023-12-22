@@ -1,6 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.validators;
 
-import com.toda.api.TODASERVERSPRINGBOOT.annotations.ValidTime;
+import com.toda.api.TODASERVERSPRINGBOOT.validators.annotations.ValidTime;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.RegularExpressions;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;

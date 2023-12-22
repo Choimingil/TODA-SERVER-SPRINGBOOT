@@ -1,16 +1,11 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
-import com.toda.api.TODASERVERSPRINGBOOT.entities.Diary;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.Post;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.PostImage;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.PostText;
-import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.*;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreatePost;
+import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdatePost;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.FcmDto;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
-import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmGroup;
-import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmParams;
-import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.KafkaFcmProto;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmTokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.KafkaProducerProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
@@ -21,9 +16,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component("postService")
 @RequiredArgsConstructor
@@ -33,6 +27,7 @@ public class PostService extends AbstractFcmService implements BaseService {
     private final PostTextRepository postTextRepository;
     private final PostImageRepository postImageRepository;
     private final UserLogRepository userLogRepository;
+    private final HeartRepository heartRepository;
 
     private final TokenProvider tokenProvider;
     private final KafkaProducerProvider kafkaProducerProvider;
@@ -78,17 +73,7 @@ public class PostService extends AbstractFcmService implements BaseService {
     }
 
     @Transactional
-    public void setFcmAndLog(UserData sendUserData, Post post, int type){
-        // 발송 대상 : 다이어리에 존재하면서 탈퇴하거나 초대받지 않은 유저들 제외
-        Map<Long,String> fcmReceiveUserMap = getFcmReceiveUserMap(
-                (userDiary,map)-> !map.containsKey(userDiary.getUserID()),
-                (userDiary,map)-> map.put(
-                        userDiary.getUserID(),
-                        userDiary.getUser().getUserName()
-                ),
-                userDiaryRepository.findByDiaryIDAndStatusNot(post.getDiaryID(),999)
-        );
-
+    public void setFcmAndLog(Map<Long,String> map, UserData sendUserData, Post post, int type){
         setKafkaTopicFcm(
                 (userID, userName) -> {
                     // 발송 조건 : 상대방 유저가 다이어리에 존재할 경우
@@ -101,19 +86,141 @@ public class PostService extends AbstractFcmService implements BaseService {
                 },
                 FcmDto.builder()
                         .title(getFcmTitle())
-                        .body(getFcmBody(sendUserData.getUserName(), sendUserData.getUserCode(), "", type))
+                        .body(getFcmBody(sendUserData.getUserName(), sendUserData.getUserCode(), post.getUser().getUserName(), type))
                         .typeNum(type)
                         .dataID(post.getPostID())
-                        .map(fcmReceiveUserMap)
+                        .map(map)
                         .provider(kafkaProducerProvider)
                         .build()
         );
+    }
+
+    @Transactional
+    public void deletePost(long postID){
+        Post post = postRepository.findByPostID(postID);
+        post.setStatus(0);
+        postRepository.save(post);
+    }
+
+    @Transactional
+    public void updatePost(UpdatePost updatePost){
+        int status = getStatus(updatePost.getBackground(), updatePost.getMood(), () -> {});
+
+        Post post = postRepository.findByPostID(updatePost.getPost());
+        post.setTitle(updatePost.getTitle());
+        post.setStatus(status);
+        if(!updatePost.getDate().equals("1901-01-01")) post.setCreateAt(toLocalDateTime(updatePost.getDate()));
+        postRepository.save(post);
+    }
+
+    @Transactional
+    public void updatePostText(UpdatePost updatePost){
+        int status = getStatus(updatePost.getAligned(), updatePost.getFont(), () -> {});
+
+        List<PostText> postTextList = postTextRepository.findByPostID(updatePost.getPost());
+        AtomicBoolean isEdit = new AtomicBoolean(false);
+        updateListAndDelete(
+                postText -> isEdit.get(),
+                postText -> {
+                    postText.setText(updatePost.getText());
+                    postText.setStatus(status);
+                    isEdit.set(true);
+                },
+                postTextList,
+                postTextRepository
+        );
+    }
+
+    @Transactional
+    public void deletePostImage(long postID){
+        List<PostImage> postImageList = postImageRepository.findByPostID(postID);
+        updateList(
+                postImageList,
+                postImage -> postImage.setStatus(0),
+                postImageRepository
+        );
+    }
+
+    @Transactional
+    public void addHeart(long userID, long postID, int mood){
+        Heart heart = new Heart();
+        heart.setUserID(userID);
+        heart.setPostID(postID);
+        heart.setStatus(mood);
+        heartRepository.save(heart);
+    }
+
+    @Transactional
+    public void updateHeart(Heart heart, int status){
+        heart.setStatus(status);
+        heartRepository.save(heart);
     }
 
 
 
 
 
+
+
+
+
+
+
+
+    /**
+     * 유효한 좋아요만 리턴하고 나머지는 삭제
+     * @return
+     */
+    public Heart getValidHeart(List<Heart> heartList){
+        Queue<Heart> queue = new ArrayDeque<>();
+        AtomicBoolean isEdit = new AtomicBoolean(false);
+        updateListAndDelete(
+                heart -> !isEdit.get(),
+                heart -> {
+                    queue.add(heart);
+                    isEdit.set(true);
+                },
+                heartList,
+                heartRepository
+        );
+        return queue.poll();
+    }
+
+    /**
+     * 게시글 작성 시 FCM 발송받을 유저 데이터 getter
+     * 발송 대상 : 다이어리에 존재하면서 탈퇴하거나 초대받지 않은 유저들 제외
+     * @param diaryID
+     * @return
+     */
+    public Map<Long,String> getFcmAddPostUserMap(long diaryID){
+        return getFcmReceiveUserMap(
+                (userDiary,map)-> !map.containsKey(userDiary.getUserID()),
+                (userDiary,map)-> map.put(
+                        userDiary.getUserID(),
+                        userDiary.getUser().getUserName()
+                ),
+                userDiaryRepository.findByDiaryIDAndStatusNot(diaryID,999)
+        );
+    }
+
+    /**
+     * 좋아요 추가 시 FCM 발송받을 유저 데이터 getter
+     * 발송 대상 : 게시글 주인
+     * @param user
+     * @return
+     */
+    public Map<Long,String> getFcmAddHeartUserMap(User user){
+        Map<Long,String> res = new HashMap<>();
+        res.put(user.getUserID(), user.getUserName());
+        return res;
+    }
+
+
+
+
+    public Post getPostByID(long postID){return postRepository.findByPostID(postID);}
+    public List<Heart> getHeartList(long userID, long postID){return heartRepository.findByUserIDAndPostIDOrderByCreateAtDesc(userID,postID);}
+    public int getUserPostStatus(long userID, long postID){return getUserPostStatus(userID,postID,userDiaryRepository,postRepository);}
     public long getUserID(String token){return getUserID(token, tokenProvider);}
     public UserData getSendUserData(String token){return tokenProvider.decodeToken(token);}
     public int getUserDiaryStatus(long userID, long diaryID){return getUserDiaryStatus(userID, diaryID, userDiaryRepository);}
