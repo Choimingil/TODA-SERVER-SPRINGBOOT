@@ -11,6 +11,8 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.SetHeart;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdatePost;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryListResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.services.PostService;
 import jakarta.validation.Valid;
@@ -18,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,7 +39,7 @@ public class PostController extends AbstractController implements BaseController
         long userID = postService.getUserID(token);
         int userDiaryStatus = postService.getUserDiaryStatus(userID,createPost.getDiary());
 
-        // 현재 다이어리에 속해 있는 게시글 추가 작업 진행
+        // 현재 다이어리에 속해 있는 경우 게시글 추가 작업 진행
         if(userDiaryStatus == 100){
             Post newPost = postService.addPost(userID, createPost);
             if(!createPost.getImageList().isEmpty())
@@ -147,7 +150,39 @@ public class PostController extends AbstractController implements BaseController
         }
     }
 
-    // $r->addRoute('GET', '/diaries/{diaryID:\d+}/posts', ['PostController', 'getPostList']);                                 //19. 게시물 리스트 조회 API
+    //19. 게시물 리스트 조회 API
+    @GetMapping("/diaries/{diaryID}/posts")
+    public Map<String, ?> getPostList(
+            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @PathVariable("diaryID") long diaryID,
+            @RequestParam(name="page", required = true) int page
+//            @RequestParam(name="page", required = true) int page,
+//            @RequestParam(name="post", required = false) int post
+    ){
+        long userID = postService.getUserID(token);
+        int userDiaryStatus = postService.getUserDiaryStatus(userID,diaryID);
+
+        // 현재 다이어리에 속해 있는 경우 게시글 조회 작업 진행
+        if(userDiaryStatus == 100){
+            List<PostListResponse> res = postService.getPostList(userID, diaryID, page);
+
+            // 게시글이 존재하지 않을 경우 메시지 출력
+            if(res.isEmpty()){
+                Map<String,String> emptyRes = new HashMap<>();
+                emptyRes.put("message","등록된 다이어리가 없습니다.");
+                return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
+                        .add("result",emptyRes)
+                        .build().getResponse();
+            }
+            // 게시글이 존재할 경우 게시글 데이터 리턴
+            else return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
+                    .add("result",res)
+                    .build().getResponse();
+        }
+        // 그 외의 경우 존재하지 않는 다이어리 리턴
+        else throw new BusinessLogicException(BusinessLogicException.of.NO_DIARY_EXCEPTION);
+    }
+
     // $r->addRoute('GET', '/posts/{postID:\d+}/ver2', ['PostController', 'getPostDetailVer2']);                               //20-1. 게시물 상세 조회 API(날짜 및 폰트 추가 버전)
 
 

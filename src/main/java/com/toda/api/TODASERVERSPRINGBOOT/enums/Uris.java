@@ -38,6 +38,7 @@ public enum Uris {
     /** 16-2. 게시물 작성 API(날짜 폰트 추가) */ POST_POST_VER3,
     /** 17. 게시물 삭제 API */ DELETE_POST_NUMBER,
     /** 18-2. 게시물 수정 API */ PATCH_POST_VER3,
+    /** 19. 게시물 리스트 조회 API */ GET_DIARIES_NUMBER_POSTS,
     /** 28. 좋아요 API */ POST_POSTS_NUMBER_LIKE,
     /** 38. 공지사항 리스트 조회 API */ GET_ANNOUNCEMENT,
     /** 39. 공지사항 상세 조회 API */ GET_ANNOUNCEMENT_NUMBER,

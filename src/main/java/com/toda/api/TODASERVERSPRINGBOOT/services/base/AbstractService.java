@@ -183,6 +183,18 @@ public abstract class AbstractService implements BaseService{
         return duration.getSeconds();
     }
 
+
+    protected String getDateString(LocalDateTime targetDateTime){
+        long diffSec = getTimeDiffSec(LocalDateTime.now(),targetDateTime);
+        StringBuilder sb = new StringBuilder();
+        if(diffSec > 60*60*24*30*12) return sb.append(diffSec/(60*60*24*30*12)).append("년 전").toString();
+        else if(diffSec > 60*60*24*30) return sb.append(diffSec/(60*60*24*30)).append("달 전").toString();
+        else if(diffSec > 60*60*24) return sb.append(diffSec/(60*60*24)).append("일 전").toString();
+        else if(diffSec > 60*60) return sb.append(diffSec/(60*60)).append("시간 전").toString();
+        else if(diffSec > 60) return sb.append(diffSec/60).append("분 전").toString();
+        else return sb.append(diffSec).append("초 전").toString();
+    }
+
     protected long getUserID(String token, TokenProvider tokenProvider){
         return tokenProvider.getUserID(token);
     }

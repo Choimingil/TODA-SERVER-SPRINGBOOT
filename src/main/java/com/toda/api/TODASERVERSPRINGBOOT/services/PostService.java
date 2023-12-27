@@ -1,11 +1,13 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
 import com.toda.api.TODASERVERSPRINGBOOT.entities.*;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.PostList;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreatePost;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdatePost;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.FcmDto;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmTokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.KafkaProducerProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
@@ -13,9 +15,12 @@ import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractFcmService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -156,6 +161,32 @@ public class PostService extends AbstractFcmService implements BaseService {
         heartRepository.save(heart);
     }
 
+    public List<PostListResponse> getPostList(long userID, long diaryID, int page){
+        List<PostListResponse> res = new ArrayList<>();
+
+        int start = (page-1)*20;
+        Pageable pageable = PageRequest.of(start,20);
+        List<PostList> postList = postRepository.getPostList(userID, diaryID, pageable);
+
+        for(PostList item : postList){
+            int moodCode = item.getPost().getStatus()/100;
+            PostListResponse response = PostListResponse.builder()
+                    .diaryID(item.getPost().getDiaryID())
+                    .postID(item.getPost().getPostID())
+                    .name(item.getPost().getUser().getUserName())
+                    .title(item.getPost().getTitle())
+                    .date(getDateString(item.getPost().getCreateAt()))
+                    .icon(moodCode)
+                    .mood(getMoodString(moodCode))
+                    .isMyLike(item.getIsMyLike()==1)
+                    .likeNum(item.getLikeNum())
+                    .commentNum(item.getCommentNum())
+                    .build();
+            res.add(response);
+        }
+
+        return res;
+    }
 
 
 
@@ -215,6 +246,23 @@ public class PostService extends AbstractFcmService implements BaseService {
         return res;
     }
 
+    /**
+     * 감정 코드를 스트링으로 변환
+     * @param moodCode
+     * @return
+     */
+    private String getMoodString(int moodCode){
+        return switch (moodCode) {
+            case 1 -> "기분 등록 없음";
+            case 2 -> "행복해요";
+            case 3 -> "슬퍼요";
+            case 4 -> "화나요";
+            case 5 -> "우울해요";
+            case 6 -> "설레요";
+            case 7 -> "멍때려요";
+            default -> "잘못된 감정";
+        };
+    }
 
 
 
