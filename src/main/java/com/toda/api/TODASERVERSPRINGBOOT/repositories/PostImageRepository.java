@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface PostImageRepository extends JpaRepository<PostImage,Long> {
-    List<PostImage> findByPostID(long postID);
+    List<PostImage> findByPostIDAndStatusNot(long postID, int status);
 }

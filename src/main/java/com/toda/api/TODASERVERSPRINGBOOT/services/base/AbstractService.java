@@ -161,6 +161,16 @@ public abstract class AbstractService implements BaseService{
         return firstValue*100 + secondValue;
     }
 
+    protected String toStringDateFullTime(LocalDateTime dateTime){
+        return new StringBuilder()
+                .append(dateTime.getYear()).append("-")
+                .append(dateTime.getMonthValue()).append("-")
+                .append(dateTime.getDayOfMonth()).append(" ")
+                .append(dateTime.getHour()).append(":")
+                .append(dateTime.getMinute()).append(":")
+                .append(dateTime.getSecond()).toString();
+    }
+
     /**
      * "yyyy-MM-dd" 형식의 날짜 String을 LocalDateTime으로 변환
      * @param date
@@ -183,7 +193,11 @@ public abstract class AbstractService implements BaseService{
         return duration.getSeconds();
     }
 
-
+    /**
+     * 현재 시간과 주어진 시간 사이의 차이값을 시간 단위로 변환하여 리턴
+     * @param targetDateTime
+     * @return
+     */
     protected String getDateString(LocalDateTime targetDateTime){
         long diffSec = getTimeDiffSec(LocalDateTime.now(),targetDateTime);
         StringBuilder sb = new StringBuilder();

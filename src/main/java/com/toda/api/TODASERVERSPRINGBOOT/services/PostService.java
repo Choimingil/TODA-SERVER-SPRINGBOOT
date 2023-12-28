@@ -1,12 +1,15 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
 import com.toda.api.TODASERVERSPRINGBOOT.entities.*;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.PostDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.PostList;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreatePost;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdatePost;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.FcmDto;
+import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.ImageItem;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostDetailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmTokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.KafkaProducerProvider;
@@ -23,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 @Component("postService")
 @RequiredArgsConstructor
@@ -138,7 +142,7 @@ public class PostService extends AbstractFcmService implements BaseService {
 
     @Transactional
     public void deletePostImage(long postID){
-        List<PostImage> postImageList = postImageRepository.findByPostID(postID);
+        List<PostImage> postImageList = postImageRepository.findByPostIDAndStatusNot(postID,0);
         updateList(
                 postImageList,
                 postImage -> postImage.setStatus(0),
@@ -169,7 +173,7 @@ public class PostService extends AbstractFcmService implements BaseService {
         List<PostList> postList = postRepository.getPostList(userID, diaryID, pageable);
 
         for(PostList item : postList){
-            int moodCode = item.getPost().getStatus()/100;
+            int moodCode = item.getPost().getStatus()%100;
             PostListResponse response = PostListResponse.builder()
                     .diaryID(item.getPost().getDiaryID())
                     .postID(item.getPost().getPostID())
@@ -188,6 +192,42 @@ public class PostService extends AbstractFcmService implements BaseService {
         return res;
     }
 
+    public PostDetailResponse getPostDetail(long userID, long postID){
+        PostDetail postDetail = postRepository.getPostDetail(userID,postID);
+        List<PostImage> postImageList = postImageRepository.findByPostIDAndStatusNot(postID,0);
+
+        int moodCode = postDetail.getPost().getStatus()%100;
+        int backgroundCode = postDetail.getPost().getStatus()/100;
+        int fontCode = postDetail.getPostText().getStatus()%100;
+        int alignedCode = postDetail.getPostText().getStatus()/100;
+
+        List<ImageItem> validImageList = postImageList.stream()
+                .map(postImage -> ImageItem.builder()
+                        .imageID(postImage.getPostImageID())
+                        .URL(postImage.getUrl())
+                        .build())
+                .collect(Collectors.toList());
+
+        return PostDetailResponse.builder()
+                .isMyPost(postDetail.getPost().getUserID() == userID)
+                .diaryID(postDetail.getPost().getDiaryID())
+                .postID(postID)
+                .name(postDetail.getPost().getUser().getUserName())
+                .date(getDateString(postDetail.getPost().getCreateAt()))
+                .dateFull(toStringDateFullTime(postDetail.getPost().getCreateAt()))
+                .title(postDetail.getPost().getTitle())
+                .text(postDetail.getPostText().getText())
+                .icon(moodCode)
+                .mood(getMoodString(moodCode))
+                .background(backgroundCode)
+                .font(fontCode)
+                .aligned(alignedCode)
+                .isMyLike(postDetail.getIsMyLike()==1)
+                .likeNum(postDetail.getLikeNum())
+                .commentNum(postDetail.getCommentNum())
+                .image(validImageList)
+                .build();
+    }
 
 
 

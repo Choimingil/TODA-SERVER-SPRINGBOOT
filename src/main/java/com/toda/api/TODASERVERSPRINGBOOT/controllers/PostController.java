@@ -12,6 +12,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdatePost;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryListResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostDetailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.services.PostService;
@@ -156,8 +157,6 @@ public class PostController extends AbstractController implements BaseController
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
             @PathVariable("diaryID") long diaryID,
             @RequestParam(name="page", required = true) int page
-//            @RequestParam(name="page", required = true) int page,
-//            @RequestParam(name="post", required = false) int post
     ){
         long userID = postService.getUserID(token);
         int userDiaryStatus = postService.getUserDiaryStatus(userID,diaryID);
@@ -183,7 +182,25 @@ public class PostController extends AbstractController implements BaseController
         else throw new BusinessLogicException(BusinessLogicException.of.NO_DIARY_EXCEPTION);
     }
 
-    // $r->addRoute('GET', '/posts/{postID:\d+}/ver2', ['PostController', 'getPostDetailVer2']);                               //20-1. 게시물 상세 조회 API(날짜 및 폰트 추가 버전)
+    //20-1. 게시물 상세 조회 API(날짜 및 폰트 추가 버전)
+    @GetMapping("/posts/{postID}/ver2")
+    public Map<String, ?> getPostDetail(
+            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @PathVariable("postID") long postID
+    ){
+        long userID = postService.getUserID(token);
+        int userPostStatus = postService.getUserPostStatus(userID,postID);
+
+        // 현재 다이어리에 속해 있지 않은 경우 게시물 볼 수 있는 권한 없음 리턴
+        if(userPostStatus == 404) throw new BusinessLogicException(BusinessLogicException.of.NO_AUTH_POST_EXCEPTION);
+        return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
+                .add("result",postService.getPostDetail(userID,postID))
+                .build().getResponse();
+    }
+
+
+
+
 
 
     // 이 부분은 일단 구현하지 않고 1. 안드로이드에서 사용하는지 2. 테스트 후 오류 발생하는지  이 부분 체크해서 구현
