@@ -42,13 +42,14 @@ public class PostController extends AbstractController implements BaseController
 
         // 현재 다이어리에 속해 있는 경우 게시글 추가 작업 진행
         if(userDiaryStatus == 100){
-            Post newPost = postService.addPost(userID, createPost);
+            Post target = postService.addPost(userID, createPost);
+
             if(!createPost.getImageList().isEmpty())
-                postService.addPostImage(newPost.getPostID(),createPost.getImageList());
+                postService.addPostImage(target.getPostID(),createPost.getImageList());
 
             // 알림 발송
             UserData sendUserData = postService.getSendUserData(token);
-            postService.setFcmAndLog(postService.getFcmAddPostUserMap(createPost.getDiary()),sendUserData,newPost,3);
+            postService.setFcmAndLog(postService.getFcmAddPostUserMap(createPost.getDiary()),sendUserData,target,3);
             return new SuccessResponse.Builder(SuccessResponse.of.CREATE_POST_SUCCESS).build().getResponse();
         }
 

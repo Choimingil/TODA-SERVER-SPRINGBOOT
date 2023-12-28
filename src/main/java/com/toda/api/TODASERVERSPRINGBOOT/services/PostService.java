@@ -3,7 +3,6 @@ package com.toda.api.TODASERVERSPRINGBOOT.services;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.*;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.PostDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.PostList;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreatePost;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdatePost;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.FcmDto;
@@ -23,7 +22,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -31,6 +29,7 @@ import java.util.stream.Collectors;
 @Component("postService")
 @RequiredArgsConstructor
 public class PostService extends AbstractFcmService implements BaseService {
+    private final UserRepository userRepository;
     private final UserDiaryRepository userDiaryRepository;
     private final PostRepository postRepository;
     private final PostTextRepository postTextRepository;
@@ -55,7 +54,7 @@ public class PostService extends AbstractFcmService implements BaseService {
         Post newPost = postRepository.save(post);
         addPostText(newPost.getPostID(),createPost);
 
-        return post;
+        return newPost;
     }
 
     @Transactional
@@ -95,7 +94,11 @@ public class PostService extends AbstractFcmService implements BaseService {
                 },
                 FcmDto.builder()
                         .title(getFcmTitle())
-                        .body(getFcmBody(sendUserData.getUserName(), sendUserData.getUserCode(), post.getUser().getUserName(), type))
+                        .body(getFcmBody(
+                                sendUserData.getUserName(),
+                                sendUserData.getUserCode(),
+                                post.getUser() == null ? userRepository.findByUserID(post.getUserID()).getUserName() : post.getUser().getUserName(),
+                                type))
                         .typeNum(type)
                         .dataID(post.getPostID())
                         .map(map)
