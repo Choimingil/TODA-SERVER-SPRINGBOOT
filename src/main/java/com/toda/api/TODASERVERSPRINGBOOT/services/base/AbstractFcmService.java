@@ -16,6 +16,7 @@ import java.util.concurrent.ExecutionException;
 
 public abstract class AbstractFcmService extends AbstractService implements BaseService{
     protected void setKafkaTopicFcm(
+            long sendID,
             CheckParams2Params<Long,String> check,
             FcmMethod<Long,String> params,
             FcmDto fcmDto
@@ -26,6 +27,9 @@ public abstract class AbstractFcmService extends AbstractService implements Base
         for(Map.Entry<Long,String> entry : fcmDto.getMap().entrySet()){
             long userID = entry.getKey();
             String userName = entry.getValue();
+
+            // 발신자와 수신자가 같을 경우 알림 미발송
+            if(userID == sendID) continue;
 
             // 상대방 유저가 FCM 수신 조건 만족 시 발송
             if(check.check(userID,userName)){
@@ -110,13 +114,7 @@ public abstract class AbstractFcmService extends AbstractService implements Base
 
 
 
-//    protected String getFcmTitle(String userName){
-//        return new StringBuilder()
-//                .append("To. ")
-//                .append(userName)
-//                .append("님")
-//                .toString();
-//  }
+
     protected String getFcmTitle(){
         return "투다에서 알림이 왔어요!";
     }
@@ -127,6 +125,8 @@ public abstract class AbstractFcmService extends AbstractService implements Base
             case 2 -> new StringBuilder().append(userName).append("님(").append(userCode).append(")이 ").append(objName).append(" 초대에 수락하셨습니다:)").toString();
             case 3 -> new StringBuilder().append(userName).append("님이 일기를 남겼습니다:)").toString();
             case 4 -> new StringBuilder().append(userName).append("님(").append(userCode).append(")이 ").append(objName).append("님의 일기를 좋아합니다:)").toString();
+            case 5 -> new StringBuilder().append(userName).append("님(").append(userCode).append(")이 댓글을 남겼습니다:)").toString();
+            case 6 -> new StringBuilder().append(userName).append("님(").append(userCode).append(")이 대댓글을 남겼습니다:)").toString();
             default -> throw new WrongAccessException(WrongAccessException.of.FCM_BODY_EXCEPTION);
         };
     }

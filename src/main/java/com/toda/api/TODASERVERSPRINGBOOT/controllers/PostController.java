@@ -49,7 +49,7 @@ public class PostController extends AbstractController implements BaseController
 
             // 알림 발송
             UserData sendUserData = postService.getSendUserData(token);
-            postService.setFcmAndLog(postService.getFcmAddPostUserMap(createPost.getDiary()),sendUserData,target,3);
+            postService.setFcmAndLog(postService.getFcmAddPostUserMap(userID, createPost.getDiary()),sendUserData,target,3);
             return new SuccessResponse.Builder(SuccessResponse.of.CREATE_POST_SUCCESS).build().getResponse();
         }
 
@@ -127,7 +127,7 @@ public class PostController extends AbstractController implements BaseController
                 // 자신이 작성한 게시글이 아닐 경우 게시글 주인에게 알림 발송
                 if(target.getUserID() != userID){
                     UserData sendUserData = postService.getSendUserData(token);
-                    postService.setFcmAndLog(postService.getFcmAddHeartUserMap(target.getUser()),sendUserData,target,4);
+                    postService.setFcmAndLog(postService.getFcmAddHeartUserMap(userID, target.getUser()),sendUserData,target,4);
                 }
 
                 return new SuccessResponse.Builder(SuccessResponse.of.DO_HEART_SUCCESS).build().getResponse();

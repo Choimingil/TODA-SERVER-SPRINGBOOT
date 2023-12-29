@@ -83,6 +83,7 @@ public class PostService extends AbstractFcmService implements BaseService {
     @Transactional
     public void setFcmAndLog(Map<Long,String> map, UserData sendUserData, Post post, int type){
         setKafkaTopicFcm(
+                sendUserData.getUserID(),
                 (userID, userName) -> {
                     // 발송 조건 : 상대방 유저가 다이어리에 존재할 경우
                     return getUserDiaryStatus(userID,post.getDiaryID()) == 100;
@@ -263,12 +264,13 @@ public class PostService extends AbstractFcmService implements BaseService {
     /**
      * 게시글 작성 시 FCM 발송받을 유저 데이터 getter
      * 발송 대상 : 다이어리에 존재하면서 탈퇴하거나 초대받지 않은 유저들 제외
-     * @param diaryID
+     * 이 때 자기 자신은 알림 대상에서 제외
+     * @param userID,diaryID
      * @return
      */
-    public Map<Long,String> getFcmAddPostUserMap(long diaryID){
+    public Map<Long,String> getFcmAddPostUserMap(long userID, long diaryID){
         return getFcmReceiveUserMap(
-                (userDiary,map)-> !map.containsKey(userDiary.getUserID()),
+                (userDiary,map)-> !map.containsKey(userDiary.getUserID()) && userID != userDiary.getUserID(),
                 (userDiary,map)-> map.put(
                         userDiary.getUserID(),
                         userDiary.getUser().getUserName()
@@ -280,12 +282,13 @@ public class PostService extends AbstractFcmService implements BaseService {
     /**
      * 좋아요 추가 시 FCM 발송받을 유저 데이터 getter
      * 발송 대상 : 게시글 주인
-     * @param user
+     * 이 때 자기 자신은 알림 대상에서 제외
+     * @param userID,user
      * @return
      */
-    public Map<Long,String> getFcmAddHeartUserMap(User user){
+    public Map<Long,String> getFcmAddHeartUserMap(long userID, User user){
         Map<Long,String> res = new HashMap<>();
-        res.put(user.getUserID(), user.getUserName());
+        if(user.getUserID() != userID) res.put(user.getUserID(), user.getUserName());
         return res;
     }
 

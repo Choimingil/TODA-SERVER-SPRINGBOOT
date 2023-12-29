@@ -117,6 +117,7 @@ public class DiaryService extends AbstractFcmService implements BaseService {
     public void setFcmAndLog(Map<Long,String> receiveUserMap, UserData sendUserData, Diary diary, int type){
 
         setKafkaTopicFcm(
+                sendUserData.getUserID(),
                 (userID, userName) -> {
                     // 초대 시 발송 조건 : 상대방 유저가 다이어리 초대를 받았을 경우
                     if(type == 1) return getUserDiaryStatus(userID,diary.getDiaryID()) == 200;

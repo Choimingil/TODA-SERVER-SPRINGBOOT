@@ -69,6 +69,12 @@ public class SuccessResponse extends Response {
         REDO_HEART_SUCCESS(100, "좋아요가 재등록되었습니다."),
 
         /**
+         * CommentController
+         */
+        CREATE_COMMENT_SUCCESS(100, "댓글이 성공적으로 작성되었습니다."),
+        CREATE_RE_COMMENT_SUCCESS(100, "대댓글이 성공적으로 작성되었습니다."),
+
+        /**
          * BASIC
          */
         SUCCESS(100, "성공"),

@@ -27,6 +27,11 @@ public class BusinessLogicException extends IllegalArgumentException{
         NO_AUTH_POST_EXCEPTION(102,"게시물을 볼 수 있는 권한이 없습니다."),
         WRONG_HEART_STATUS_EXCEPTION(103,"잘못된 좋아요 상태값입니다."),
 
+        /**
+         * Comment
+         */
+        NO_AUTH_Comment_EXCEPTION(102,"대댓글을 달 권한이 없습니다."),
+
         ;
 
         private final int code;
