@@ -73,6 +73,8 @@ public class SuccessResponse extends Response {
          */
         CREATE_COMMENT_SUCCESS(100, "댓글이 성공적으로 작성되었습니다."),
         CREATE_RE_COMMENT_SUCCESS(100, "대댓글이 성공적으로 작성되었습니다."),
+        DELETE_COMMENT_SUCCESS(100, "댓글이 삭제되었습니다."),
+        UPDATE_COMMENT_SUCCESS(100, "댓글이 수정되었습니다."),
 
         /**
          * BASIC

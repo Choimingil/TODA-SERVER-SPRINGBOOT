@@ -42,6 +42,9 @@ public enum Uris {
     /** 20-1. 게시물 상세 조회 API(날짜 및 폰트 추가 버전) */ GET_POSTS_NUMBER_VER2,
     /** 28. 좋아요 API */ POST_POSTS_NUMBER_LIKE,
     /** 30. 댓글 작성 API */ POST_COMMENT,
+    /** 31. 댓글 삭제 API */ DELETE_COMMENT_NUMBER,
+    /** 32. 댓글 수정 API */ PATCH_COMMENT,
+    /** 33. 댓글 리스트 조회 API */ GET_POSTS_NUMBER_COMMENTS,
     /** 38. 공지사항 리스트 조회 API */ GET_ANNOUNCEMENT,
     /** 39. 공지사항 상세 조회 API */ GET_ANNOUNCEMENT_NUMBER,
     /** 40. 공지사항 읽었는지 안읽었는지 확인 API */ GET_ANNOUNCEMENT_CHECK;

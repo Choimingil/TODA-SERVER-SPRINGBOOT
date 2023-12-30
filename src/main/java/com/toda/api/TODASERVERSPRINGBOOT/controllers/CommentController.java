@@ -7,8 +7,12 @@ import com.toda.api.TODASERVERSPRINGBOOT.entities.Post;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreateComment;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreatePost;
+import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateComment;
+import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdatePost;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.CommentListResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.services.CommentService;
 import jakarta.validation.Valid;
@@ -16,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -35,7 +41,7 @@ public class CommentController extends AbstractController implements BaseControl
         long userID = commentService.getUserID(token);
         int userPostStatus = commentService.getUserPostStatus(userID,createComment.getPost());
 
-        // 현재 다이어리에 속해 있지 않은 경우 게시물 볼 수 있는 권한 없음 리턴
+        // 현재 게시글에 속해 있지 않은 경우 게시물 볼 수 있는 권한 없음 리턴
         if(userPostStatus == 404) throw new BusinessLogicException(BusinessLogicException.of.NO_AUTH_POST_EXCEPTION);
         else{
             UserData sendUserData = commentService.getSendUserData(token);
@@ -50,7 +56,7 @@ public class CommentController extends AbstractController implements BaseControl
             else{
                 // 부모 댓글 아이디가 해당 게시글의 댓글이 아닐 경우 예외 리턴
                 if(!commentService.isValidCommentPostDiary(comment,createComment.getPost()))
-                    throw new BusinessLogicException(BusinessLogicException.of.NO_AUTH_Comment_EXCEPTION);
+                    throw new BusinessLogicException(BusinessLogicException.of.NO_AUTH_COMMENT_EXCEPTION);
 
                 Comment target = commentService.addReComment(userID, createComment.getPost(), createComment.getReply(), comment);
                 commentService.setFcmAndLog(commentService.getFcmAddReCommentUserMap(userID, comment),sendUserData,target,6);
@@ -59,8 +65,70 @@ public class CommentController extends AbstractController implements BaseControl
         }
     }
 
-    // $r->addRoute('POST', '/comment', ['LikeCommentController', 'postComment']);                                             //30. 댓글 작성 API
-    // $r->addRoute('DELETE', '/comment/{commentID:\d+}', ['LikeCommentController', 'deleteComment']);
-    // $r->addRoute('PATCH', '/comment', ['LikeCommentController', 'updateComment']);
-    // $r->addRoute('GET', '/posts/{postID:\d+}/comments', ['LikeCommentController', 'getComment']);                           //33. 댓글 리스트 조회 API
+    //31. 댓글 삭제 API
+    @DeleteMapping("/comment/{commentID}")
+    public Map<String, ?> deleteComment(
+            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @PathVariable("commentID") long commentID
+    ){
+        long userID = commentService.getUserID(token);
+        int userCommentStatus = commentService.getUserCommentStatus(userID,commentID);
+
+        // 자신이 작성한 댓글인지 확인
+        if(userCommentStatus == 404) throw new BusinessLogicException(BusinessLogicException.of.NO_USER_COMMENT_EXCEPTION);
+        else{
+            // 자신이 작성한 댓글인 경우 삭제 진행
+            commentService.deleteComment(commentID);
+            return new SuccessResponse.Builder(SuccessResponse.of.DELETE_COMMENT_SUCCESS).build().getResponse();
+        }
+    }
+    
+    //32. 댓글 수정 API
+    @PatchMapping("/comment")
+    public Map<String, ?> updateComment(
+            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestBody @Valid UpdateComment updateComment,
+            BindingResult bindingResult
+    ){
+        long userID = commentService.getUserID(token);
+        int userCommentStatus = commentService.getUserCommentStatus(userID, updateComment.getComment());
+
+        // 자신이 작성한 댓글인지 확인
+        if(userCommentStatus == 404) throw new BusinessLogicException(BusinessLogicException.of.NO_USER_COMMENT_EXCEPTION);
+        else{
+            // 자신이 작성한 댓글인 경우 수정 진행
+            commentService.updateComment(updateComment.getComment(), updateComment.getReply());
+            return new SuccessResponse.Builder(SuccessResponse.of.UPDATE_COMMENT_SUCCESS).build().getResponse();
+        }
+    }
+
+    //33. 댓글 리스트 조회 API
+    @GetMapping("/posts/{postID}/comments")
+    public Map<String, ?> getPostList(
+            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @PathVariable("postID") long postID,
+            @RequestParam(name="page", required = true) int page
+    ){
+        long userID = commentService.getUserID(token);
+        int userPostStatus = commentService.getUserPostStatus(userID,postID);
+
+        // 현재 게시글에 속해 있지 않은 경우 게시물 볼 수 있는 권한 없음 리턴
+        if(userPostStatus == 404) throw new BusinessLogicException(BusinessLogicException.of.NO_AUTH_POST_EXCEPTION);
+        else{
+            CommentListResponse res = commentService.getCommentList(userID, postID, page);
+
+            // 댓글이 존재하지 않을 경우 메시지 출력
+            if(res.getComment().isEmpty()){
+                Map<String,String> emptyRes = new HashMap<>();
+                emptyRes.put("message","등록된 댓글이 없습니다.");
+                return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
+                        .add("result",emptyRes)
+                        .build().getResponse();
+            }
+            // 댓글이 존재할 경우 댓글 리스트 출력
+            else return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
+                    .add("result",res)
+                    .build().getResponse();
+        }
+    }
 }

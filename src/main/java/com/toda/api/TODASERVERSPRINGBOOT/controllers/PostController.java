@@ -169,7 +169,7 @@ public class PostController extends AbstractController implements BaseController
             // 게시글이 존재하지 않을 경우 메시지 출력
             if(res.isEmpty()){
                 Map<String,String> emptyRes = new HashMap<>();
-                emptyRes.put("message","등록된 다이어리가 없습니다.");
+                emptyRes.put("message","등록된 게시글이 없습니다.");
                 return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
                         .add("result",emptyRes)
                         .build().getResponse();

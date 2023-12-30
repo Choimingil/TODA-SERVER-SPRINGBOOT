@@ -11,6 +11,11 @@ public class BusinessLogicException extends IllegalArgumentException{
     @Getter
     public enum of{
         /**
+         * User
+         */
+        NO_USER_SELFIE_EXCEPTION(103,"유저 프로필 사진이 존재하지 않습니다"),
+
+        /**
          * Diary
          */
         SELF_INVITE_EXCEPTION(501,"자기 자신을 등록할 수 없습니다."),
@@ -30,8 +35,8 @@ public class BusinessLogicException extends IllegalArgumentException{
         /**
          * Comment
          */
-        NO_AUTH_Comment_EXCEPTION(102,"대댓글을 달 권한이 없습니다."),
-
+        NO_AUTH_COMMENT_EXCEPTION(102,"대댓글을 달 권한이 없습니다."),
+        NO_USER_COMMENT_EXCEPTION(102,"자신이 작성한 댓글이 아닙니다."),
         ;
 
         private final int code;

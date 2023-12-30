@@ -1,12 +1,16 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services.base;
 
+import com.toda.api.TODASERVERSPRINGBOOT.entities.Comment;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.Post;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.UserDiary;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.UserImage;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryColors;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryStatus;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmGroup;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.repositories.CommentRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.PostRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserDiaryRepository;
 import org.slf4j.Logger;
@@ -147,6 +151,22 @@ public abstract class AbstractService implements BaseService{
             if(userDiaryList.isEmpty()) return 404;
             else return 200;
         }
+    }
+
+    /**
+     * 유저의 댓글 접근 권한 확인
+     * @param userID
+     * @param commentID
+     * @param commentRepository
+     * @return
+     * 404 : 유저가 작성하지 않은 댓글일 경우
+     * 100 : 유저가 작성한 댓글일 경우
+     * 200 : 유저가 작성한 대댓글일 경우
+     */
+    protected int getUserCommentStatus(long userID, long commentID, CommentRepository commentRepository){
+        Comment comment = commentRepository.findByCommentID(commentID);
+        if(comment == null || comment.getUserID() != userID) return 404;
+        return comment.getParentID() == 0 ? 100 : 200;
     }
 
     /**

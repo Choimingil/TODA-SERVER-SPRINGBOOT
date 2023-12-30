@@ -3,8 +3,16 @@ package com.toda.api.TODASERVERSPRINGBOOT.services;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.Comment;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.Post;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.User;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.UserImage;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.CommentDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.PostList;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.FcmDto;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.CommentDetailResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.CommentListResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostListResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.ReCommentDetailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmTokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.KafkaProducerProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
@@ -12,11 +20,16 @@ import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractFcmService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component("commentService")
 @RequiredArgsConstructor
@@ -52,6 +65,20 @@ public class CommentService extends AbstractFcmService implements BaseService {
     }
 
     @Transactional
+    public void deleteComment(long commentID){
+        Comment comment = commentRepository.findByCommentID(commentID);
+        comment.setStatus(0);
+        commentRepository.save(comment);
+    }
+
+    @Transactional
+    public void updateComment(long commentID, String reply){
+        Comment comment = commentRepository.findByCommentID(commentID);
+        comment.setText(reply);
+        commentRepository.save(comment);
+    }
+
+    @Transactional
     public void setFcmAndLog(Map<Long,String> map, UserData sendUserData, Comment comment, int type){
         Post post = comment.getPost() == null ? postRepository.findByPostID(comment.getPostID()) : comment.getPost();
         setKafkaTopicFcm(
@@ -79,6 +106,61 @@ public class CommentService extends AbstractFcmService implements BaseService {
                         .build()
         );
     }
+
+    public CommentListResponse getCommentList(long userID, long postID, int page){
+        int start = (page-1)*20;
+        Pageable pageable = PageRequest.of(start,20);
+//        List<Comment> commentList = commentRepository.findByPostIDAndStatusNot(postID, 0, pageable);
+        List<CommentDetail> commentList = commentRepository.getCommentDetail(postID,pageable);
+
+        List<Long> commentIDList = commentList.stream().map(commentDetail -> {
+            return commentDetail.getComment().getCommentID();
+        }).toList();
+//        List<Comment> reCommentList = commentRepository.findByParentIDInAndStatusNot(commentIDList,0);
+        List<CommentDetail> reCommentList = commentRepository.getReCommentDetail(commentIDList);
+
+        Map<Long, CommentDetailResponse> map = new HashMap<>();
+        for(CommentDetail commentDetail : commentList){
+            Comment comment = commentDetail.getComment();
+            CommentDetailResponse response = CommentDetailResponse.builder()
+                    .commentID(comment.getCommentID())
+                    .postID(comment.getPostID())
+                    .userID(comment.getUserID())
+                    .userName(comment.getUser().getUserName())
+                    .userSelfie(commentDetail.getSelfie())
+                    .comment(comment.getText())
+                    .time(getDateString(comment.getCreateAt()))
+                    .isMyComment(comment.getUserID() == userID)
+                    .build();
+            map.put(comment.getCommentID(), response);
+        }
+
+        for(CommentDetail commentDetail : reCommentList){
+            Comment reComment = commentDetail.getComment();
+            ReCommentDetailResponse response = ReCommentDetailResponse.builder()
+                    .commentID(reComment.getCommentID())
+                    .comment(reComment.getText())
+                    .userID(reComment.getUserID())
+                    .userName(reComment.getUser().getUserName())
+                    .userSelfie(commentDetail.getSelfie())
+                    .parent(reComment.getParentID())
+                    .time(getDateString(reComment.getCreateAt()))
+                    .isMyComment(reComment.getUserID() == userID)
+                    .build();
+            map.get(reComment.getParentID()).getReComment().add(response);
+        }
+
+        List<CommentDetailResponse> commentDetailResponseList = new ArrayList<>();
+        for (Map.Entry<Long, CommentDetailResponse> entry : map.entrySet()) {
+            commentDetailResponseList.add(entry.getValue());
+        }
+
+        return CommentListResponse.builder()
+                .totalCommentNum(commentRepository.countByPostIDAndStatusNot(postID,0))
+                .Comment(commentDetailResponseList)
+                .build();
+    }
+
 
 
     /**
@@ -123,4 +205,5 @@ public class CommentService extends AbstractFcmService implements BaseService {
     public UserData getSendUserData(String token){return tokenProvider.decodeToken(token);}
     public long getUserID(String token){return getUserID(token, tokenProvider);}
     public int getUserPostStatus(long userID, long postID){return getUserPostStatus(userID,postID,userDiaryRepository,postRepository);}
+    public int getUserCommentStatus(long userID, long commentID){return getUserCommentStatus(userID,commentID,commentRepository);}
 }

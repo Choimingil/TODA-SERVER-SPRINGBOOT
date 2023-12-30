@@ -6,15 +6,15 @@ import lombok.ToString;
 
 @Getter
 @ToString
-public final class CreateComment {
-    private long post;
+public final class UpdateComment {
+    private long comment;
     private String reply;
 
-    public CreateComment(){}
+    public UpdateComment(){}
 
     @Builder
-    public CreateComment(long post, String reply){
-        this.post = post;
+    public UpdateComment(long comment, String reply){
+        this.comment = comment;
         this.reply = reply;
     }
 }
