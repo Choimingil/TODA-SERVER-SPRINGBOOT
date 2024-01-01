@@ -131,13 +131,6 @@ public class UserService extends AbstractService implements BaseService {
         return userRepository.getUserDataByUserCode(userCode);
     }
 
-    public List<UserStickerDetail> getUserStickers(String token, int page){
-        long userID = tokenProvider.getUserID(token);
-        int start = (page-1)*10;
-        Pageable pageable = PageRequest.of(start,10);
-        return userStickerRepository.getUserStickers(userID,pageable);
-    }
-
     @Transactional
     public void updateTempPassword(String email) {
         UserData userData = userProvider.getUserInfo(email);

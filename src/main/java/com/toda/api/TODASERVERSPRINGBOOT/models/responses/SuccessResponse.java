@@ -77,6 +77,12 @@ public class SuccessResponse extends Response {
         UPDATE_COMMENT_SUCCESS(100, "댓글이 수정되었습니다."),
 
         /**
+         * StickerController
+         */
+        ADD_STICKER_SUCCESS(100, "스티커 사용이 완료되었습니다."),
+        UPDATE_STICKER_SUCCESS(100, "스티커 수정이 완료되었습니다."),
+
+        /**
          * BASIC
          */
         SUCCESS(100, "성공"),

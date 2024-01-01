@@ -1,9 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services.base;
 
-import com.toda.api.TODASERVERSPRINGBOOT.entities.Comment;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.Post;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.UserDiary;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.UserImage;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.*;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryColors;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryStatus;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
@@ -12,6 +9,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmGroup;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.CommentRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.PostRepository;
+import com.toda.api.TODASERVERSPRINGBOOT.repositories.PostStickerRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserDiaryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -169,16 +167,19 @@ public abstract class AbstractService implements BaseService{
         return comment.getParentID() == 0 ? 100 : 200;
     }
 
+
+
     /**
      * 데이터의 상태값을 생성
      * @param firstValue
      * @param secondValue
-     * @param params
+     * @param secondValue
+     * @param digit
      * @return firstValue*100 + secondValue 형식
      */
-    protected int getStatus(int firstValue, int secondValue, MethodNoParams params){
+    protected int getStatus(int firstValue, int secondValue, int digit, MethodNoParams params){
         params.method();
-        return firstValue*100 + secondValue;
+        return firstValue*digit + secondValue;
     }
 
     protected String toStringDateFullTime(LocalDateTime dateTime){

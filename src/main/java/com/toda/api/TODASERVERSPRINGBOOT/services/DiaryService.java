@@ -380,7 +380,7 @@ public class DiaryService extends AbstractFcmService implements BaseService {
 
     public int getUserDiaryStatus(long userID, long diaryID){return getUserDiaryStatus(userID, diaryID, userDiaryRepository);}
     public int getDiaryStatus(int status, int color){
-        return getStatus(color,status,() -> {
+        return getStatus(color,status,100,() -> {
             if(status<1 || status>statusSet.size()) throw new WrongArgException(WrongArgException.of.WRONG_DIARY_STATUS_EXCEPTION);
             if(color<1 || color>colorSet.size()) throw new WrongArgException(WrongArgException.of.WRONG_DIARY_COLOR_EXCEPTION);
         });

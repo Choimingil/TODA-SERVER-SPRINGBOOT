@@ -37,6 +37,12 @@ public class BusinessLogicException extends IllegalArgumentException{
          */
         NO_AUTH_COMMENT_EXCEPTION(102,"대댓글을 달 권한이 없습니다."),
         NO_USER_COMMENT_EXCEPTION(102,"자신이 작성한 댓글이 아닙니다."),
+
+        /**
+         * Sticker
+         */
+        NO_AUTH_STICKER_EXCEPTION(102,"보유한 스티커가 아닙니다."),
+        NO_USER_STICKER_EXCEPTION(103,"자신이 등록한 스티커가 아닙니다."),
         ;
 
         private final int code;

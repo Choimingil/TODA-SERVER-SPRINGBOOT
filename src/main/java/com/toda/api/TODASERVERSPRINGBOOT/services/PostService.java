@@ -43,7 +43,7 @@ public class PostService extends AbstractFcmService implements BaseService {
 
     @Transactional
     public Post addPost(long userID, CreatePost createPost){
-        int status = getStatus(createPost.getBackground(), createPost.getMood(), () -> {});
+        int status = getStatus(createPost.getBackground(), createPost.getMood(), 100, () -> {});
 
         Post post = new Post();
         post.setUserID(userID);
@@ -59,7 +59,7 @@ public class PostService extends AbstractFcmService implements BaseService {
 
     @Transactional
     private void addPostText(long postID, CreatePost createPost){
-        int status = getStatus(createPost.getAligned(), createPost.getFont(), () -> {});
+        int status = getStatus(createPost.getAligned(), createPost.getFont(), 100, () -> {});
 
         PostText postText = new PostText();
         postText.setPostID(postID);
@@ -117,7 +117,7 @@ public class PostService extends AbstractFcmService implements BaseService {
 
     @Transactional
     public void updatePost(UpdatePost updatePost){
-        int status = getStatus(updatePost.getBackground(), updatePost.getMood(), () -> {});
+        int status = getStatus(updatePost.getBackground(), updatePost.getMood(), 100, () -> {});
 
         Post post = postRepository.findByPostID(updatePost.getPost());
         post.setTitle(updatePost.getTitle());
@@ -128,7 +128,7 @@ public class PostService extends AbstractFcmService implements BaseService {
 
     @Transactional
     public void updatePostText(UpdatePost updatePost){
-        int status = getStatus(updatePost.getAligned(), updatePost.getFont(), () -> {});
+        int status = getStatus(updatePost.getAligned(), updatePost.getFont(), 100, () -> {});
 
         List<PostText> postTextList = postTextRepository.findByPostID(updatePost.getPost());
         AtomicBoolean isEdit = new AtomicBoolean(false);

@@ -153,26 +153,6 @@ public class UserController extends AbstractController implements BaseController
                 .build().getResponse();
     }
 
-    //7-1. 유저 보유 스티커 조회 API
-    @GetMapping("/user/stickers")
-    public Map<String,?> getUserStickers(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token,
-            @RequestParam(name="page") int page
-    ){
-        List<UserStickerDetail> userStickers = userService.getUserStickers(token,page);
-        List<Map<String,?>> result = userStickers.stream().map(element -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("ID", element.getUserStickerID());
-            map.put("stickerPackID", element.getStickerPackID());
-            map.put("miniticon", element.getMiniticon());
-            return map;
-        }).collect(Collectors.toList());
-
-        return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
-                .add("result",result)
-                .build().getResponse();
-    }
-
     //7-2. 임시 비밀번호 발급
     @PostMapping("/user/searchPW")
     public Map<String, ?> getTempPassword(
