@@ -21,6 +21,8 @@ public final class CommentDetailResponse {
     private boolean isMyComment;
     private final List<ReCommentDetailResponse> reComment = new ArrayList<>();
 
+    public boolean getIsMyComment(){return isMyComment;}
+
     public CommentDetailResponse(){}
 
     @Builder

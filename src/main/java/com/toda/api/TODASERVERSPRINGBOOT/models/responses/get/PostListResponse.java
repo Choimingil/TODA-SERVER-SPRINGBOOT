@@ -18,6 +18,8 @@ public final class PostListResponse {
     private int likeNum;
     private int commentNum;
 
+    public boolean getIsMyLike(){return isMyLike;}
+
     public PostListResponse(){}
 
     @Builder

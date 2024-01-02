@@ -1,12 +1,14 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
-import com.toda.api.TODASERVERSPRINGBOOT.entities.PostSticker;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.PostStickerRotate;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.PostStickerScale;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.*;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserStickerDetail;
-import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.AddSticker;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.AddStickerDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.StickerRotate;
+import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.StickerScale;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateStickerDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.StickerDetailResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.StickerPackDetailResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostStickerListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
 import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
@@ -17,8 +19,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component("stickerService")
 @RequiredArgsConstructor
@@ -29,6 +31,8 @@ public class StickerService extends AbstractService implements BaseService {
     private final PostStickerRepository postStickerRepository;
     private final PostStickerRotateRepository postStickerRotateRepository;
     private final PostStickerScaleRepository postStickerScaleRepository;
+    private final StickerRepository stickerRepository;
+    private final StickerPackRepository stickerPackRepository;
 
     private final TokenProvider tokenProvider;
 
@@ -38,7 +42,7 @@ public class StickerService extends AbstractService implements BaseService {
         return userStickerRepository.getUserStickers(userID,pageable);
     }
 
-    public void addPostSticker(List<PostSticker> postStickerList, long userID, long postID, AddStickerDetail addStickerDetail, int idx){
+    public void addPostSticker(Set<PostSticker> postStickerSet, long userID, long postID, AddStickerDetail addStickerDetail, int idx){
         int status = getStatus(addStickerDetail.getLayerNum(), addStickerDetail.getInversion(), 10, () -> {});
 
         PostSticker postSticker = new PostSticker();
@@ -51,43 +55,149 @@ public class StickerService extends AbstractService implements BaseService {
         postSticker.setStatus(status);
         postSticker.setIdx(idx);
 
-        postStickerList.add(postSticker);
+        postStickerSet.add(postSticker);
     }
 
-    public void addPostStickerRotate(List<PostStickerRotate> postStickerRotateList, long postStickerID, AddStickerDetail addStickerDetail){
+    public void setPostStickerRotate(
+            Set<PostStickerRotate> postStickerRotateSet,
+            long postStickerID,
+            double a,
+            double b,
+            double c,
+            double d,
+            double tx,
+            double ty
+    ){
         PostStickerRotate postStickerRotate = new PostStickerRotate();
         postStickerRotate.setUsedStickerID(postStickerID);
-        postStickerRotate.setA(addStickerDetail.getRotate().getA());
-        postStickerRotate.setB(addStickerDetail.getRotate().getB());
-        postStickerRotate.setC(addStickerDetail.getRotate().getC());
-        postStickerRotate.setD(addStickerDetail.getRotate().getD());
-        postStickerRotate.setTx(addStickerDetail.getRotate().getTx());
-        postStickerRotate.setTy(addStickerDetail.getRotate().getTy());
+        postStickerRotate.setA(a);
+        postStickerRotate.setB(b);
+        postStickerRotate.setC(c);
+        postStickerRotate.setD(d);
+        postStickerRotate.setTx(tx);
+        postStickerRotate.setTy(ty);
 
-        postStickerRotateList.add(postStickerRotate);
+        postStickerRotateSet.add(postStickerRotate);
     }
 
-    public void addPostStickerScale(List<PostStickerScale> postStickerScaleList, long postStickerID, AddStickerDetail addStickerDetail){
+    public void setPostStickerScale(
+            Set<PostStickerScale> postStickerScaleSet,
+            long postStickerID,
+            double x,
+            double y,
+            double width,
+            double height
+    ){
         PostStickerScale postStickerScale = new PostStickerScale();
         postStickerScale.setUsedStickerID(postStickerID);
-        postStickerScale.setX(addStickerDetail.getScale().getX());
-        postStickerScale.setY(addStickerDetail.getScale().getY());
-        postStickerScale.setWidth(addStickerDetail.getScale().getWidth());
-        postStickerScale.setHeight(addStickerDetail.getScale().getHeight());
+        postStickerScale.setX(x);
+        postStickerScale.setY(y);
+        postStickerScale.setWidth(width);
+        postStickerScale.setHeight(height);
 
-        postStickerScaleList.add(postStickerScale);
+        postStickerScaleSet.add(postStickerScale);
+    }
+
+    public void updatePostSticker(Set<PostSticker> postStickerSet, PostSticker postSticker, UpdateStickerDetail updateStickerDetail){
+        int status = getStatus(updateStickerDetail.getLayerNum(), updateStickerDetail.getInversion(), 10, () -> {});
+
+        postSticker.setDevice(updateStickerDetail.getDevice());
+        postSticker.setX(updateStickerDetail.getX());
+        postSticker.setY(updateStickerDetail.getY());
+        postSticker.setStatus(status);
+
+        postStickerSet.add(postSticker);
+    }
+
+    public void deletePostSticker(Set<PostSticker> postStickerSet, PostSticker postSticker){
+        postSticker.setStatus(0);
+        postStickerSet.add(postSticker);
+    }
+
+    public StickerPackDetailResponse getStickerDetail(long stickerPackID){
+        List<Sticker> stickerList = stickerRepository.findByStickerPackID(stickerPackID);
+        List<StickerDetailResponse> stickerDetailResponseList = stickerList.stream().map(sticker ->
+                StickerDetailResponse.builder().stickerID(sticker.getStickerID()).image(sticker.getImage()).build()).toList();
+
+        StickerPack stickerPack = stickerPackRepository.findByStickerPackIDAndStatusNot(stickerPackID,0);
+        return StickerPackDetailResponse.builder()
+                .stickerPackID(stickerPackID)
+                .name(stickerPack.getName())
+                .point(stickerPack.getPoint())
+                .stickerArr(stickerDetailResponseList)
+                .build();
+    }
+
+    public List<PostStickerListResponse> getPostStickerList(long userID, long postID, int page){
+        int start = (page-1)*20;
+        Pageable pageable = PageRequest.of(start,20);
+
+        // PostStickerList 가져오기
+        List<PostSticker> postStickerList = postStickerRepository.findByPostIDAndStatusNot(postID,0,pageable);
+        Set<Long> postStickerIDSet = postStickerList.stream().map(PostSticker::getPostStickerID).collect(Collectors.toSet());
+
+        // PostStickerID에 맞추어 매핑을 위해 Map<Long,PostStickerRotate || PostStickerScale> 생성
+        Map<Long, PostStickerRotate> rotateMap =
+                postStickerRotateRepository.getPostStickerRotate(postStickerIDSet,pageable).stream()
+                        .collect(Collectors.toMap(PostStickerRotate::getUsedStickerID, psr -> psr));
+        Map<Long, PostStickerScale> scaleMap =
+                postStickerScaleRepository.getPostStickerScale(postStickerIDSet,pageable).stream()
+                        .collect(Collectors.toMap(PostStickerScale::getUsedStickerID, psr -> psr));
+
+        return postStickerList.stream()
+                .map(postSticker -> {
+                    int inversion = postSticker.getStatus() % 10;
+                    int layerNum = postSticker.getStatus() / 10;
+
+                    PostStickerRotate psr = rotateMap.get(postSticker.getPostStickerID());
+                    PostStickerScale pss = scaleMap.get(postSticker.getPostStickerID());
+
+                    return PostStickerListResponse.builder()
+                            .postID(postID)
+                            .usedStickerID(postSticker.getPostStickerID())
+                            .userID(userID)
+                            .stickerID(postSticker.getStickerID())
+                            .image(postSticker.getSticker().getImage())
+                            .device(postSticker.getDevice())
+                            .x(postSticker.getX())
+                            .y(postSticker.getY())
+                            .rotate(StickerRotate.builder()
+                                    .a(psr.getA())
+                                    .b(psr.getB())
+                                    .c(psr.getC())
+                                    .d(psr.getD())
+                                    .tx(psr.getTx())
+                                    .ty(psr.getTy())
+                                    .build())
+                            .scale(StickerScale.builder()
+                                    .x(pss.getX())
+                                    .y(pss.getY())
+                                    .width(pss.getWidth())
+                                    .height(pss.getHeight())
+                                    .build())
+                            .inversion(inversion)
+                            .layerNum(layerNum)
+                            .isMySticker(postSticker.getUserID() == userID)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
     }
 
 
 
 
     @Transactional
-    public List<PostSticker> savePostStickerList(List<PostSticker> postStickerList){return postStickerRepository.saveAll(postStickerList);}
+    public List<PostSticker> savePostStickerSet(Set<PostSticker> postStickerSet){return postStickerRepository.saveAll(postStickerSet);}
     @Transactional
-    public void savePostStickerRotateAndScale(List<PostStickerRotate> postStickerRotateList, List<PostStickerScale> postStickerScaleList){
-        postStickerRotateRepository.saveAll(postStickerRotateList);
-        postStickerScaleRepository.saveAll(postStickerScaleList);
+    public void savePostStickerRotateAndScaleSet(Set<PostStickerRotate> postStickerRotateSet, Set<PostStickerScale> postStickerScaleSet){
+        postStickerRotateRepository.saveAll(postStickerRotateSet);
+        postStickerScaleRepository.saveAll(postStickerScaleSet);
     }
+
+
+
+    public List<PostSticker> getPostStickerList(long userID){return postStickerRepository.findByUserIDAndStatusNot(userID,0);}
     public Set<Long> getUserStickerSet(long userID){return userStickerRepository.getUserStickerSet(userID);}
     public long getUserID(String token){return getUserID(token, tokenProvider);}
     public int getUserPostStatus(long userID, long postID){return getUserPostStatus(userID,postID,userDiaryRepository,postRepository);}

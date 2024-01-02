@@ -28,6 +28,7 @@ public final class PostDetailResponse {
     private int likeNum;
     private int commentNum;
 
+    public boolean getIsMyLike(){return isMyLike;}
 
     public PostDetailResponse(){}
 

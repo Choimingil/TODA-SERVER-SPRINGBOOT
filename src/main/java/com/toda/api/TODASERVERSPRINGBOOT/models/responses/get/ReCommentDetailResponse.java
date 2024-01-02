@@ -16,6 +16,8 @@ public final class ReCommentDetailResponse {
     private String time;
     private boolean isMyComment;
 
+    public boolean getIsMyComment(){return isMyComment;}
+
     public ReCommentDetailResponse(){}
 
     @Builder

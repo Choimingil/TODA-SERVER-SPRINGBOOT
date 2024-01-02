@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface StickerPackRepository extends JpaRepository<StickerPack,Long> {
+    StickerPack findByStickerPackIDAndStatusNot(long stickerPackID, int status);
 }
