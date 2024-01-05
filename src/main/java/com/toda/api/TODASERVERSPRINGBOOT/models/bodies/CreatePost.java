@@ -51,10 +51,16 @@ public final class CreatePost {
         if(date != null) this.date = date;
         else{
             LocalDateTime curr = LocalDateTime.now();
-            this.date = new StringBuilder()
-                    .append(curr.getYear()).append("-")
-                    .append(curr.getMonthValue()).append("-")
-                    .append(curr.getDayOfMonth()).toString();
+            StringBuilder sb = new StringBuilder();
+            sb.append(curr.getYear()).append("-");
+
+            if(curr.getMonthValue()<10) sb.append("0");
+            sb.append(curr.getMonthValue()).append("-");
+
+            if(curr.getDayOfMonth()<10) sb.append("0");
+            sb.append(curr.getDayOfMonth());
+
+            this.date = sb.toString();
         }
 
         if(imageList != null) this.imageList = imageList;

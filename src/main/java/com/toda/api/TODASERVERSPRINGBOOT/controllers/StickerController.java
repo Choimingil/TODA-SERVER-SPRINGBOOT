@@ -1,7 +1,9 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
-import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
-import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateDateTime;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.PostSticker;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.PostStickerRotate;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.PostStickerScale;
@@ -9,23 +11,24 @@ import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserStickerDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.*;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.CommentListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.services.StickerService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @RestController
-@RequiredArgsConstructor
 public class StickerController extends AbstractController implements BaseController {
     private final StickerService stickerService;
+
+    public StickerController(DelegateDateTime delegateDateTime, DelegateJwt delegateJwt, StickerService stickerService) {
+        super(delegateDateTime, delegateJwt);
+        this.stickerService = stickerService;
+    }
 
     //7-1. 유저 보유 스티커 조회 API
     @GetMapping("/user/stickers")
@@ -33,7 +36,7 @@ public class StickerController extends AbstractController implements BaseControl
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
             @RequestParam(name="page") int page
     ){
-        long userID = stickerService.getUserID(token);
+        long userID = getUserID(token);
 
         List<UserStickerDetail> userStickers = stickerService.getUserStickers(userID,page);
         List<Map<String,?>> result = userStickers.stream().map(element -> {
@@ -57,7 +60,7 @@ public class StickerController extends AbstractController implements BaseControl
             @PathVariable("postID") long postID,
             BindingResult bindingResult
     ){
-        long userID = stickerService.getUserID(token);
+        long userID = getUserID(token);
         int userPostStatus = stickerService.getUserPostStatus(userID,postID);
 
         // 현재 게시글에 속해 있지 않은 경우 게시물 볼 수 있는 권한 없음 리턴
@@ -115,7 +118,7 @@ public class StickerController extends AbstractController implements BaseControl
             BindingResult bindingResult
     ){
         // postStickerID로 PostSticker 값 가져올 수 있는 Map 설정
-        long userID = stickerService.getUserID(token);
+        long userID = getUserID(token);
         List<PostSticker> userPostStickerList = stickerService.getPostStickerList(userID);
         Map<Long, PostSticker> userPostStickerMap = userPostStickerList.stream()
                 .collect(Collectors.toMap(PostSticker::getPostStickerID, Function.identity()));
@@ -181,7 +184,7 @@ public class StickerController extends AbstractController implements BaseControl
             @PathVariable("postID") long postID,
             @RequestParam(name="page", required = true) int page
     ){
-        long userID = stickerService.getUserID(token);
+        long userID = getUserID(token);
         int userPostStatus = stickerService.getUserPostStatus(userID,postID);
 
         // 현재 게시글에 속해 있지 않은 경우 게시물 볼 수 있는 권한 없음 리턴

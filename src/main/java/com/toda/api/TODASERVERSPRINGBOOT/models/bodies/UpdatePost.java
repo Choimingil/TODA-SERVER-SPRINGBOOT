@@ -46,13 +46,6 @@ public final class UpdatePost {
 
         if(date != null) this.date = date;
         else this.date = "1901-01-01";
-//        else{
-//            LocalDateTime curr = LocalDateTime.now();
-//            this.date = new StringBuilder()
-//                    .append(curr.getYear()).append("-")
-//                    .append(curr.getMonthValue()).append("-")
-//                    .append(curr.getDayOfMonth()).toString();
-//        }
 
         if(imageList != null) this.imageList = imageList;
         else this.imageList = new ArrayList<>();

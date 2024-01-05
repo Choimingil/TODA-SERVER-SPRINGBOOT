@@ -1,8 +1,10 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateDateTime;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
-import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
-import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.FailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
@@ -17,10 +19,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequiredArgsConstructor
 public class SystemController extends AbstractController implements BaseController {
     private final SystemService systemService;
- 
+
+    public SystemController(DelegateDateTime delegateDateTime, DelegateJwt delegateJwt, SystemService systemService) {
+        super(delegateDateTime, delegateJwt);
+        this.systemService = systemService;
+    }
+
     // 1-2. 이메일 중복 확인 API
     @PostMapping("/email/valid")
     @SetMdcBody

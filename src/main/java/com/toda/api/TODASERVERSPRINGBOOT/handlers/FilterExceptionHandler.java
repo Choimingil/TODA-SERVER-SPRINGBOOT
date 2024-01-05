@@ -2,8 +2,8 @@ package com.toda.api.TODASERVERSPRINGBOOT.handlers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.*;
-import com.toda.api.TODASERVERSPRINGBOOT.handlers.base.AbstractExceptionHandler;
-import com.toda.api.TODASERVERSPRINGBOOT.handlers.base.BaseExceptionHandler;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractExceptionHandler;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseExceptionHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.FailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.SlackProvider;
 import jakarta.servlet.http.HttpServletRequest;

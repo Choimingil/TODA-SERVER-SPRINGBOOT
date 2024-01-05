@@ -7,14 +7,15 @@ import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.UserInfoProto;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.base.RedisProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.RedisProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ExecutionException;
@@ -74,25 +75,16 @@ public class UserProvider extends RedisProvider implements BaseProvider {
      * @return : UserData type
      */
     private UserData getUserData(String key) {
-        try {
-            byte[] byteCode = getRedis(key).get();
-            if(byteCode == null) return null;
-
-            UserInfoProto.UserInfo userProto = UserInfoProto.UserInfo.parseFrom(byteCode);
-            return UserData.builder()
-                    .userID(userProto.getUserID())
-                    .userCode(userProto.getUserCode())
-                    .email(userProto.getEmail())
-                    .password(userProto.getPassword())
-                    .userName(userProto.getUserName())
-                    .appPassword(Integer.parseInt(userProto.getAppPassword()))
-                    .createAt(LocalDateTime.parse(userProto.getCreateAt()))
-                    .profile(userProto.getProfile())
-                    .build();
-        }
-        catch (ExecutionException | InterruptedException | InvalidProtocolBufferException e){
-            throw new WrongAccessException(WrongAccessException.of.REDIS_CONNECTION_EXCEPTION);
-        }
+        return convertRedisData(key, UserInfoProto.UserInfo.class, userProto -> UserData.builder()
+                .userID(userProto.getUserID())
+                .userCode(userProto.getUserCode())
+                .email(userProto.getEmail())
+                .password(userProto.getPassword())
+                .userName(userProto.getUserName())
+                .appPassword(Integer.parseInt(userProto.getAppPassword()))
+                .createAt(LocalDateTime.parse(userProto.getCreateAt()))
+                .profile(userProto.getProfile())
+                .build());
     }
 
     /**

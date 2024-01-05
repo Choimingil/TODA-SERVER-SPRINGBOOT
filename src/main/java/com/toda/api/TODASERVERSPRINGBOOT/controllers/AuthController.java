@@ -1,8 +1,10 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateDateTime;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
-import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
-import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.AppPassword;
@@ -17,9 +19,17 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequiredArgsConstructor
 public class AuthController extends AbstractController implements BaseController {
     private final AuthService authService;
+
+    public AuthController(
+            DelegateDateTime delegateDateTime,
+            DelegateJwt delegateJwt,
+            AuthService authService
+    ) {
+        super(delegateDateTime, delegateJwt);
+        this.authService = authService;
+    }
 
     //1. 자체 로그인 API
     @PostMapping("/login")
@@ -40,7 +50,7 @@ public class AuthController extends AbstractController implements BaseController
     public Map<String,?> decodeToken(
             @RequestHeader(TokenProvider.HEADER_NAME) String token
     ) {
-        Map<String,?> checkTokenResult = authService.decodeToken(token);
+        Map<String,?> checkTokenResult = authService.getTokenData(token);
         return new SuccessResponse.Builder(SuccessResponse.of.DECODE_TOKEN_SUCCESS)
                 .add("id",checkTokenResult.get("id"))
                 .add("pw",checkTokenResult.get("pw"))
@@ -56,7 +66,7 @@ public class AuthController extends AbstractController implements BaseController
             @RequestBody @Nullable AppPassword appPassword,
             BindingResult bindingResult
     ) {
-        Map<String,?> checkTokenResult = authService.decodeToken(token);
+        Map<String,?> checkTokenResult = authService.getTokenData(token);
 
         if(appPassword == null){
             if((int) checkTokenResult.get("appPw") == 10000)

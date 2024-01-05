@@ -1,8 +1,9 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
-import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
-import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.Diary;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateDateTime;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.UserDiary;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.DiaryRequestOfUser;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
@@ -19,7 +20,6 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.services.DiaryService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,9 +28,13 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequiredArgsConstructor
 public class DiaryController extends AbstractController implements BaseController {
     private final DiaryService diaryService;
+
+    public DiaryController(DelegateDateTime delegateDateTime, DelegateJwt delegateJwt, DiaryService diaryService) {
+        super(delegateDateTime, delegateJwt);
+        this.diaryService = diaryService;
+    }
 
     //11. 다이어리 추가 API
     @PostMapping("/diary")
@@ -39,7 +43,7 @@ public class DiaryController extends AbstractController implements BaseControlle
             @RequestBody @Valid CreateDiary createDiary,
             BindingResult bindingResult
     ){
-        long userID = diaryService.getUserID(token);
+        long userID = getUserID(token);
         int status = diaryService.getDiaryStatus(createDiary.getStatus(), createDiary.getColor());
         long diaryID = diaryService.addDiary(createDiary.getTitle(), status);
 
@@ -67,7 +71,7 @@ public class DiaryController extends AbstractController implements BaseControlle
 
         UserData sendUserData = diaryService.getSendUserData(token);
         UserInfoDetail receiveUserData = diaryService.getReceiveUserData(userCode.getUserCode());
-        Diary diary = diaryService.getDiary(diaryID);
+        com.toda.api.TODASERVERSPRINGBOOT.entities.Diary diary = diaryService.getDiary(diaryID);
 
         long sendUserID = sendUserData.getUserID();
         long receiveUserID = receiveUserData.getUserID();
@@ -117,7 +121,8 @@ public class DiaryController extends AbstractController implements BaseControlle
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
             @PathVariable("diaryID") long diaryID
     ){
-        DiaryRequestOfUser getRequestList = diaryService.getRequestOfUser(diaryService.getUserID(token),diaryID);
+        long userID = getUserID(token);
+        DiaryRequestOfUser getRequestList = diaryService.getRequestOfUser(userID,diaryID);
         return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
                 .add("result",getRequestList)
                 .build().getResponse();
@@ -129,7 +134,7 @@ public class DiaryController extends AbstractController implements BaseControlle
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
             @PathVariable("diaryID") long diaryID
     ){
-        long userID = diaryService.getUserID(token);
+        long userID = getUserID(token);
         int userDiaryStatus = diaryService.getUserDiaryStatus(userID,diaryID);
 
         // 현재 다이어리 속해 있는 경우 탈퇴 진행
@@ -153,7 +158,7 @@ public class DiaryController extends AbstractController implements BaseControlle
             @RequestBody @Valid UpdateDiary updateDiary,
             BindingResult bindingResult
     ){
-        long userID = diaryService.getUserID(token);
+        long userID = getUserID(token);
         int userDiaryStatus = diaryService.getUserDiaryStatus(userID,updateDiary.getDiary());
 
         // 현재 다이어리에 속해 있는 경우 수정 작업 진행
@@ -174,9 +179,10 @@ public class DiaryController extends AbstractController implements BaseControlle
             @RequestParam(name="status", required = true) int status,
             @RequestParam(name="keyword", required = false) String keyword
     ){
+        long userID = getUserID(token);
         List<DiaryListResponse> res = keyword==null ?
-                diaryService.getDiaryList(diaryService.getUserID(token), status, page) :
-                diaryService.getDiaryListWithKeyword(diaryService.getUserID(token), status, page, keyword);
+                diaryService.getDiaryList(userID, status, page) :
+                diaryService.getDiaryListWithKeyword(userID, status, page, keyword);
 
         // 다이어리가 존재하지 않을 경우 메시지 출력
         if(res.isEmpty()){
@@ -200,7 +206,7 @@ public class DiaryController extends AbstractController implements BaseControlle
             @RequestParam(name="page", required = true) int page,
             @RequestParam(name="status", required = true) int status
     ){
-        long userID = diaryService.getUserID(token);
+        long userID = getUserID(token);
         int userDiaryStatus = diaryService.getUserDiaryStatus(userID,diaryID);
 
         // 현재 다이어리에 속해 있는 경우 조회 진행
@@ -232,7 +238,7 @@ public class DiaryController extends AbstractController implements BaseControlle
             @RequestBody @Valid UpdateNotice updateNotice,
             BindingResult bindingResult
     ){
-        long userID = diaryService.getUserID(token);
+        long userID = getUserID(token);
         diaryService.updateNotice(userID, updateNotice.getDiary(), updateNotice.getNotice());
         return new SuccessResponse.Builder(SuccessResponse.of.UPDATE_DIARY_NOTICE_SUCCESS).build().getResponse();
     }
@@ -243,7 +249,7 @@ public class DiaryController extends AbstractController implements BaseControlle
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
             @PathVariable("diaryID") long diaryID
     ){
-        long userID = diaryService.getUserID(token);
+        long userID = getUserID(token);
         int userDiaryStatus = diaryService.getUserDiaryStatus(userID,diaryID);
 
         // 현재 다이어리에 속해 있는 경우 조회 진행

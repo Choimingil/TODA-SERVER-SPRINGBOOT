@@ -1,5 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.*;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.*;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryColors;
@@ -14,8 +15,8 @@ import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmTokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.KafkaProducerProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
-import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractFcmService;
-import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractFcm;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component("diaryService")
 @RequiredArgsConstructor
-public class DiaryService extends AbstractFcmService implements BaseService {
+public class DiaryService extends AbstractService implements BaseService {
     private final UserRepository userRepository;
     private final UserLogRepository userLogRepository;
     private final DiaryRepository diaryRepository;
@@ -41,10 +42,10 @@ public class DiaryService extends AbstractFcmService implements BaseService {
 
     @Transactional
     public long addDiary(String diaryName, int status){
-        Diary diary = new Diary();
+        com.toda.api.TODASERVERSPRINGBOOT.entities.Diary diary = new com.toda.api.TODASERVERSPRINGBOOT.entities.Diary();
         diary.setDiaryName(diaryName);
         diary.setStatus(status);
-        Diary newDiary = diaryRepository.save(diary);
+        com.toda.api.TODASERVERSPRINGBOOT.entities.Diary newDiary = diaryRepository.save(diary);
         return newDiary.getDiaryID();
     }
 
@@ -68,7 +69,7 @@ public class DiaryService extends AbstractFcmService implements BaseService {
     }
 
     @Transactional
-    public void inviteDiary(UserData sendUserData, UserInfoDetail receiveUserData, Diary diary){
+    public void inviteDiary(UserData sendUserData, UserInfoDetail receiveUserData, com.toda.api.TODASERVERSPRINGBOOT.entities.Diary diary){
         long sendUserID = sendUserData.getUserID();
         long receiveUserID = receiveUserData.getUserID();
         long diaryID = diary.getDiaryID();
@@ -114,7 +115,7 @@ public class DiaryService extends AbstractFcmService implements BaseService {
     }
 
     @Transactional
-    public void setFcmAndLog(Map<Long,String> receiveUserMap, UserData sendUserData, Diary diary, int type){
+    public void setFcmAndLog(Map<Long,String> receiveUserMap, UserData sendUserData, com.toda.api.TODASERVERSPRINGBOOT.entities.Diary diary, int type){
 
         setKafkaTopicFcm(
                 sendUserData.getUserID(),
@@ -386,7 +387,7 @@ public class DiaryService extends AbstractFcmService implements BaseService {
         });
     }
 
-    public long getUserID(String token){return getUserID(token, tokenProvider);}
+    //    public long getUserID(String token){return getUserID(token, tokenProvider);}
 
     public List<UserDiary> getAcceptableDiaryList(long userID, long diaryID){
         List<UserDiary> res = new ArrayList<>();
@@ -403,8 +404,8 @@ public class DiaryService extends AbstractFcmService implements BaseService {
         return userRepository.getUserDataByUserCode(userCode);
     }
 
-    public Diary getDiary(long diaryID){
-        Diary diary = diaryRepository.findByDiaryID(diaryID);
+    public com.toda.api.TODASERVERSPRINGBOOT.entities.Diary getDiary(long diaryID){
+        com.toda.api.TODASERVERSPRINGBOOT.entities.Diary diary = diaryRepository.findByDiaryID(diaryID);
         if(diary == null) throw new WrongArgException(WrongArgException.of.WRONG_DIARY_EXCEPTION);
         if(diary.getStatus()%100 == 2) throw new BusinessLogicException(BusinessLogicException.of.ALONE_DIARY_INVITATION_EXCEPTION);
         return diary;

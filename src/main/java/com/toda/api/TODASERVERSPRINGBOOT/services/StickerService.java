@@ -11,8 +11,8 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.StickerPackDetailR
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostStickerListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
-import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
-import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -199,6 +199,6 @@ public class StickerService extends AbstractService implements BaseService {
 
     public List<PostSticker> getPostStickerList(long userID){return postStickerRepository.findByUserIDAndStatusNot(userID,0);}
     public Set<Long> getUserStickerSet(long userID){return userStickerRepository.getUserStickerSet(userID);}
-    public long getUserID(String token){return getUserID(token, tokenProvider);}
+    //    public long getUserID(String token){return getUserID(token, tokenProvider);}
     public int getUserPostStatus(long userID, long postID){return getUserPostStatus(userID,postID,userDiaryRepository,postRepository);}
 }

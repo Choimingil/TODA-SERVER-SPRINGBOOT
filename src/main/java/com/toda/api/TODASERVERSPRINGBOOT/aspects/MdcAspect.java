@@ -1,7 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.aspects;
 
-import com.toda.api.TODASERVERSPRINGBOOT.aspects.base.AbstractAspect;
-import com.toda.api.TODASERVERSPRINGBOOT.aspects.base.BaseAspect;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractAspect;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseAspect;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.LogFields;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import lombok.RequiredArgsConstructor;

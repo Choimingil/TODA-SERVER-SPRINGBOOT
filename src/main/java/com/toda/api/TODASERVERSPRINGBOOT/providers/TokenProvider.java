@@ -2,8 +2,8 @@ package com.toda.api.TODASERVERSPRINGBOOT.providers;
 
 import com.toda.api.TODASERVERSPRINGBOOT.enums.TokenFields;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseProvider;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;

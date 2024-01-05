@@ -1,25 +1,20 @@
 package com.toda.api.TODASERVERSPRINGBOOT.providers;
 
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
-import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.KafkaMailProto;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.SlackKeys;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import net.gpedro.integrations.slack.*;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 @Component

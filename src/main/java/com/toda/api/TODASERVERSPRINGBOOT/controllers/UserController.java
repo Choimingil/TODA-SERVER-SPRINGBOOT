@@ -1,13 +1,14 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateDateTime;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
-import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
-import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.*;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserLogDetail;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserStickerDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.FailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
@@ -24,10 +25,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
-@RequiredArgsConstructor
 public class UserController extends AbstractController implements BaseController {
     private final UserService userService;
     private final SystemService systemService;
@@ -35,6 +34,19 @@ public class UserController extends AbstractController implements BaseController
 
     @Value("${toda.url.userImage}")
     private String defaultProfile;
+
+    public UserController(
+            DelegateDateTime delegateDateTime,
+            DelegateJwt delegateJwt,
+            UserService userService,
+            SystemService systemService,
+            AuthService authService
+    ) {
+        super(delegateDateTime, delegateJwt);
+        this.userService = userService;
+        this.systemService = systemService;
+        this.authService = authService;
+    }
 
     //2. 자체 회원가입 API
     @PostMapping("/user")
@@ -49,8 +61,7 @@ public class UserController extends AbstractController implements BaseController
         long userID = userService.createUser(createUser);
         userService.createUserImage(userID,defaultProfile);
         userService.setUserSticker(userID, null);
-        return new SuccessResponse.Builder(SuccessResponse.of.CREATE_USER_SUCCESS)
-                .build().getResponse();
+        return new SuccessResponse.Builder(SuccessResponse.of.CREATE_USER_SUCCESS).build().getResponse();
     }
 
     //3. 회원탈퇴 API
@@ -59,8 +70,7 @@ public class UserController extends AbstractController implements BaseController
             @RequestHeader(TokenProvider.HEADER_NAME) String token
     ){
         userService.deleteUser(token);
-        return new SuccessResponse.Builder(SuccessResponse.of.DELETE_USER_SUCCESS)
-                .build().getResponse();
+        return new SuccessResponse.Builder(SuccessResponse.of.DELETE_USER_SUCCESS).build().getResponse();
     }
 
     //4. 닉네임 변경 API
@@ -71,8 +81,7 @@ public class UserController extends AbstractController implements BaseController
             BindingResult bindingResult
     ){
         userService.updateName(token, updateName.getName());
-        return new SuccessResponse.Builder(SuccessResponse.of.UPDATE_NAME_SUCCESS)
-                .build().getResponse();
+        return new SuccessResponse.Builder(SuccessResponse.of.UPDATE_NAME_SUCCESS).build().getResponse();
     }
 
     //5. 비밀번호 변경 API
@@ -205,7 +214,7 @@ public class UserController extends AbstractController implements BaseController
             map.put("ID", element.getID());
             map.put("name", element.getName());
             map.put("selfie", element.getSelfie());
-            map.put("date", getTimeDiff(element.getDate()));
+            map.put("date", getDateString(element.getDate()));
             map.put("isReplied", element.getIsReplied());
             return map;
         }).toList();

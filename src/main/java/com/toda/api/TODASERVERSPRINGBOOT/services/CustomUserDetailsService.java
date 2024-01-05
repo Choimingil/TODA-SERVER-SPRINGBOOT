@@ -2,8 +2,8 @@ package com.toda.api.TODASERVERSPRINGBOOT.services;
 
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.UserProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
-import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;

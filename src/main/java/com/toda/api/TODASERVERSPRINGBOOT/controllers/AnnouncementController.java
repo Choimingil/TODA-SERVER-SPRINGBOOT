@@ -1,7 +1,9 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
-import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
-import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateDateTime;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.services.AnnouncementService;
@@ -12,9 +14,17 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequiredArgsConstructor
 public class AnnouncementController extends AbstractController implements BaseController {
     private final AnnouncementService announcementService;
+
+    public AnnouncementController(
+            DelegateDateTime delegateDateTime,
+            DelegateJwt delegateJwt,
+            AnnouncementService announcementService
+    ) {
+        super(delegateDateTime, delegateJwt);
+        this.announcementService = announcementService;
+    }
 
     //38. 공지사항 리스트 조회 API
     @GetMapping("/announcement")

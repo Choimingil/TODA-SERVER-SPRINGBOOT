@@ -1,23 +1,20 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
-import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
-import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateDateTime;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.Heart;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.Post;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
-import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreateDiary;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreatePost;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.SetHeart;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdatePost;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryListResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostDetailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.services.PostService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,9 +23,13 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequiredArgsConstructor
 public class PostController extends AbstractController implements BaseController {
     private final PostService postService;
+
+    public PostController(DelegateDateTime delegateDateTime, DelegateJwt delegateJwt, PostService postService) {
+        super(delegateDateTime, delegateJwt);
+        this.postService = postService;
+    }
 
     //16-2. 게시물 작성 API(날짜 폰트 추가)
     @PostMapping("/post/ver3")
@@ -37,12 +38,12 @@ public class PostController extends AbstractController implements BaseController
             @RequestBody @Valid CreatePost createPost,
             BindingResult bindingResult
     ){
-        long userID = postService.getUserID(token);
+        long userID = getUserID(token);
         int userDiaryStatus = postService.getUserDiaryStatus(userID,createPost.getDiary());
 
         // 현재 다이어리에 속해 있는 경우 게시글 추가 작업 진행
         if(userDiaryStatus == 100){
-            Post target = postService.addPost(userID, createPost);
+            com.toda.api.TODASERVERSPRINGBOOT.entities.Post target = postService.addPost(userID, createPost);
 
             if(!createPost.getImageList().isEmpty())
                 postService.addPostImage(target.getPostID(),createPost.getImageList());
@@ -63,7 +64,7 @@ public class PostController extends AbstractController implements BaseController
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
             @PathVariable("postID") long postID
     ){
-        long userID = postService.getUserID(token);
+        long userID = getUserID(token);
         int userPostStatus = postService.getUserPostStatus(userID,postID);
 
         // 자신이 작성한 게시글인지 확인
@@ -82,7 +83,7 @@ public class PostController extends AbstractController implements BaseController
             @RequestBody @Valid UpdatePost updatePost,
             BindingResult bindingResult
     ){
-        long userID = postService.getUserID(token);
+        long userID = getUserID(token);
         int userPostStatus = postService.getUserPostStatus(userID,updatePost.getPost());
 
         // 자신이 작성한 게시글인지 확인
@@ -108,7 +109,7 @@ public class PostController extends AbstractController implements BaseController
             @RequestParam(name="type", required = false) String type,
             BindingResult bindingResult
     ){
-        long userID = postService.getUserID(token);
+        long userID = getUserID(token);
         int userPostStatus = postService.getUserPostStatus(userID,postID);
 
         // 현재 다이어리에 속해 있지 않은 경우 게시물 볼 수 있는 권한 없음 리턴
@@ -122,7 +123,7 @@ public class PostController extends AbstractController implements BaseController
             // 최초 1회 좋아요 시에만 알림 발송
             if(heartList.isEmpty()){
                 postService.addHeart(userID,postID,setHeart.getMood());
-                Post target = postService.getPostByID(postID);
+                com.toda.api.TODASERVERSPRINGBOOT.entities.Post target = postService.getPostByID(postID);
 
                 // 자신이 작성한 게시글이 아닐 경우 게시글 주인에게 알림 발송
                 if(target.getUserID() != userID){
@@ -159,7 +160,7 @@ public class PostController extends AbstractController implements BaseController
             @PathVariable("diaryID") long diaryID,
             @RequestParam(name="page", required = true) int page
     ){
-        long userID = postService.getUserID(token);
+        long userID = getUserID(token);
         int userDiaryStatus = postService.getUserDiaryStatus(userID,diaryID);
 
         // 현재 다이어리에 속해 있는 경우 게시글 조회 작업 진행
@@ -189,7 +190,7 @@ public class PostController extends AbstractController implements BaseController
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
             @PathVariable("postID") long postID
     ){
-        long userID = postService.getUserID(token);
+        long userID = getUserID(token);
         int userPostStatus = postService.getUserPostStatus(userID,postID);
 
         // 현재 다이어리에 속해 있지 않은 경우 게시물 볼 수 있는 권한 없음 리턴

@@ -1,7 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.providers;
 
-import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;

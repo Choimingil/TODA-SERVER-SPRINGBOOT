@@ -1,33 +1,36 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
-import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
-import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.Comment;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.Post;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateDateTime;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreateComment;
-import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreatePost;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateComment;
-import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdatePost;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.CommentListResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.services.CommentService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequiredArgsConstructor
 public class CommentController extends AbstractController implements BaseController {
     private final CommentService commentService;
+
+    public CommentController(
+            DelegateDateTime delegateDateTime,
+            DelegateJwt delegateJwt,
+            CommentService commentService
+    ) {
+        super(delegateDateTime, delegateJwt);
+        this.commentService = commentService;
+    }
 
     //30. 댓글 작성 API
     @PostMapping("/comment")
@@ -38,7 +41,7 @@ public class CommentController extends AbstractController implements BaseControl
             @RequestParam(name="type", required = false) String type,
             BindingResult bindingResult
     ){
-        long userID = commentService.getUserID(token);
+        long userID = getUserID(token);
         int userPostStatus = commentService.getUserPostStatus(userID,createComment.getPost());
 
         // 현재 게시글에 속해 있지 않은 경우 게시물 볼 수 있는 권한 없음 리턴
@@ -48,7 +51,7 @@ public class CommentController extends AbstractController implements BaseControl
 
             // 부모 댓글 아이디가 존재하지 않으면 댓글 작성 진행
             if(comment == null){
-                Comment target = commentService.addComment(userID, createComment.getPost(), createComment.getReply());
+                com.toda.api.TODASERVERSPRINGBOOT.entities.Comment target = commentService.addComment(userID, createComment.getPost(), createComment.getReply());
                 commentService.setFcmAndLog(commentService.getFcmAddCommentUserMap(userID, target),sendUserData,target,5);
                 return new SuccessResponse.Builder(SuccessResponse.of.CREATE_COMMENT_SUCCESS).build().getResponse();
             }
@@ -58,7 +61,7 @@ public class CommentController extends AbstractController implements BaseControl
                 if(!commentService.isValidCommentPostDiary(comment,createComment.getPost()))
                     throw new BusinessLogicException(BusinessLogicException.of.NO_AUTH_COMMENT_EXCEPTION);
 
-                Comment target = commentService.addReComment(userID, createComment.getPost(), createComment.getReply(), comment);
+                com.toda.api.TODASERVERSPRINGBOOT.entities.Comment target = commentService.addReComment(userID, createComment.getPost(), createComment.getReply(), comment);
                 commentService.setFcmAndLog(commentService.getFcmAddReCommentUserMap(userID, comment),sendUserData,target,6);
                 return new SuccessResponse.Builder(SuccessResponse.of.CREATE_RE_COMMENT_SUCCESS).build().getResponse();
             }
@@ -71,7 +74,7 @@ public class CommentController extends AbstractController implements BaseControl
             @RequestHeader(TokenProvider.HEADER_NAME) String token,
             @PathVariable("commentID") long commentID
     ){
-        long userID = commentService.getUserID(token);
+        long userID = getUserID(token);
         int userCommentStatus = commentService.getUserCommentStatus(userID,commentID);
 
         // 자신이 작성한 댓글인지 확인
@@ -90,7 +93,7 @@ public class CommentController extends AbstractController implements BaseControl
             @RequestBody @Valid UpdateComment updateComment,
             BindingResult bindingResult
     ){
-        long userID = commentService.getUserID(token);
+        long userID = getUserID(token);
         int userCommentStatus = commentService.getUserCommentStatus(userID, updateComment.getComment());
 
         // 자신이 작성한 댓글인지 확인
@@ -109,7 +112,7 @@ public class CommentController extends AbstractController implements BaseControl
             @PathVariable("postID") long postID,
             @RequestParam(name="page", required = true) int page
     ){
-        long userID = commentService.getUserID(token);
+        long userID = getUserID(token);
         int userPostStatus = commentService.getUserPostStatus(userID,postID);
 
         // 현재 게시글에 속해 있지 않은 경우 게시물 볼 수 있는 권한 없음 리턴

@@ -1,5 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.*;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.PostDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.PostList;
@@ -14,8 +15,8 @@ import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmTokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.KafkaProducerProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
-import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractFcmService;
-import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractFcm;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +29,7 @@ import java.util.stream.Collectors;
 
 @Component("postService")
 @RequiredArgsConstructor
-public class PostService extends AbstractFcmService implements BaseService {
+public class PostService extends AbstractService implements BaseService {
     private final UserRepository userRepository;
     private final UserDiaryRepository userDiaryRepository;
     private final PostRepository postRepository;
@@ -42,16 +43,16 @@ public class PostService extends AbstractFcmService implements BaseService {
     private final FcmTokenProvider fcmTokenProvider;
 
     @Transactional
-    public Post addPost(long userID, CreatePost createPost){
+    public com.toda.api.TODASERVERSPRINGBOOT.entities.Post addPost(long userID, CreatePost createPost){
         int status = getStatus(createPost.getBackground(), createPost.getMood(), 100, () -> {});
 
-        Post post = new Post();
+        com.toda.api.TODASERVERSPRINGBOOT.entities.Post post = new com.toda.api.TODASERVERSPRINGBOOT.entities.Post();
         post.setUserID(userID);
         post.setDiaryID(createPost.getDiary());
         post.setTitle(createPost.getTitle());
         post.setStatus(status);
         post.setCreateAt(toLocalDateTime(createPost.getDate()));
-        Post newPost = postRepository.save(post);
+        com.toda.api.TODASERVERSPRINGBOOT.entities.Post newPost = postRepository.save(post);
         addPostText(newPost.getPostID(),createPost);
 
         return newPost;
@@ -81,7 +82,7 @@ public class PostService extends AbstractFcmService implements BaseService {
     }
 
     @Transactional
-    public void setFcmAndLog(Map<Long,String> map, UserData sendUserData, Post post, int type){
+    public void setFcmAndLog(Map<Long,String> map, UserData sendUserData, com.toda.api.TODASERVERSPRINGBOOT.entities.Post post, int type){
         setKafkaTopicFcm(
                 sendUserData.getUserID(),
                 (userID, userName) -> {
@@ -110,7 +111,7 @@ public class PostService extends AbstractFcmService implements BaseService {
 
     @Transactional
     public void deletePost(long postID){
-        Post post = postRepository.findByPostID(postID);
+        com.toda.api.TODASERVERSPRINGBOOT.entities.Post post = postRepository.findByPostID(postID);
         post.setStatus(0);
         postRepository.save(post);
     }
@@ -119,7 +120,7 @@ public class PostService extends AbstractFcmService implements BaseService {
     public void updatePost(UpdatePost updatePost){
         int status = getStatus(updatePost.getBackground(), updatePost.getMood(), 100, () -> {});
 
-        Post post = postRepository.findByPostID(updatePost.getPost());
+        com.toda.api.TODASERVERSPRINGBOOT.entities.Post post = postRepository.findByPostID(updatePost.getPost());
         post.setTitle(updatePost.getTitle());
         post.setStatus(status);
         if(!updatePost.getDate().equals("1901-01-01")) post.setCreateAt(toLocalDateTime(updatePost.getDate()));
@@ -312,10 +313,10 @@ public class PostService extends AbstractFcmService implements BaseService {
 
 
 
-    public Post getPostByID(long postID){return postRepository.findByPostID(postID);}
+    public com.toda.api.TODASERVERSPRINGBOOT.entities.Post getPostByID(long postID){return postRepository.findByPostID(postID);}
     public List<Heart> getHeartList(long userID, long postID){return heartRepository.findByUserIDAndPostIDOrderByCreateAtDesc(userID,postID);}
     public int getUserPostStatus(long userID, long postID){return getUserPostStatus(userID,postID,userDiaryRepository,postRepository);}
-    public long getUserID(String token){return getUserID(token, tokenProvider);}
+//    public long getUserID(String token){return getUserID(token, tokenProvider);}
     public UserData getSendUserData(String token){return tokenProvider.decodeToken(token);}
     public int getUserDiaryStatus(long userID, long diaryID){return getUserDiaryStatus(userID, diaryID, userDiaryRepository);}
 }

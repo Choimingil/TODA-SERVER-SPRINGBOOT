@@ -10,6 +10,7 @@ public final class WrongArgException extends IllegalArgumentException{
     @RequiredArgsConstructor
     @Getter
     public enum of{
+        KEY_VALUE_SIZE_EXCEPTION(502,"Map의 key와 value의 개수가 맞지 않습니다."),
         WRONG_DEVICE_TYPE_EXCEPTION(103,"잘못된 type 값입니다."),
         WRONG_HEADER_EXCEPTION(103, "잘못된 헤더값입니다."),
         WRONG_TOKEN_DATA_EXCEPTION(103,"토큰과 유저 정보가 일치하지 않습니다."),

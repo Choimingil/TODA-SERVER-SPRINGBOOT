@@ -1,7 +1,9 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
-import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.AbstractController;
-import com.toda.api.TODASERVERSPRINGBOOT.controllers.base.BaseController;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateDateTime;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.SaveFcmToken;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateFcmAllowed;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateFcmTime;
@@ -17,9 +19,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequiredArgsConstructor
 public class NotificationController extends AbstractController implements BaseController {
     private final NotificationService notificationService;
+
+    public NotificationController(DelegateDateTime delegateDateTime, DelegateJwt delegateJwt, NotificationService notificationService) {
+        super(delegateDateTime, delegateJwt);
+        this.notificationService = notificationService;
+    }
 
     //1-5. 알림 토큰 저장 API
     @PostMapping("/notification")

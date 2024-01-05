@@ -1,10 +1,15 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateDateTime;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateFile;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateStatus;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.UserProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
-import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -22,6 +27,13 @@ public class AuthService extends AbstractService implements BaseService {
     private final TokenProvider tokenProvider;
     private final UserProvider userProvider;
 
+//    public AuthService(DelegateDateTime delegateDateTime, DelegateFile delegateFile, DelegateStatus delegateStatus, AuthenticationManagerBuilder authenticationManagerBuilder, TokenProvider tokenProvider, UserProvider userProvider){
+//        super(delegateDateTime,delegateFile,delegateStatus);
+//        this.authenticationManagerBuilder = authenticationManagerBuilder;
+//        this.tokenProvider = tokenProvider;
+//        this.userProvider = userProvider;
+//    }
+
     public String createJwt(String email, String pw) {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(email,pw);
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
@@ -31,7 +43,7 @@ public class AuthService extends AbstractService implements BaseService {
         return tokenProvider.createToken(authentication, userData);
     }
 
-    public Map<String,?> decodeToken(String token) {
+    public Map<String,?> getTokenData(String token) {
         UserData userData = userProvider.getUserInfo(token);
 
         Map<String,Object> map = new HashMap<>();

@@ -13,8 +13,8 @@ import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserStickerDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.KafkaMailProto;
 import com.toda.api.TODASERVERSPRINGBOOT.providers.*;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
-import com.toda.api.TODASERVERSPRINGBOOT.services.base.AbstractService;
-import com.toda.api.TODASERVERSPRINGBOOT.services.base.BaseService;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +31,7 @@ public class UserService extends AbstractService implements BaseService {
     private final UserImageRepository userImageRepository;
     private final UserStickerRepository userStickerRepository;
     private final UserLogRepository userLogRepository;
+
     private final UserProvider userProvider;
     private final TokenProvider tokenProvider;
     private final KafkaProducerProvider kafkaProducerProvider;
@@ -217,4 +218,10 @@ public class UserService extends AbstractService implements BaseService {
         }
         return set;
     }
+
+
+
+
+
+    //    public long getUserID(String token){return getUserID(token, tokenProvider);}
 }

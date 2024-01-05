@@ -6,16 +6,12 @@ import com.toda.api.TODASERVERSPRINGBOOT.enums.FcmTypes;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.*;
 import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.KafkaFcmProto;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.base.AbstractProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.base.BaseProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseProvider;
 import lombok.RequiredArgsConstructor;
 
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -26,11 +22,9 @@ import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
-import org.springframework.web.client.RestTemplate;
 
 
 //import org.apache.http.client.methods.CloseableHttpResponse;
