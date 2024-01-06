@@ -2,8 +2,11 @@ package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateDateTime;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateFile;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateStatus;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
+import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.UserDiary;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.DiaryRequestOfUser;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
@@ -17,7 +20,6 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryMemberListRes
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryNoticeResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.services.DiaryService;
 import jakarta.validation.Valid;
 import org.springframework.validation.BindingResult;
@@ -31,15 +33,16 @@ import java.util.Map;
 public class DiaryController extends AbstractController implements BaseController {
     private final DiaryService diaryService;
 
-    public DiaryController(DelegateDateTime delegateDateTime, DelegateJwt delegateJwt, DiaryService diaryService) {
-        super(delegateDateTime, delegateJwt);
+    public DiaryController(DelegateDateTime delegateDateTime, DelegateFile delegateFile, DelegateStatus delegateStatus, DelegateJwt delegateJwt, DiaryService diaryService) {
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt);
         this.diaryService = diaryService;
     }
 
     //11. 다이어리 추가 API
     @PostMapping("/diary")
+    @SetMdcBody
     public Map<String, ?> createDiary(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @RequestBody @Valid CreateDiary createDiary,
             BindingResult bindingResult
     ){
@@ -57,8 +60,9 @@ public class DiaryController extends AbstractController implements BaseControlle
 
     //12. 다이어리 유저 추가 API
     @PostMapping("/diaries/{diaryID}/user")
+    @SetMdcBody
     public Map<String, ?> setDiaryFriend(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @PathVariable("diaryID") long diaryID,
             @RequestParam(name="type", required = false) String type,
             @RequestBody @Valid UserCode userCode,
@@ -69,7 +73,7 @@ public class DiaryController extends AbstractController implements BaseControlle
             ReceiveUser : FCM 알림을 발송할 상대방
          */
 
-        UserData sendUserData = diaryService.getSendUserData(token);
+        UserData sendUserData = decodeToken(token);
         UserInfoDetail receiveUserData = diaryService.getReceiveUserData(userCode.getUserCode());
         com.toda.api.TODASERVERSPRINGBOOT.entities.Diary diary = diaryService.getDiary(diaryID);
 
@@ -77,8 +81,8 @@ public class DiaryController extends AbstractController implements BaseControlle
         long receiveUserID = receiveUserData.getUserID();
 
         if(sendUserID == receiveUserID) throw new BusinessLogicException(BusinessLogicException.of.SELF_INVITE_EXCEPTION);
-        int sendUserDiaryStatus = diaryService.getUserDiaryStatus(sendUserID,diaryID);
-        int receiveUserDiaryStatus = diaryService.getUserDiaryStatus(receiveUserID,diaryID);
+        int sendUserDiaryStatus = getUserDiaryStatus(sendUserID,diaryID);
+        int receiveUserDiaryStatus = getUserDiaryStatus(receiveUserID,diaryID);
 
         // 현재 유저가 다이어리에 존재하지 않을 경우 불가능하므로 예외 리턴
         if(sendUserDiaryStatus == 404) throw new BusinessLogicException(BusinessLogicException.of.NO_DIARY_EXCEPTION);
@@ -118,7 +122,7 @@ public class DiaryController extends AbstractController implements BaseControlle
     //12-1. 유저에게 온 다이어리 초대 요청 조회 API
     @GetMapping("/log/{diaryID}")
     public Map<String, ?> getInviteList(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @PathVariable("diaryID") long diaryID
     ){
         long userID = getUserID(token);
@@ -131,11 +135,11 @@ public class DiaryController extends AbstractController implements BaseControlle
     //13. 다이어리 퇴장 및 초대 거절 API
     @DeleteMapping("/diary/{diaryID}")
     public Map<String, ?> deleteDiary(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @PathVariable("diaryID") long diaryID
     ){
         long userID = getUserID(token);
-        int userDiaryStatus = diaryService.getUserDiaryStatus(userID,diaryID);
+        int userDiaryStatus = getUserDiaryStatus(userID,diaryID);
 
         // 현재 다이어리 속해 있는 경우 탈퇴 진행
         if(userDiaryStatus == 100){
@@ -153,13 +157,14 @@ public class DiaryController extends AbstractController implements BaseControlle
 
     //14. 다이어리 수정 API
     @PatchMapping("/diary")
+    @SetMdcBody
     public Map<String, ?> updateDiary(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @RequestBody @Valid UpdateDiary updateDiary,
             BindingResult bindingResult
     ){
         long userID = getUserID(token);
-        int userDiaryStatus = diaryService.getUserDiaryStatus(userID,updateDiary.getDiary());
+        int userDiaryStatus = getUserDiaryStatus(userID,updateDiary.getDiary());
 
         // 현재 다이어리에 속해 있는 경우 수정 작업 진행
         if(userDiaryStatus == 100){
@@ -174,7 +179,7 @@ public class DiaryController extends AbstractController implements BaseControlle
     //15. 다이어리 조회 API
     @GetMapping("/diaries")
     public Map<String, ?> getDiaryList(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @RequestParam(name="page", required = true) int page,
             @RequestParam(name="status", required = true) int status,
             @RequestParam(name="keyword", required = false) String keyword
@@ -201,13 +206,13 @@ public class DiaryController extends AbstractController implements BaseControlle
     //15-0. 다이어리 멤버 조회 API
     @GetMapping("/diaries/{diaryID}/users")
     public Map<String, ?> getDiaryMember(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @PathVariable("diaryID") long diaryID,
             @RequestParam(name="page", required = true) int page,
             @RequestParam(name="status", required = true) int status
     ){
         long userID = getUserID(token);
-        int userDiaryStatus = diaryService.getUserDiaryStatus(userID,diaryID);
+        int userDiaryStatus = getUserDiaryStatus(userID,diaryID);
 
         // 현재 다이어리에 속해 있는 경우 조회 진행
         if(userDiaryStatus == 100){
@@ -233,8 +238,9 @@ public class DiaryController extends AbstractController implements BaseControlle
 
     //15-3. 다이어리 공지 수정 API
     @PatchMapping("/notice")
+    @SetMdcBody
     public Map<String, ?> updateNotice(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @RequestBody @Valid UpdateNotice updateNotice,
             BindingResult bindingResult
     ){
@@ -246,11 +252,11 @@ public class DiaryController extends AbstractController implements BaseControlle
     //15-4. 다이어리 공지 조회 API
     @GetMapping("/notice/{diaryID}")
     public Map<String, ?> getNotice(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @PathVariable("diaryID") long diaryID
     ){
         long userID = getUserID(token);
-        int userDiaryStatus = diaryService.getUserDiaryStatus(userID,diaryID);
+        int userDiaryStatus = getUserDiaryStatus(userID,diaryID);
 
         // 현재 다이어리에 속해 있는 경우 조회 진행
         if(userDiaryStatus == 100){

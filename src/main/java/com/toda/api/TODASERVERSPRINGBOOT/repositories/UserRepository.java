@@ -28,7 +28,6 @@ public interface UserRepository extends JpaRepository<User,Long> {
     UserInfoDetail getUserDataByEmail(String email);
 
     @Modifying
-    @Transactional
     @Query("UPDATE User SET appPassword = 99999 WHERE userID = :userID")
     void deleteUser(long userID);
 }

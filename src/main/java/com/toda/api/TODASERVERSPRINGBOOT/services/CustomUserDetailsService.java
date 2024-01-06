@@ -1,10 +1,9 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.UserProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -14,15 +13,28 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component("userDetailsService")
-@RequiredArgsConstructor
 public class CustomUserDetailsService extends AbstractService implements BaseService, UserDetailsService {
-    private final UserProvider userProvider;
     private final PasswordEncoder passwordEncoder;
+
+    public CustomUserDetailsService(
+            DelegateDateTime delegateDateTime,
+            DelegateFile delegateFile,
+            DelegateStatus delegateStatus,
+            DelegateJwt delegateJwt,
+            DelegateFcm delegateFcm,
+            DelegateUserAuth delegateUserAuth,
+            DelegateFcmTokenAuth delegateFcmTokenAuth,
+            DelegateKafka delegateKafka,
+            PasswordEncoder passwordEncoder
+    ) {
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateKafka);
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        UserData userdata = userProvider.getUserInfo(email);
+        UserData userdata = getUserInfo(email);
         return User.builder()
                 .username(userdata.getEmail())
                 .password(passwordEncoder.encode(userdata.getPassword()))

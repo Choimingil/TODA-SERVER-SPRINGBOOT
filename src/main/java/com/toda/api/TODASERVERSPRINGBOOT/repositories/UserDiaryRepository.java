@@ -55,11 +55,4 @@ public interface UserDiaryRepository extends JpaRepository<UserDiary,Long> {
             "inner join UserImage ui on ui.userID = ud.userID and ui.status not like 0 " +
             "where ud.diaryID = :diaryID and MOD(ud.status,100) = :status order by ui.createAt desc")
     List<DiaryMemberList> getDiaryMemberList(long diaryID, int status, Pageable pageable);
-
-
-
-//    @Modifying
-//    @Transactional
-//    @Query("UPDATE UserDiary SET status=(SELECT status from Diary WHERE diaryID = :diaryID) WHERE diaryID=:diaryID and userID=:userID")
-//    void updateUserDiaryStatus(long diaryID, long userID);
 }

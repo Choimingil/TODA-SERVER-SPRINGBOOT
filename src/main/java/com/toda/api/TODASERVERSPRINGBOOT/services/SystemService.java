@@ -1,19 +1,15 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
-import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component("systemService")
-@RequiredArgsConstructor
 public class SystemService extends AbstractService implements BaseService {
     private final UserRepository userRepository;
-    private final TokenProvider tokenProvider;
-
     @Value("${toda.ios.version.prev}")
     private String iosVerPrev;
     @Value("${toda.ios.version.curr}")
@@ -23,12 +19,27 @@ public class SystemService extends AbstractService implements BaseService {
     @Value("${toda.aos.version.curr}")
     private String aosVerCurr;
 
+    public SystemService(
+            DelegateDateTime delegateDateTime,
+            DelegateFile delegateFile,
+            DelegateStatus delegateStatus,
+            DelegateJwt delegateJwt,
+            DelegateFcm delegateFcm,
+            DelegateUserAuth delegateUserAuth,
+            DelegateFcmTokenAuth delegateFcmTokenAuth,
+            DelegateKafka delegateKafka,
+            UserRepository userRepository
+    ) {
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateKafka);
+        this.userRepository = userRepository;
+    }
+
     public boolean isExistEmail(String email){
         return !userRepository.existsByEmailAndAppPasswordNot(email,99999);
     }
 
     public boolean isMyEmail(String token, String email){
-        long userID = tokenProvider.getUserID(token);
+        long userID = getUserID(token);
         return userRepository.existsByUserIDAndEmail(userID, email);
     }
 

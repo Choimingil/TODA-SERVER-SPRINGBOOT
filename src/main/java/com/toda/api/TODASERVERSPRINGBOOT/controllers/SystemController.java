@@ -1,7 +1,9 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateDateTime;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateFile;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateStatus;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
@@ -9,10 +11,8 @@ import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.FailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.ValidateEmail;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.services.SystemService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,8 +22,8 @@ import java.util.Map;
 public class SystemController extends AbstractController implements BaseController {
     private final SystemService systemService;
 
-    public SystemController(DelegateDateTime delegateDateTime, DelegateJwt delegateJwt, SystemService systemService) {
-        super(delegateDateTime, delegateJwt);
+    public SystemController(DelegateDateTime delegateDateTime, DelegateFile delegateFile, DelegateStatus delegateStatus, DelegateJwt delegateJwt, SystemService systemService) {
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt);
         this.systemService = systemService;
     }
 
@@ -42,7 +42,7 @@ public class SystemController extends AbstractController implements BaseControll
     // 1-6. 강제 업데이트 API
     @GetMapping("/update")
     public Map<String, ?> checkUpdate(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @RequestParam(name="type") int type,
             @RequestParam(name="version") String version
     ){
@@ -65,8 +65,9 @@ public class SystemController extends AbstractController implements BaseControll
 
     // 1-11. 자신의 이메일인지 확인 API
     @PostMapping("/email/check")
+    @SetMdcBody
     public Map<String, ?> checkMyEmail(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @RequestBody @Valid ValidateEmail validateEmail,
             BindingResult bindingResult
     ){

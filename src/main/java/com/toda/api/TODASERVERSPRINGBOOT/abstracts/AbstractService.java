@@ -1,59 +1,114 @@
 package com.toda.api.TODASERVERSPRINGBOOT.abstracts;
 
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateDateTime;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateFile;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateStatus;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.MethodParamsInterface;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.*;
+import com.google.protobuf.MessageLite;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryColors;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryStatus;
-import com.toda.api.TODASERVERSPRINGBOOT.repositories.CommentRepository;
-import com.toda.api.TODASERVERSPRINGBOOT.repositories.PostRepository;
-import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserDiaryRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.FcmDto;
+import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
+import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.core.Authentication;
 
-import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
-@RequiredArgsConstructor
-public abstract class AbstractService extends AbstractFcm implements BaseService, MethodParamsInterface {
+public abstract class AbstractService extends AbstractUtil implements BaseService {
     protected final Logger logger = LoggerFactory.getLogger(AbstractService.class);
     protected final Set<Long> basicStickers = Set.of(1L,2L,3L,4L);
     protected final Set<DiaryColors> colorSet = EnumSet.allOf(DiaryColors.class);
     protected final Set<DiaryStatus> statusSet = EnumSet.allOf(DiaryStatus.class);
 
     /* Delegate Class */
-    private final DelegateDateTime delegateDateTime = new DelegateDateTime();
-    private final DelegateFile delegateFile = new DelegateFile();
-    private final DelegateStatus delegateStatus = new DelegateStatus();
+    private final DelegateJwt delegateJwt;
+    private final DelegateFcm delegateFcm;
+    private final DelegateUserAuth delegateUserAuth;
+    private final DelegateFcmTokenAuth delegateFcmTokenAuth;
+    private final DelegateKafka delegateKafka;
 
-//    private final DelegateDateTime delegateDateTime;
-//    private final DelegateFile delegateFile;
-//    private final DelegateStatus delegateStatus;
+    public AbstractService(
+            DelegateDateTime delegateDateTime,
+            DelegateFile delegateFile,
+            DelegateStatus delegateStatus,
+            DelegateJwt delegateJwt,
+            DelegateFcm delegateFcm,
+            DelegateUserAuth delegateUserAuth,
+            DelegateFcmTokenAuth delegateFcmTokenAuth,
+            DelegateKafka delegateKafka
+    ) {
+        super(delegateDateTime, delegateFile, delegateStatus);
+        this.delegateJwt = delegateJwt;
+        this.delegateFcm = delegateFcm;
+        this.delegateUserAuth = delegateUserAuth;
+        this.delegateFcmTokenAuth = delegateFcmTokenAuth;
+        this.delegateKafka = delegateKafka;
+    }
 
-//    public AbstractService(DelegateDateTime delegateDateTime, DelegateFile delegateFile, DelegateStatus delegateStatus) {
-//        this.delegateDateTime = delegateDateTime;
-//        this.delegateFile = delegateFile;
-//        this.delegateStatus = delegateStatus;
-//    }
-
+    protected long getUserID(String token) {
+        return delegateJwt.getUserID(token);
+    }
+    protected String createToken(Authentication authentication, UserData userData) {
+        return delegateJwt.createToken(authentication,userData);
+    }
+    protected UserData decodeToken(String token) {
+        return delegateJwt.decodeToken(token);
+    }
+    protected UserData getUserInfo(String value) {
+        return delegateUserAuth.getUserInfo(value);
+    }
+    protected void setUserInfo(UserData userData) {
+        delegateUserAuth.setUserInfo(userData);
+    }
+    protected void deleteUserInfo(String email) {
+        delegateUserAuth.deleteUserInfo(email);
+    }
+    protected FcmGroup getUserFcmTokenList(long userID) {
+        return delegateFcmTokenAuth.getUserFcmTokenList(userID);
+    }
+    protected long getNotificationID(long userID, String fcm) {
+        return delegateFcmTokenAuth.getNotificationID(userID,fcm);
+    }
+    protected void setNewFcm(long userID, String fcm, long notificationID, int status) {
+        delegateFcmTokenAuth.setNewFcm(userID,fcm,notificationID,status);
+    }
+    protected void deleteFcm(long userID, String fcm) {
+        delegateFcmTokenAuth.deleteFcm(userID,fcm);
+    }
+    protected void setKafkaTopicFcm(long sendID, BiFunction<Long,String,Boolean> check, BiFunction<Long,String, FcmGroup> fcmGroup, FcmDto fcmDto) {
+        delegateFcm.setKafkaTopicFcm(sendID,check,fcmGroup,fcmDto);
+    }
+    protected <T> Map<Long, String> getFcmReceiveUserMap(BiFunction<T, Map<Long, String>, Boolean> check, BiConsumer<T, Map<Long, String>> run, List<T> entityList) {
+        return delegateFcm.getFcmReceiveUserMap(check,run,entityList);
+    }
+    protected void addUserLog(long sendUserID, long receiveUserID, long diaryID, int type, int status) {
+        delegateFcm.addUserLog(sendUserID,receiveUserID,diaryID,type,status);
+    }
+    protected String getFcmTitle() {
+        return delegateFcm.getFcmTitle();
+    }
+    protected String getFcmBody(String userName, String userCode, String objName, int type) {
+        return delegateFcm.getFcmBody(userName,userCode,objName,type);
+    }
+    protected CompletableFuture<Boolean> getKafkaProducer(String topic, MessageLite message) {
+        return delegateKafka.getKafkaProducer(topic,message);
+    }
 
     @Override
-    @Transactional
-    public <T> void updateListAndDelete(CheckParams<T> check, MethodParams<T> params, List<T> entityList, JpaRepository<T, Long> repository) {
+    public <T> void updateListAndDelete(Function<T,Boolean> check, Consumer<T> run, List<T> entityList, JpaRepository<T, Long> repository) {
         if(!entityList.isEmpty()) {
             List<T> saveList = new ArrayList<>();
             List<T> deleteList = new ArrayList<>();
             for(T entity : entityList){
-                if(check.check(entity)){
-                    params.method(entity);
+                if(check.apply(entity)){
+                    run.accept(entity);
                     saveList.add(entity);
                 }
                 else deleteList.add(entity);
@@ -64,51 +119,16 @@ public abstract class AbstractService extends AbstractFcm implements BaseService
     }
 
     @Override
-    @Transactional
-    public <T> void updateList(List<T> entityList, MethodParams<T> params, JpaRepository<T, Long> repository){
+    public <T> void updateList(List<T> entityList, Consumer<T> run, JpaRepository<T, Long> repository){
         if(!entityList.isEmpty()){
             List<T> res = new ArrayList<>();
             for(T entity : entityList){
-                params.method(entity);
+                run.accept(entity);
                 res.add(entity);
             }
             repository.saveAll(res);
         }
     }
 
-    protected int getUserDiaryStatus(long userID, long diaryID, UserDiaryRepository userDiaryRepository){
-        return delegateStatus.getUserDiaryStatus(userID, diaryID, userDiaryRepository);
-    }
 
-    protected int getUserPostStatus(long userID, long postID, UserDiaryRepository userDiaryRepository, PostRepository postRepository){
-        return delegateStatus.getUserPostStatus(userID,postID,userDiaryRepository,postRepository);
-    }
-
-    protected int getUserCommentStatus(long userID, long commentID, CommentRepository commentRepository){
-        return delegateStatus.getUserCommentStatus(userID,commentID,commentRepository);
-    }
-
-    protected int getStatus(int firstValue, int secondValue, int digit, MethodNoParams params){
-        return delegateStatus.getStatus(firstValue,secondValue,digit,params);
-    }
-
-    protected String toStringDateFullTime(LocalDateTime dateTime){
-        return delegateDateTime.toStringDateFullTime(dateTime);
-    }
-
-    protected LocalDateTime toLocalDateTime(String date){
-        return delegateDateTime.toLocalDateTime(date);
-    }
-
-    protected long getTimeDiffSec(LocalDateTime currentDateTime, LocalDateTime targetDateTime) {
-        return delegateDateTime.getTimeDiffSec(currentDateTime,targetDateTime);
-    }
-
-    protected String getDateString(LocalDateTime targetDateTime){
-        return delegateDateTime.getDateString(targetDateTime);
-    }
-
-    protected String readTxtFile(String filename) {
-        return delegateFile.readTxtFile(filename);
-    }
 }

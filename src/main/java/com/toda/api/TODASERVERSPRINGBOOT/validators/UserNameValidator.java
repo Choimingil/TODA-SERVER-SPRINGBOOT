@@ -1,7 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.validators;
 
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
 import com.toda.api.TODASERVERSPRINGBOOT.validators.annotations.ValidUserName;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ public final class UserNameValidator implements ConstraintValidator<ValidUserNam
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        if(value.equals(TokenProvider.SKIP_VALUE)) return true;
+        if(value.equals(DelegateJwt.SKIP_VALUE)) return true;
         return value.length() < 45;
     }
 }

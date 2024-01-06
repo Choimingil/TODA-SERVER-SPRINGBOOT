@@ -1,6 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.*;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.*;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryColors;
@@ -11,13 +12,8 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.*;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryMemberListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryNoticeResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmTokenProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.KafkaProducerProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractFcm;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -28,7 +24,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component("diaryService")
-@RequiredArgsConstructor
 public class DiaryService extends AbstractService implements BaseService {
     private final UserRepository userRepository;
     private final UserLogRepository userLogRepository;
@@ -36,9 +31,28 @@ public class DiaryService extends AbstractService implements BaseService {
     private final UserDiaryRepository userDiaryRepository;
     private final DiaryNoticeRepository diaryNoticeRepository;
 
-    private final KafkaProducerProvider kafkaProducerProvider;
-    private final TokenProvider tokenProvider;
-    private final FcmTokenProvider fcmTokenProvider;
+    public DiaryService(
+            DelegateDateTime delegateDateTime,
+            DelegateFile delegateFile,
+            DelegateStatus delegateStatus,
+            DelegateJwt delegateJwt,
+            DelegateFcm delegateFcm,
+            DelegateUserAuth delegateUserAuth,
+            DelegateFcmTokenAuth delegateFcmTokenAuth,
+            DelegateKafka delegateKafka,
+            UserRepository userRepository,
+            UserLogRepository userLogRepository,
+            DiaryRepository diaryRepository,
+            UserDiaryRepository userDiaryRepository,
+            DiaryNoticeRepository diaryNoticeRepository
+    ) {
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateKafka);
+        this.userRepository = userRepository;
+        this.userLogRepository = userLogRepository;
+        this.diaryRepository = diaryRepository;
+        this.userDiaryRepository = userDiaryRepository;
+        this.diaryNoticeRepository = diaryNoticeRepository;
+    }
 
     @Transactional
     public long addDiary(String diaryName, int status){
@@ -128,8 +142,8 @@ public class DiaryService extends AbstractService implements BaseService {
                 },
                 // 조건 만족 시 FCM 발송
                 (userID, userName) -> {
-                    addUserLog(userLogRepository,userID,sendUserData.getUserID(),diary.getDiaryID(),type,100);
-                    return fcmTokenProvider.getSingleUserFcmList(userID);
+                    addUserLog(userID,sendUserData.getUserID(),diary.getDiaryID(),type,100);
+                    return getUserFcmTokenList(userID);
                 },
                 FcmDto.builder()
                         .title(getFcmTitle())
@@ -137,7 +151,6 @@ public class DiaryService extends AbstractService implements BaseService {
                         .typeNum(type)
                         .dataID(diary.getDiaryID())
                         .map(receiveUserMap)
-                        .provider(kafkaProducerProvider)
                         .build()
         );
     }
@@ -379,15 +392,12 @@ public class DiaryService extends AbstractService implements BaseService {
         );
     }
 
-    public int getUserDiaryStatus(long userID, long diaryID){return getUserDiaryStatus(userID, diaryID, userDiaryRepository);}
     public int getDiaryStatus(int status, int color){
         return getStatus(color,status,100,() -> {
             if(status<1 || status>statusSet.size()) throw new WrongArgException(WrongArgException.of.WRONG_DIARY_STATUS_EXCEPTION);
             if(color<1 || color>colorSet.size()) throw new WrongArgException(WrongArgException.of.WRONG_DIARY_COLOR_EXCEPTION);
         });
     }
-
-    //    public long getUserID(String token){return getUserID(token, tokenProvider);}
 
     public List<UserDiary> getAcceptableDiaryList(long userID, long diaryID){
         List<UserDiary> res = new ArrayList<>();
@@ -396,16 +406,12 @@ public class DiaryService extends AbstractService implements BaseService {
         return res;
     }
 
-    public UserData getSendUserData(String token){
-        return tokenProvider.decodeToken(token);
-    }
-
     public UserInfoDetail getReceiveUserData(String userCode){
         return userRepository.getUserDataByUserCode(userCode);
     }
 
-    public com.toda.api.TODASERVERSPRINGBOOT.entities.Diary getDiary(long diaryID){
-        com.toda.api.TODASERVERSPRINGBOOT.entities.Diary diary = diaryRepository.findByDiaryID(diaryID);
+    public Diary getDiary(long diaryID){
+        Diary diary = diaryRepository.findByDiaryID(diaryID);
         if(diary == null) throw new WrongArgException(WrongArgException.of.WRONG_DIARY_EXCEPTION);
         if(diary.getStatus()%100 == 2) throw new BusinessLogicException(BusinessLogicException.of.ALONE_DIARY_INVITATION_EXCEPTION);
         return diary;

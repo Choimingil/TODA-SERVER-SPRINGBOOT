@@ -20,7 +20,6 @@ public interface NotificationRepository extends JpaRepository<Notification,Long>
     Notification findByNotificationID(long notificationID);
 
     @Modifying
-    @Transactional
     @Query("UPDATE Notification SET time = :time WHERE notificationID = :notificationID")
     void updateFcmTime(String time, long notificationID);
 }

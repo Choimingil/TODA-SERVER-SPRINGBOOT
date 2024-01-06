@@ -1,6 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.enums;
 
-import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -50,7 +50,7 @@ public enum LogFields {
             case "request_method" -> request.getMethod();
             case "request_time" -> Instant.now().toString();
             case "request_ip" -> request.getRemoteAddr();
-            case "request_header" -> request.getHeader(TokenProvider.HEADER_NAME);
+            case "request_header" -> request.getHeader(DelegateJwt.HEADER_NAME);
             case "request_query_string" -> request.getQueryString();
             default -> "";
         };

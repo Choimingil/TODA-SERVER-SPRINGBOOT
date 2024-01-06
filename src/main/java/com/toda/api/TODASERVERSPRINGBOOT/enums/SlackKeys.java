@@ -1,6 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.enums;
 
-import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import net.gpedro.integrations.slack.SlackField;
@@ -19,8 +19,8 @@ public enum SlackKeys {
     REQUEST_QUERY_STRING("Request Query String", "request_query_string", SlackKeys::setField, SlackKeys::setField),
     REQUEST_BODY("Request Body", "request_body", SlackKeys::setField, SlackKeys::setField);
 
-    private final String slackTitle;
-    private final String mdcTitle;
+    public final String slackTitle;
+    public final String mdcTitle;
     private final BiFunction<String, String, SlackField> addRequest;
     private final BiFunction<String, String, SlackField> addMdc;
     public final SlackField addRequest(HttpServletRequest request){
@@ -29,7 +29,7 @@ public enum SlackKeys {
             case "request_method" -> request.getMethod();
             case "request_time" -> Instant.now().toString();
             case "request_ip" -> request.getRemoteAddr();
-            case "request_header" -> request.getHeader(TokenProvider.HEADER_NAME);
+            case "request_header" -> request.getHeader(DelegateJwt.HEADER_NAME);
             case "request_query_string" -> request.getQueryString();
             default -> "";
         };

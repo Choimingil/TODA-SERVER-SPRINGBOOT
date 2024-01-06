@@ -1,11 +1,8 @@
 package com.toda.api.TODASERVERSPRINGBOOT.models.dtos;
 
-import com.toda.api.TODASERVERSPRINGBOOT.providers.KafkaProducerProvider;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
-
-import java.util.Map;
 
 @Getter
 @ToString

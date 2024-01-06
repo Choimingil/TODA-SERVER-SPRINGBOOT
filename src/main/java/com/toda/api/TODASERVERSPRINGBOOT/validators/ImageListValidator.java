@@ -1,7 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.validators;
 
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
 import com.toda.api.TODASERVERSPRINGBOOT.validators.annotations.ValidImageList;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ public final class ImageListValidator implements ConstraintValidator<ValidImageL
     @Override
     public boolean isValid(List<String> list, ConstraintValidatorContext constraintValidatorContext) {
         for(String value : list){
-            if(value.equals(TokenProvider.SKIP_VALUE)) continue;
+            if(value.equals(DelegateJwt.SKIP_VALUE)) continue;
             if(value.length()<8) return false;
             String protocol = value.substring(0,8);
             return protocol.equals("https://");

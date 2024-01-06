@@ -1,23 +1,22 @@
 package com.toda.api.TODASERVERSPRINGBOOT.handlers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateKafka;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.*;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractExceptionHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseExceptionHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.FailResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.SlackProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
 @Component
-@RequiredArgsConstructor
 public final class FilterExceptionHandler extends AbstractExceptionHandler implements BaseExceptionHandler {
-    private final ObjectMapper objectMapper;
-    private final SlackProvider slackProvider;
+    public FilterExceptionHandler(DelegateKafka delegateKafka) {
+        super(delegateKafka);
+    }
 
     public void getResponse(HttpServletRequest request, HttpServletResponse response, Exception e) {
         response.setStatus(200);
@@ -32,8 +31,8 @@ public final class FilterExceptionHandler extends AbstractExceptionHandler imple
              */
             if(e.getClass() == JwtAccessDeniedException.class){
                 JwtAccessDeniedException exception = (JwtAccessDeniedException) e;
-                jsonResponse = objectMapper.writeValueAsString(
-                        getResponse(request,exception,exception.getCode(),exception.getMessage())
+                jsonResponse = new ObjectMapper().writeValueAsString(
+                        getErrorFilter(request,exception,exception.getCode(),exception.getMessage())
                 );
             }
 
@@ -42,8 +41,8 @@ public final class FilterExceptionHandler extends AbstractExceptionHandler imple
              */
             else if(e.getClass() == JwtAuthenticationException.class){
                 JwtAuthenticationException exception = (JwtAuthenticationException) e;
-                jsonResponse = objectMapper.writeValueAsString(
-                        getResponse(request,exception,exception.getCode(),exception.getMessage())
+                jsonResponse = new ObjectMapper().writeValueAsString(
+                        getErrorFilter(request,exception,exception.getCode(),exception.getMessage())
                 );
             }
 
@@ -52,8 +51,8 @@ public final class FilterExceptionHandler extends AbstractExceptionHandler imple
              */
             else if(e.getClass() == NoArgException.class){
                 NoArgException exception = (NoArgException) e;
-                jsonResponse = objectMapper.writeValueAsString(
-                        getResponse(request,exception,exception.getElement().getCode(),exception.getElement().getMessage())
+                jsonResponse = new ObjectMapper().writeValueAsString(
+                        getErrorFilter(request,exception,exception.getElement().getCode(),exception.getElement().getMessage())
                 );
             }
 
@@ -62,8 +61,8 @@ public final class FilterExceptionHandler extends AbstractExceptionHandler imple
              */
             else if(e.getClass() == WrongArgException.class){
                 WrongArgException exception = (WrongArgException) e;
-                jsonResponse = objectMapper.writeValueAsString(
-                        getResponse(request,exception,exception.getElement().getCode(),exception.getElement().getMessage())
+                jsonResponse = new ObjectMapper().writeValueAsString(
+                        getErrorFilter(request,exception,exception.getElement().getCode(),exception.getElement().getMessage())
                 );
             }
 
@@ -72,8 +71,8 @@ public final class FilterExceptionHandler extends AbstractExceptionHandler imple
              */
             else if(e.getClass() == NoBodyException.class){
                 NoBodyException exception = (NoBodyException) e;
-                jsonResponse = objectMapper.writeValueAsString(
-                        getResponse(request,exception,exception.getElement().getCode(),exception.getElement().getMessage())
+                jsonResponse = new ObjectMapper().writeValueAsString(
+                        getErrorFilter(request,exception,exception.getElement().getCode(),exception.getElement().getMessage())
                 );
             }
 
@@ -81,8 +80,8 @@ public final class FilterExceptionHandler extends AbstractExceptionHandler imple
              * Rest Exceptions Handler
              */
             else{
-                jsonResponse = objectMapper.writeValueAsString(
-                        getResponse(request,e,FailResponse.of.UNKNOWN_EXCEPTION.getCode(), e.getMessage())
+                jsonResponse = new ObjectMapper().writeValueAsString(
+                        getErrorFilter(request,e,FailResponse.of.UNKNOWN_EXCEPTION.getCode(), e.getMessage())
                 );
             }
 

@@ -13,7 +13,6 @@ public interface UserImageRepository extends JpaRepository<UserImage, Long> {
     UserImage findByUserIDAndStatusNot(long userID, int status);
 
     @Modifying
-    @Transactional
     @Query("UPDATE UserImage SET status = 0 WHERE userID = :userID")
     void deleteImage(long userID);
 }

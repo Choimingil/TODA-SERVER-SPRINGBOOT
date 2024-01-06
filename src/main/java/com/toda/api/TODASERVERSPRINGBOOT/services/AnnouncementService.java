@@ -1,12 +1,13 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.UserAnnouncement;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.AnnouncementDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.AnnouncementList;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.AnnouncementRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserAnnouncementRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -19,14 +20,29 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component("announcementService")
-@RequiredArgsConstructor
-public class AnnouncementService {
+public class AnnouncementService extends AbstractService implements BaseService {
     private final AnnouncementRepository announcementRepository;
     private final UserAnnouncementRepository userAnnouncementRepository;
-    private final TokenProvider tokenProvider;
+
+    public AnnouncementService(
+            DelegateDateTime delegateDateTime,
+            DelegateFile delegateFile,
+            DelegateStatus delegateStatus,
+            DelegateJwt delegateJwt,
+            DelegateFcm delegateFcm,
+            DelegateUserAuth delegateUserAuth,
+            DelegateFcmTokenAuth delegateFcmTokenAuth,
+            DelegateKafka delegateKafka,
+            AnnouncementRepository announcementRepository,
+            UserAnnouncementRepository userAnnouncementRepository
+    ) {
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateKafka);
+        this.announcementRepository = announcementRepository;
+        this.userAnnouncementRepository = userAnnouncementRepository;
+    }
 
     public List<Map<String,Object>> getAnnouncement(String token, int page){
-        long userID = tokenProvider.getUserID(token);
+        long userID = getUserID(token);
         int start = (page-1)*20;
         Pageable pageable = PageRequest.of(start,20);
         List<AnnouncementList> announcementList = announcementRepository.findByStatusNotOrderByCreateAtDesc(0,pageable);
@@ -42,7 +58,7 @@ public class AnnouncementService {
     }
 
     public List<Map<String,Object>> getAnnouncementDetail(String token, long announcementID){
-        long userID = tokenProvider.getUserID(token);
+        long userID = getUserID(token);
         List<AnnouncementDetail> announcementDetails = announcementRepository.findByStatusNotAndAnnouncementID(0,announcementID);
         boolean isRead = userAnnouncementRepository.existsByUserIDAndAnnouncementID(userID,announcementID);
         if(!isRead) readAnnouncement(userID,announcementID);
@@ -58,7 +74,7 @@ public class AnnouncementService {
     }
 
     public boolean isAllAnnouncementRead(String token){
-        long userID = tokenProvider.getUserID(token);
+        long userID = getUserID(token);
         long announcementNum = announcementRepository.count();
         long userReadNum = userAnnouncementRepository.countByUserID(userID);
         return announcementNum == userReadNum;

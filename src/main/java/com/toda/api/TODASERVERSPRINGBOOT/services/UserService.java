@@ -1,5 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.User;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.UserImage;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.UserSticker;
@@ -11,7 +12,6 @@ import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserLogDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserStickerDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.KafkaMailProto;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.*;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
@@ -25,16 +25,32 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 @Component("userService")
-@RequiredArgsConstructor
 public class UserService extends AbstractService implements BaseService {
     private final UserRepository userRepository;
     private final UserImageRepository userImageRepository;
     private final UserStickerRepository userStickerRepository;
     private final UserLogRepository userLogRepository;
 
-    private final UserProvider userProvider;
-    private final TokenProvider tokenProvider;
-    private final KafkaProducerProvider kafkaProducerProvider;
+    public UserService(
+            DelegateDateTime delegateDateTime,
+            DelegateFile delegateFile,
+            DelegateStatus delegateStatus,
+            DelegateJwt delegateJwt,
+            DelegateFcm delegateFcm,
+            DelegateUserAuth delegateUserAuth,
+            DelegateFcmTokenAuth delegateFcmTokenAuth,
+            DelegateKafka delegateKafka,
+            UserRepository userRepository,
+            UserImageRepository userImageRepository,
+            UserStickerRepository userStickerRepository,
+            UserLogRepository userLogRepository
+    ) {
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateKafka);
+        this.userRepository = userRepository;
+        this.userImageRepository = userImageRepository;
+        this.userStickerRepository = userStickerRepository;
+        this.userLogRepository = userLogRepository;
+    }
 
     @Transactional
     public long createUser(CreateUser createUser){
@@ -72,23 +88,23 @@ public class UserService extends AbstractService implements BaseService {
 
     @Transactional
     public void deleteUser(String token){
-        UserData userData = userProvider.getUserInfo(token);
+        UserData userData = getUserInfo(token);
         userRepository.deleteUser(userData.getUserID());
-        userProvider.deleteUserInfo(userData.getEmail());
+        deleteUserInfo(userData.getEmail());
     }
 
     @Transactional
     public void updateName(String token, String name){
-        UserData userData = userProvider.getUserInfo(token);
+        UserData userData = getUserInfo(token);
         User user = userData.toUser();
         user.setUserName(name);
         userRepository.save(user);
-        userProvider.setUserInfo(userData);
+        setUserInfo(userData);
     }
 
     @Transactional
     public void updatePassword(String token, String password){
-        UserData userData = userProvider.getUserInfo(token);
+        UserData userData = getUserInfo(token);
         User user = userData.toUser();
 
         if(userRepository.existsByUserIDAndPasswordAndAppPasswordNot(user.getUserID(), password, 99999))
@@ -99,33 +115,32 @@ public class UserService extends AbstractService implements BaseService {
 
         user.setPassword(password);
         userRepository.save(user);
-        userProvider.setUserInfo(userData);
+        setUserInfo(userData);
     }
 
     @Transactional
     public UserData updateAppPassword(String token, int appPassword){
-        UserData userData = userProvider.getUserInfo(token);
+        UserData userData = getUserInfo(token);
         User user = userData.toUser();
         user.setAppPassword(appPassword);
         userRepository.save(user);
-        userProvider.setUserInfo(userData);
+        setUserInfo(userData);
         return userData;
     }
 
     @Transactional
     public void updateProfile(String token, String profile){
-        UserData userData = userProvider.getUserInfo(token);
+        UserData userData = getUserInfo(token);
         long userID = userData.getUserID();
 
         userImageRepository.deleteImage(userID);
-//        userImageRepository.deleteByUserID(userID);
 
         createUserImage(userID,profile);
-        userProvider.setUserInfo(userData);
+        setUserInfo(userData);
     }
 
-    public UserData getUserInfo(String token){
-        return userProvider.getUserInfo(token);
+    public UserData getUser(String token){
+        return getUserInfo(token);
     }
 
     public UserInfoDetail getUserInfoWithUserCode(String userCode){
@@ -134,7 +149,7 @@ public class UserService extends AbstractService implements BaseService {
 
     @Transactional
     public void updateTempPassword(String email) {
-        UserData userData = userProvider.getUserInfo(email);
+        UserData userData = getUserInfo(email);
         User user = userData.toUser();
         String password = createUserCode();
 
@@ -146,12 +161,12 @@ public class UserService extends AbstractService implements BaseService {
 
         user.setPassword(password);
         userRepository.save(user);
-        userProvider.deleteUserInfo(email);
+        deleteUserInfo(email);
         sendTempPassword(email,password);
     }
 
     public List<UserLogDetail> getUserLog(String token, int page){
-        long userID = tokenProvider.getUserID(token);
+        long userID = getUserID(token);
         int start = (page-1)*20;
         Pageable pageable = PageRequest.of(start,20);
         return userLogRepository.getUserLogs(userID,pageable);
@@ -192,7 +207,7 @@ public class UserService extends AbstractService implements BaseService {
                 .build();
 
         try{
-            kafkaProducerProvider.getKafkaProducer("mail", params).get();
+            getKafkaProducer("mail", params).get();
         }
         catch (InterruptedException | ExecutionException e){
             throw new WrongAccessException(WrongAccessException.of.SEND_MAIL_EXCEPTION);
@@ -218,10 +233,4 @@ public class UserService extends AbstractService implements BaseService {
         }
         return set;
     }
-
-
-
-
-
-    //    public long getUserID(String token){return getUserID(token, tokenProvider);}
 }

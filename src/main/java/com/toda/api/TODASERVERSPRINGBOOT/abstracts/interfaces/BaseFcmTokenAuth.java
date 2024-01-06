@@ -1,10 +1,19 @@
 package com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces;
 
+import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmGroup;
 import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmMap;
 
 import java.util.Map;
 
 public interface BaseFcmTokenAuth {
+    /**
+     * 아직 사용 안함
+     * 유저 리스트를 받아 한번에 전송할 FCM 리스트 가져오기
+     * Redis에 값이 없을 경우 null 리턴, 사용하는 클래스에서 예외 처리 해줘야 함
+     * @param userID
+     * @return
+     */
+    FcmGroup getUserFcmTokenList(long userID);
     /**
      * Redis에 저장된 토큰 중 입력받은 토큰의 아이디 가져옴
      * @param userID
@@ -45,15 +54,15 @@ public interface BaseFcmTokenAuth {
      */
     FcmMap convertRedisToFcmMap(long userID);
 
+    /**
+     * 특정 토큰 하나를 제거
+     * @param userID
+     * @param fcm
+     */
+    void deleteFcm(long userID, String fcm);
 
 
 
-//    /**
-//     * 특정 토큰 하나를 제거
-//     * @param userID
-//     * @param fcm
-//     */
-//    void deleteFcm(long userID, String fcm);
 //    /**
 //     * 인터셉터에서 Redis에 토큰이 없을 경우 등록
 //     * @param userID
@@ -68,16 +77,4 @@ public interface BaseFcmTokenAuth {
 //    public void deleteUserFcm(long userID){
 //        deleteRedis(getKey(userID));
 //    }
-
-
-
-
-//    /**
-//     * 아직 사용 안함
-//     * 유저 리스트를 받아 한번에 전송할 FCM 리스트 가져오기
-//     * Redis에 값이 없을 경우 null 리턴, 사용하는 클래스에서 예외 처리 해줘야 함
-//     * @param userID
-//     * @return
-//     */
-//    FcmGroup getSingleUserFcmList(long userID);
 }

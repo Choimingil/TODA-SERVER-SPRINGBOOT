@@ -4,11 +4,14 @@ import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractAuth;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseFcmTokenAuth;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserFcm;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.NoArgException;
+import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmGroup;
 import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmMap;
+import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.UserFcmProto;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.NotificationRepository;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +31,21 @@ public final class DelegateFcmTokenAuth extends AbstractAuth implements BaseFcmT
         super(delegateJwt, delegateMdc);
         this.delegateRedis = delegateRedis;
         this.notificationRepository = notificationRepository;
+    }
+
+    @Override
+    public FcmGroup getUserFcmTokenList(long userID) {
+        List<String> aosFcmList = new ArrayList<>();
+        List<String> iosFcmList = new ArrayList<>();
+
+        Map<String,Integer> tokenStatus = getTokenStatus(userID);
+        for(String fcm : tokenStatus.keySet()){
+            int status = tokenStatus.get(fcm);
+            if(status == 100) iosFcmList.add(fcm);
+            else if(status == 200) aosFcmList.add(fcm);
+        }
+
+        return FcmGroup.builder().aosFcmList(aosFcmList).iosFcmList(iosFcmList).build();
     }
 
     @Override
@@ -79,6 +97,16 @@ public final class DelegateFcmTokenAuth extends AbstractAuth implements BaseFcmT
                 .build());
     }
 
+    @Override
+    public void deleteFcm(long userID, String fcm) {
+        FcmMap fcmMap = getFcmMap(userID);
+        Map<String,Long> tokenIDs = new HashMap<>(fcmMap.getTokenIDs());
+        Map<String,Integer> tokenStatus = new HashMap<>(fcmMap.getTokenStatus());
+        tokenIDs.remove(fcm);
+        tokenStatus.remove(fcm);
+        setUserFcm(userID,FcmMap.builder().tokenIDs(tokenIDs).tokenStatus(tokenStatus).build());
+    }
+
     /**
      * Redis에 값이 없다면 DB 접속해서 값 최신화
      * @param userID
@@ -127,4 +155,19 @@ public final class DelegateFcmTokenAuth extends AbstractAuth implements BaseFcmT
     private String getKey(long userID){
         return new StringBuilder().append(userID).append("_Tokens").toString();
     }
+
+
+//    /**
+//     * 만료된 토큰이 있을 경우 DB 및 Redis에서 삭제
+//     * @param response
+//     * @param userID
+//     * @param tokenList
+//     */
+//    private void checkExpiredTokens(FcmResponse response, long userID, List<String> tokenList){
+//        List<FcmResponse.Result> results = response.getResults();
+//        for(int i=0;i<results.size();i++){
+//            if(results.get(i).getError() != null && results.get(i).getError().equals("NotRegistered"))
+//                deleteFcm(userID,tokenList.get(i));
+//        }
+//    }
 }

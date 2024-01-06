@@ -12,21 +12,21 @@ public interface BaseExceptionHandler {
     String getErrorMsg(Exception e);
 
     /**
-     * Exception 종류 별 실패를 MDC 값을 기준으로 리턴해주는 메소드
+     * Spring Container 내에서 발생한 에러 캐치
      * @param e
      * @param elementCode
      * @param errorMessage
      * @return
      */
-    Map<String,?> getResponse(Exception e, int elementCode, String errorMessage);
+    Map<String,?> getErrorSpringContainer(Exception e, int elementCode, String errorMessage);
 
     /**
-     * Exception 종류 별 실패를 HttpServletRequest 값을 기준으로 리턴해주는 메소드
+     * Filter 레벨에서 발생한 에러 캐치
      * @param request
      * @param e
      * @param elementCode
      * @param errorMessage
      * @return
      */
-    Map<String,?> getResponse(HttpServletRequest request, Exception e, int elementCode, String errorMessage);
+    Map<String,?> getErrorFilter(HttpServletRequest request, Exception e, int elementCode, String errorMessage);
 }

@@ -5,6 +5,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.FileCopyUtils;
 
@@ -18,6 +19,7 @@ import java.util.concurrent.Future;
 @Component
 @RequiredArgsConstructor
 public final class DelegateFile implements BaseFile {
+    private final ThreadPoolTaskExecutor taskExecutor;
     @Override
     public String readTxtFile(String filename) {
         ClassPathResource resource = new ClassPathResource(filename);
@@ -33,12 +35,11 @@ public final class DelegateFile implements BaseFile {
      * @param resource
      * @return
      */
-    @Async
     private Future<String> readFile(ClassPathResource resource){
         try {
             InputStream inputStream = resource.getInputStream();
             byte[] fileData = FileCopyUtils.copyToByteArray(inputStream);
-            return CompletableFuture.completedFuture(new String(fileData, StandardCharsets.UTF_8));
+            return CompletableFuture.supplyAsync(()->new String(fileData, StandardCharsets.UTF_8),taskExecutor);
         }
         catch (IOException e){
             throw new WrongAccessException(WrongAccessException.of.READ_TXT_EXCEPTION);

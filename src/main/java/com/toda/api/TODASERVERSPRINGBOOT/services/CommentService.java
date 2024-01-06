@@ -1,7 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractFcm;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.Post;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.User;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.CommentDetail;
@@ -10,12 +10,8 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.CommentDetailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.CommentListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.ReCommentDetailResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmTokenProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.KafkaProducerProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -27,18 +23,29 @@ import java.util.List;
 import java.util.Map;
 
 @Component("commentService")
-@RequiredArgsConstructor
 public class CommentService extends AbstractService implements BaseService {
-    private final UserDiaryRepository userDiaryRepository;
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
-    private final UserLogRepository userLogRepository;
     private final UserRepository userRepository;
 
-    private final TokenProvider tokenProvider;
-    private final FcmTokenProvider fcmTokenProvider;
-    private final KafkaProducerProvider kafkaProducerProvider;
-
+    public CommentService(
+            DelegateDateTime delegateDateTime,
+            DelegateFile delegateFile,
+            DelegateStatus delegateStatus,
+            DelegateJwt delegateJwt,
+            DelegateFcm delegateFcm,
+            DelegateUserAuth delegateUserAuth,
+            DelegateFcmTokenAuth delegateFcmTokenAuth,
+            DelegateKafka delegateKafka,
+            PostRepository postRepository,
+            CommentRepository commentRepository,
+            UserRepository userRepository
+    ) {
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateKafka);
+        this.postRepository = postRepository;
+        this.commentRepository = commentRepository;
+        this.userRepository = userRepository;
+    }
 
     @Transactional
     public com.toda.api.TODASERVERSPRINGBOOT.entities.Comment addComment(long userID, long postID, String reply){
@@ -84,8 +91,8 @@ public class CommentService extends AbstractService implements BaseService {
                 },
                 // 조건 만족 시 FCM 발송
                 (userID, userName) -> {
-                    addUserLog(userLogRepository,userID,sendUserData.getUserID(),post.getPostID(),type,100);
-                    return fcmTokenProvider.getSingleUserFcmList(userID);
+                    addUserLog(userID,sendUserData.getUserID(),post.getPostID(),type,100);
+                    return getUserFcmTokenList(userID);
                 },
                 FcmDto.builder()
                         .title(getFcmTitle())
@@ -97,7 +104,6 @@ public class CommentService extends AbstractService implements BaseService {
                         .typeNum(type)
                         .dataID(post.getPostID())
                         .map(map)
-                        .provider(kafkaProducerProvider)
                         .build()
         );
     }
@@ -196,9 +202,4 @@ public class CommentService extends AbstractService implements BaseService {
 
 
     public boolean isValidCommentPostDiary(long commentID, long postID){return commentRepository.existsByCommentIDAndPostID(commentID,postID);}
-    public int getUserDiaryStatus(long userID, long diaryID){return getUserDiaryStatus(userID, diaryID, userDiaryRepository);}
-    public UserData getSendUserData(String token){return tokenProvider.decodeToken(token);}
-//    public long getUserID(String token){return getUserID(token, tokenProvider);}
-    public int getUserPostStatus(long userID, long postID){return getUserPostStatus(userID,postID,userDiaryRepository,postRepository);}
-    public int getUserCommentStatus(long userID, long commentID){return getUserCommentStatus(userID,commentID,commentRepository);}
 }

@@ -2,8 +2,11 @@ package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateDateTime;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateFile;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateStatus;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
+import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.Heart;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreatePost;
@@ -12,7 +15,6 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdatePost;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostListResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.services.PostService;
 import jakarta.validation.Valid;
 import org.springframework.validation.BindingResult;
@@ -26,20 +28,21 @@ import java.util.Map;
 public class PostController extends AbstractController implements BaseController {
     private final PostService postService;
 
-    public PostController(DelegateDateTime delegateDateTime, DelegateJwt delegateJwt, PostService postService) {
-        super(delegateDateTime, delegateJwt);
+    public PostController(DelegateDateTime delegateDateTime, DelegateFile delegateFile, DelegateStatus delegateStatus, DelegateJwt delegateJwt, PostService postService) {
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt);
         this.postService = postService;
     }
 
     //16-2. 게시물 작성 API(날짜 폰트 추가)
     @PostMapping("/post/ver3")
+    @SetMdcBody
     public Map<String, ?> createPost(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @RequestBody @Valid CreatePost createPost,
             BindingResult bindingResult
     ){
         long userID = getUserID(token);
-        int userDiaryStatus = postService.getUserDiaryStatus(userID,createPost.getDiary());
+        int userDiaryStatus = getUserDiaryStatus(userID,createPost.getDiary());
 
         // 현재 다이어리에 속해 있는 경우 게시글 추가 작업 진행
         if(userDiaryStatus == 100){
@@ -49,7 +52,7 @@ public class PostController extends AbstractController implements BaseController
                 postService.addPostImage(target.getPostID(),createPost.getImageList());
 
             // 알림 발송
-            UserData sendUserData = postService.getSendUserData(token);
+            UserData sendUserData = decodeToken(token);
             postService.setFcmAndLog(postService.getFcmAddPostUserMap(userID, createPost.getDiary()),sendUserData,target,3);
             return new SuccessResponse.Builder(SuccessResponse.of.CREATE_POST_SUCCESS).build().getResponse();
         }
@@ -61,11 +64,11 @@ public class PostController extends AbstractController implements BaseController
     //17. 게시물 삭제 API
     @DeleteMapping("/post/{postID}")
     public Map<String, ?> deletePost(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @PathVariable("postID") long postID
     ){
         long userID = getUserID(token);
-        int userPostStatus = postService.getUserPostStatus(userID,postID);
+        int userPostStatus = getUserPostStatus(userID,postID);
 
         // 자신이 작성한 게시글인지 확인
         if(userPostStatus == 100){
@@ -78,13 +81,14 @@ public class PostController extends AbstractController implements BaseController
 
     //18-2. 게시물 수정 API
     @PatchMapping("/post/ver3")
+    @SetMdcBody
     public Map<String, ?> updatePost(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @RequestBody @Valid UpdatePost updatePost,
             BindingResult bindingResult
     ){
         long userID = getUserID(token);
-        int userPostStatus = postService.getUserPostStatus(userID,updatePost.getPost());
+        int userPostStatus = getUserPostStatus(userID,updatePost.getPost());
 
         // 자신이 작성한 게시글인지 확인
         if(userPostStatus == 100){
@@ -102,15 +106,16 @@ public class PostController extends AbstractController implements BaseController
 
     //28. 좋아요 API
     @PostMapping("/posts/{postID}/like")
+    @SetMdcBody
     public Map<String, ?> setHeart(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @RequestBody @Valid SetHeart setHeart,
             @PathVariable("postID") long postID,
             @RequestParam(name="type", required = false) String type,
             BindingResult bindingResult
     ){
         long userID = getUserID(token);
-        int userPostStatus = postService.getUserPostStatus(userID,postID);
+        int userPostStatus = getUserPostStatus(userID,postID);
 
         // 현재 다이어리에 속해 있지 않은 경우 게시물 볼 수 있는 권한 없음 리턴
         if(userPostStatus == 404) throw new BusinessLogicException(BusinessLogicException.of.NO_AUTH_POST_EXCEPTION);
@@ -127,7 +132,7 @@ public class PostController extends AbstractController implements BaseController
 
                 // 자신이 작성한 게시글이 아닐 경우 게시글 주인에게 알림 발송
                 if(target.getUserID() != userID){
-                    UserData sendUserData = postService.getSendUserData(token);
+                    UserData sendUserData = decodeToken(token);
                     postService.setFcmAndLog(postService.getFcmAddHeartUserMap(userID, target.getUser()),sendUserData,target,4);
                 }
 
@@ -156,12 +161,12 @@ public class PostController extends AbstractController implements BaseController
     //19. 게시물 리스트 조회 API
     @GetMapping("/diaries/{diaryID}/posts")
     public Map<String, ?> getPostList(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @PathVariable("diaryID") long diaryID,
             @RequestParam(name="page", required = true) int page
     ){
         long userID = getUserID(token);
-        int userDiaryStatus = postService.getUserDiaryStatus(userID,diaryID);
+        int userDiaryStatus = getUserDiaryStatus(userID,diaryID);
 
         // 현재 다이어리에 속해 있는 경우 게시글 조회 작업 진행
         if(userDiaryStatus == 100){
@@ -187,11 +192,11 @@ public class PostController extends AbstractController implements BaseController
     //20-1. 게시물 상세 조회 API(날짜 및 폰트 추가 버전)
     @GetMapping("/posts/{postID}/ver2")
     public Map<String, ?> getPostDetail(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @PathVariable("postID") long postID
     ){
         long userID = getUserID(token);
-        int userPostStatus = postService.getUserPostStatus(userID,postID);
+        int userPostStatus = getUserPostStatus(userID,postID);
 
         // 현재 다이어리에 속해 있지 않은 경우 게시물 볼 수 있는 권한 없음 리턴
         if(userPostStatus == 404) throw new BusinessLogicException(BusinessLogicException.of.NO_AUTH_POST_EXCEPTION);

@@ -2,10 +2,11 @@ package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateDateTime;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateFile;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateStatus;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.services.AnnouncementService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -17,19 +18,15 @@ import java.util.Map;
 public class AnnouncementController extends AbstractController implements BaseController {
     private final AnnouncementService announcementService;
 
-    public AnnouncementController(
-            DelegateDateTime delegateDateTime,
-            DelegateJwt delegateJwt,
-            AnnouncementService announcementService
-    ) {
-        super(delegateDateTime, delegateJwt);
+    public AnnouncementController(DelegateDateTime delegateDateTime, DelegateFile delegateFile, DelegateStatus delegateStatus, DelegateJwt delegateJwt, AnnouncementService announcementService) {
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt);
         this.announcementService = announcementService;
     }
 
     //38. 공지사항 리스트 조회 API
     @GetMapping("/announcement")
     public Map<String, ?> getAnnouncement(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @RequestParam(name="page") int page
     ){
         List<Map<String,Object>> announcementList = announcementService.getAnnouncement(token,page);
@@ -41,7 +38,7 @@ public class AnnouncementController extends AbstractController implements BaseCo
     //39. 공지사항 상세 조회 API
     @GetMapping("/announcement/{announcementID}")
     public Map<String, ?> getAnnouncementDetail(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @PathVariable("announcementID") String id
     ){
         long announcementID = Long.parseLong(id);
@@ -54,7 +51,7 @@ public class AnnouncementController extends AbstractController implements BaseCo
     //40. 공지사항 읽었는지 안읽었는지 확인 API
     @GetMapping("/announcement/check")
     public Map<String, ?> checkAnnouncement(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token
     ){
         boolean isAllAnnouncementRead = announcementService.isAllAnnouncementRead(token);
         return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)

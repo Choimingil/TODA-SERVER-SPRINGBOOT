@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 @AllArgsConstructor
 @Getter
-public class BusinessLogicException extends IllegalArgumentException{
+public final class BusinessLogicException extends IllegalArgumentException{
     @RequiredArgsConstructor
     @Getter
     public enum of{

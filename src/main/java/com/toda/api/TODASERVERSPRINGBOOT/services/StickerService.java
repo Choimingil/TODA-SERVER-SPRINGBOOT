@@ -1,5 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.*;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserStickerDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.AddStickerDetail;
@@ -9,11 +10,9 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateStickerDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.StickerDetailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.StickerPackDetailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostStickerListResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -23,18 +22,38 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Component("stickerService")
-@RequiredArgsConstructor
 public class StickerService extends AbstractService implements BaseService {
     private final UserStickerRepository userStickerRepository;
-    private final PostRepository postRepository;
-    private final UserDiaryRepository userDiaryRepository;
     private final PostStickerRepository postStickerRepository;
     private final PostStickerRotateRepository postStickerRotateRepository;
     private final PostStickerScaleRepository postStickerScaleRepository;
     private final StickerRepository stickerRepository;
     private final StickerPackRepository stickerPackRepository;
 
-    private final TokenProvider tokenProvider;
+    public StickerService(
+            DelegateDateTime delegateDateTime,
+            DelegateFile delegateFile,
+            DelegateStatus delegateStatus,
+            DelegateJwt delegateJwt,
+            DelegateFcm delegateFcm,
+            DelegateUserAuth delegateUserAuth,
+            DelegateFcmTokenAuth delegateFcmTokenAuth,
+            DelegateKafka delegateKafka,
+            UserStickerRepository userStickerRepository,
+            PostStickerRepository postStickerRepository,
+            PostStickerRotateRepository postStickerRotateRepository,
+            PostStickerScaleRepository postStickerScaleRepository,
+            StickerRepository stickerRepository,
+            StickerPackRepository stickerPackRepository
+    ) {
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateKafka);
+        this.userStickerRepository = userStickerRepository;
+        this.postStickerRepository = postStickerRepository;
+        this.postStickerRotateRepository = postStickerRotateRepository;
+        this.postStickerScaleRepository = postStickerScaleRepository;
+        this.stickerRepository = stickerRepository;
+        this.stickerPackRepository = stickerPackRepository;
+    }
 
     public List<UserStickerDetail> getUserStickers(long userID, int page){
         int start = (page-1)*10;
@@ -198,7 +217,6 @@ public class StickerService extends AbstractService implements BaseService {
 
 
     public List<PostSticker> getPostStickerList(long userID){return postStickerRepository.findByUserIDAndStatusNot(userID,0);}
+    public List<PostSticker> getUserPostStickerList(long userID, long postID){return postStickerRepository.findByUserIDAndPostIDAndStatusNot(userID,postID,0);}
     public Set<Long> getUserStickerSet(long userID){return userStickerRepository.getUserStickerSet(userID);}
-    //    public long getUserID(String token){return getUserID(token, tokenProvider);}
-    public int getUserPostStatus(long userID, long postID){return getUserPostStatus(userID,postID,userDiaryRepository,postRepository);}
 }

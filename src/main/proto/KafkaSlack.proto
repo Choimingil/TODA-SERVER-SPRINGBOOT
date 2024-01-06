@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option java_outer_classname = "KafkaSlackProto";
+package com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers;
+
+message KafkaSlackRequest {
+  string titleLink = 1;
+  map<string, string> slackFields = 2;
+  string stackTrace = 3;
+}
+
+message KafkaSlackResponse {
+  string response = 1;
+}
+
+service KafkaSlackService {
+  rpc SendSlack (KafkaSlackRequest) returns (KafkaSlackResponse) {}
+}

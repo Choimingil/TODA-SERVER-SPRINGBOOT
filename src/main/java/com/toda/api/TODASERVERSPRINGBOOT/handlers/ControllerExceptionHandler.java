@@ -1,11 +1,10 @@
 package com.toda.api.TODASERVERSPRINGBOOT.handlers;
 
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateKafka;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.*;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractExceptionHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseExceptionHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.FailResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.SlackProvider;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.http.converter.HttpMessageConversionException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -14,9 +13,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.Map;
 
 @RestControllerAdvice
-@RequiredArgsConstructor
 public final class ControllerExceptionHandler extends AbstractExceptionHandler implements BaseExceptionHandler {
-    private final SlackProvider slackProvider;
+    public ControllerExceptionHandler(DelegateKafka delegateKafka) {
+        super(delegateKafka);
+    }
 
     /**
      * NoArgException Handler
@@ -25,7 +25,7 @@ public final class ControllerExceptionHandler extends AbstractExceptionHandler i
      */
     @ExceptionHandler(NoArgException.class)
     public Map<String,?> getResponseOfNoArgException(NoArgException e) {
-        return getResponse(e, e.getElement().getCode(), e.getElement().getMessage());
+        return getErrorSpringContainer(e, e.getElement().getCode(), e.getElement().getMessage());
     }
 
     /**
@@ -35,7 +35,7 @@ public final class ControllerExceptionHandler extends AbstractExceptionHandler i
      */
     @ExceptionHandler(WrongArgException.class)
     public Map<String,?> getResponseOfWrongArgException(WrongArgException e) {
-        return getResponse(e, e.getElement().getCode(), e.getElement().getMessage());
+        return getErrorSpringContainer(e, e.getElement().getCode(), e.getElement().getMessage());
     }
 
     /**
@@ -45,7 +45,7 @@ public final class ControllerExceptionHandler extends AbstractExceptionHandler i
      */
     @ExceptionHandler(RedisConnectionFailureException.class)
     public Map<String,?> getResponseOfRedisConnectionFailureException(RedisConnectionFailureException e) {
-        return getResponse(e, WrongAccessException.of.REDIS_CONNECTION_EXCEPTION.getCode(), WrongAccessException.of.REDIS_CONNECTION_EXCEPTION.getMessage());
+        return getErrorSpringContainer(e, WrongAccessException.of.REDIS_CONNECTION_EXCEPTION.getCode(), WrongAccessException.of.REDIS_CONNECTION_EXCEPTION.getMessage());
     }
 
     /**
@@ -55,7 +55,7 @@ public final class ControllerExceptionHandler extends AbstractExceptionHandler i
      */
     @ExceptionHandler(WrongAccessException.class)
     public Map<String,?> getResponseOfWrongAccessException(WrongAccessException e) {
-        return getResponse(e, e.getElement().getCode(), e.getElement().getMessage());
+        return getErrorSpringContainer(e, e.getElement().getCode(), e.getElement().getMessage());
     }
 
     /**
@@ -65,7 +65,7 @@ public final class ControllerExceptionHandler extends AbstractExceptionHandler i
      */
     @ExceptionHandler(HttpMessageConversionException.class)
     public Map<String,?> getResponseOfHttpMessageConversionException(HttpMessageConversionException e) {
-        return getResponse(e, NoBodyException.of.NO_BODY_EXCEPTION.getCode(), NoBodyException.of.NO_BODY_EXCEPTION.getMessage());
+        return getErrorSpringContainer(e, NoBodyException.of.NO_BODY_EXCEPTION.getCode(), NoBodyException.of.NO_BODY_EXCEPTION.getMessage());
     }
 
     /**
@@ -75,6 +75,6 @@ public final class ControllerExceptionHandler extends AbstractExceptionHandler i
      */
     @ExceptionHandler(Exception.class)
     public Map<String,?> getResponseOfRestException(Exception e) {
-        return getResponse(e, FailResponse.of.UNKNOWN_EXCEPTION.getCode(), getErrorMsg(e));
+        return getErrorSpringContainer(e, FailResponse.of.UNKNOWN_EXCEPTION.getCode(), getErrorMsg(e));
     }
 }

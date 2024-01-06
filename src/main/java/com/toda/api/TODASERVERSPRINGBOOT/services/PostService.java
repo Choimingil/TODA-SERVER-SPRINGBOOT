@@ -1,6 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.*;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.PostDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.PostList;
@@ -11,13 +12,8 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.ImageItem;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostDetailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostListResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.FcmTokenProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.KafkaProducerProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractFcm;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -28,19 +24,38 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Component("postService")
-@RequiredArgsConstructor
 public class PostService extends AbstractService implements BaseService {
     private final UserRepository userRepository;
     private final UserDiaryRepository userDiaryRepository;
     private final PostRepository postRepository;
     private final PostTextRepository postTextRepository;
     private final PostImageRepository postImageRepository;
-    private final UserLogRepository userLogRepository;
     private final HeartRepository heartRepository;
 
-    private final TokenProvider tokenProvider;
-    private final KafkaProducerProvider kafkaProducerProvider;
-    private final FcmTokenProvider fcmTokenProvider;
+    public PostService(
+            DelegateDateTime delegateDateTime,
+            DelegateFile delegateFile,
+            DelegateStatus delegateStatus,
+            DelegateJwt delegateJwt,
+            DelegateFcm delegateFcm,
+            DelegateUserAuth delegateUserAuth,
+            DelegateFcmTokenAuth delegateFcmTokenAuth,
+            DelegateKafka delegateKafka,
+            UserRepository userRepository,
+            UserDiaryRepository userDiaryRepository,
+            PostRepository postRepository,
+            PostTextRepository postTextRepository,
+            PostImageRepository postImageRepository,
+            HeartRepository heartRepository
+    ) {
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateKafka);
+        this.userRepository = userRepository;
+        this.userDiaryRepository = userDiaryRepository;
+        this.postRepository = postRepository;
+        this.postTextRepository = postTextRepository;
+        this.postImageRepository = postImageRepository;
+        this.heartRepository = heartRepository;
+    }
 
     @Transactional
     public com.toda.api.TODASERVERSPRINGBOOT.entities.Post addPost(long userID, CreatePost createPost){
@@ -91,8 +106,8 @@ public class PostService extends AbstractService implements BaseService {
                 },
                 // 조건 만족 시 FCM 발송
                 (userID, userName) -> {
-                    addUserLog(userLogRepository,userID,sendUserData.getUserID(),post.getPostID(),type,100);
-                    return fcmTokenProvider.getSingleUserFcmList(userID);
+                    addUserLog(userID,sendUserData.getUserID(),post.getPostID(),type,100);
+                    return getUserFcmTokenList(userID);
                 },
                 FcmDto.builder()
                         .title(getFcmTitle())
@@ -104,7 +119,6 @@ public class PostService extends AbstractService implements BaseService {
                         .typeNum(type)
                         .dataID(post.getPostID())
                         .map(map)
-                        .provider(kafkaProducerProvider)
                         .build()
         );
     }
@@ -313,10 +327,9 @@ public class PostService extends AbstractService implements BaseService {
 
 
 
-    public com.toda.api.TODASERVERSPRINGBOOT.entities.Post getPostByID(long postID){return postRepository.findByPostID(postID);}
+    public Post getPostByID(long postID){return postRepository.findByPostID(postID);}
     public List<Heart> getHeartList(long userID, long postID){return heartRepository.findByUserIDAndPostIDOrderByCreateAtDesc(userID,postID);}
-    public int getUserPostStatus(long userID, long postID){return getUserPostStatus(userID,postID,userDiaryRepository,postRepository);}
-//    public long getUserID(String token){return getUserID(token, tokenProvider);}
-    public UserData getSendUserData(String token){return tokenProvider.decodeToken(token);}
-    public int getUserDiaryStatus(long userID, long diaryID){return getUserDiaryStatus(userID, diaryID, userDiaryRepository);}
+//    public int getUserPostStatus(long userID, long postID){return getUserPostStatus(userID,postID,userDiaryRepository,postRepository);}
+//    public UserData getSendUserData(String token){return decodeToken(token);}
+//    public int getUserDiaryStatus(long userID, long diaryID){return getUserDiaryStatus(userID, diaryID, userDiaryRepository);}
 }

@@ -12,5 +12,6 @@ import java.util.Set;
 public interface PostStickerRepository extends JpaRepository<PostSticker,Long> {
 
     List<PostSticker> findByUserIDAndStatusNot(long userID, int status);
+    List<PostSticker> findByUserIDAndPostIDAndStatusNot(long userID, long postID, int status);
     List<PostSticker> findByPostIDAndStatusNot(long postID, int status, Pageable pageable);
 }

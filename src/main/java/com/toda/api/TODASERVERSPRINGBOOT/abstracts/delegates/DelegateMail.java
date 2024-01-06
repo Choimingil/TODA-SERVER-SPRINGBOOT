@@ -1,15 +1,14 @@
-package com.toda.api.TODASERVERSPRINGBOOT.providers;
+package com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseMail;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.KafkaMailProto;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractProvider;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.CompletableFuture;
@@ -18,8 +17,9 @@ import java.util.concurrent.Future;
 
 @Component
 @RequiredArgsConstructor
-public class MailProvider extends AbstractProvider implements BaseProvider {
+public final class DelegateMail implements BaseMail {
     private final JavaMailSender javaMailSender;
+    private final ThreadPoolTaskExecutor taskExecutor;
 
     /**
      * Mail Kafka Consumer
@@ -41,14 +41,8 @@ public class MailProvider extends AbstractProvider implements BaseProvider {
         }
     }
 
-    /**
-     * 비동기 메일 전송
-     * @param message
-     * @return
-     */
-    @Async
-    private Future<Void> sendMail(SimpleMailMessage message){
-        javaMailSender.send(message);
-        return CompletableFuture.completedFuture(null);
+    @Override
+    public Future<Void> sendMail(SimpleMailMessage message) {
+        return CompletableFuture.runAsync(()->javaMailSender.send(message),taskExecutor);
     }
 }

@@ -1,7 +1,9 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateDateTime;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateFile;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateStatus;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
@@ -10,9 +12,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.AppPassword;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.LoginRequest;
 import com.toda.api.TODASERVERSPRINGBOOT.services.AuthService;
-import com.toda.api.TODASERVERSPRINGBOOT.providers.TokenProvider;
 import jakarta.annotation.Nullable;
-import lombok.RequiredArgsConstructor;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,12 +22,8 @@ import java.util.Map;
 public class AuthController extends AbstractController implements BaseController {
     private final AuthService authService;
 
-    public AuthController(
-            DelegateDateTime delegateDateTime,
-            DelegateJwt delegateJwt,
-            AuthService authService
-    ) {
-        super(delegateDateTime, delegateJwt);
+    public AuthController(DelegateDateTime delegateDateTime, DelegateFile delegateFile, DelegateStatus delegateStatus, DelegateJwt delegateJwt, AuthService authService) {
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt);
         this.authService = authService;
     }
 
@@ -47,8 +43,8 @@ public class AuthController extends AbstractController implements BaseController
 
     //1-3. 토큰 데이터 추출 API
     @GetMapping("/token")
-    public Map<String,?> decodeToken(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token
+    public Map<String,?> decodeTokenData(
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token
     ) {
         Map<String,?> checkTokenResult = authService.getTokenData(token);
         return new SuccessResponse.Builder(SuccessResponse.of.DECODE_TOKEN_SUCCESS)
@@ -62,7 +58,7 @@ public class AuthController extends AbstractController implements BaseController
     @PostMapping("/token")
     @SetMdcBody
     public Map<String,?> checkToken(
-            @RequestHeader(TokenProvider.HEADER_NAME) String token,
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @RequestBody @Nullable AppPassword appPassword,
             BindingResult bindingResult
     ) {
