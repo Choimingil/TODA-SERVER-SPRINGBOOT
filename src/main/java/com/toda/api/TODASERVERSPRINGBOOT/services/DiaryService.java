@@ -12,6 +12,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.*;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryMemberListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryNoticeResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.InviteRequestResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
 import org.springframework.data.domain.PageRequest;
@@ -39,14 +40,14 @@ public class DiaryService extends AbstractService implements BaseService {
             DelegateFcm delegateFcm,
             DelegateUserAuth delegateUserAuth,
             DelegateFcmTokenAuth delegateFcmTokenAuth,
-            DelegateKafka delegateKafka,
+            DelegateJms delegateJms,
             UserRepository userRepository,
             UserLogRepository userLogRepository,
             DiaryRepository diaryRepository,
             UserDiaryRepository userDiaryRepository,
             DiaryNoticeRepository diaryNoticeRepository
     ) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateKafka);
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateJms);
         this.userRepository = userRepository;
         this.userLogRepository = userLogRepository;
         this.diaryRepository = diaryRepository;
@@ -56,10 +57,10 @@ public class DiaryService extends AbstractService implements BaseService {
 
     @Transactional
     public long addDiary(String diaryName, int status){
-        com.toda.api.TODASERVERSPRINGBOOT.entities.Diary diary = new com.toda.api.TODASERVERSPRINGBOOT.entities.Diary();
+        Diary diary = new Diary();
         diary.setDiaryName(diaryName);
         diary.setStatus(status);
-        com.toda.api.TODASERVERSPRINGBOOT.entities.Diary newDiary = diaryRepository.save(diary);
+        Diary newDiary = diaryRepository.save(diary);
         return newDiary.getDiaryID();
     }
 
@@ -83,7 +84,7 @@ public class DiaryService extends AbstractService implements BaseService {
     }
 
     @Transactional
-    public void inviteDiary(UserData sendUserData, UserInfoDetail receiveUserData, com.toda.api.TODASERVERSPRINGBOOT.entities.Diary diary){
+    public void inviteDiary(UserData sendUserData, UserInfoDetail receiveUserData, Diary diary){
         long sendUserID = sendUserData.getUserID();
         long receiveUserID = receiveUserData.getUserID();
         long diaryID = diary.getDiaryID();
@@ -129,9 +130,9 @@ public class DiaryService extends AbstractService implements BaseService {
     }
 
     @Transactional
-    public void setFcmAndLog(Map<Long,String> receiveUserMap, UserData sendUserData, com.toda.api.TODASERVERSPRINGBOOT.entities.Diary diary, int type){
+    public void setFcmAndLog(Map<Long,String> receiveUserMap, UserData sendUserData, Diary diary, int type){
 
-        setKafkaTopicFcm(
+        setJmsTopicFcm(
                 sendUserData.getUserID(),
                 (userID, userName) -> {
                     // 초대 시 발송 조건 : 상대방 유저가 다이어리 초대를 받았을 경우
@@ -205,9 +206,23 @@ public class DiaryService extends AbstractService implements BaseService {
         );
     }
 
-    public DiaryRequestOfUser getRequestOfUser(long userID, long diaryID){
-        List<DiaryRequestOfUser> requestList = userDiaryRepository.getDiaryRequestOfUser(diaryID,userID);
-        return requestList.get(0);
+    public List<InviteRequestResponse> getInviteRequest(long userID, long diaryID){
+        List<InviteRequest> requestList = userDiaryRepository.getInviteRequest(userID,diaryID);
+        List<InviteRequestResponse> responseList = new ArrayList<>();
+        for(InviteRequest request : requestList){
+            responseList.add(InviteRequestResponse.builder()
+                    .userID(request.getUserDiary().getUserID())
+                    .userCode(request.getUserDiary().getUser().getUserCode())
+                    .email(request.getUserDiary().getUser().getEmail())
+                    .name(request.getUserDiary().getUser().getUserName())
+                    .selfie(request.getSelfie())
+                    .diaryID(request.getUserDiary().getDiaryID())
+                    .diaryName(request.getUserDiary().getDiary().getDiaryName())
+                    .date(getDateString(request.getUserDiary().getCreateAt()))
+                    .build()
+            );
+        }
+        return responseList;
     }
 
     public List<DiaryListResponse> getDiaryList(long userID, int status, int page){

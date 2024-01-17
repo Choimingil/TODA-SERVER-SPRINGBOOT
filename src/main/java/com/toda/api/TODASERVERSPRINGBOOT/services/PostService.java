@@ -40,7 +40,7 @@ public class PostService extends AbstractService implements BaseService {
             DelegateFcm delegateFcm,
             DelegateUserAuth delegateUserAuth,
             DelegateFcmTokenAuth delegateFcmTokenAuth,
-            DelegateKafka delegateKafka,
+            DelegateJms delegateJms,
             UserRepository userRepository,
             UserDiaryRepository userDiaryRepository,
             PostRepository postRepository,
@@ -48,7 +48,7 @@ public class PostService extends AbstractService implements BaseService {
             PostImageRepository postImageRepository,
             HeartRepository heartRepository
     ) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateKafka);
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateJms);
         this.userRepository = userRepository;
         this.userDiaryRepository = userDiaryRepository;
         this.postRepository = postRepository;
@@ -58,16 +58,16 @@ public class PostService extends AbstractService implements BaseService {
     }
 
     @Transactional
-    public com.toda.api.TODASERVERSPRINGBOOT.entities.Post addPost(long userID, CreatePost createPost){
+    public Post addPost(long userID, CreatePost createPost){
         int status = getStatus(createPost.getBackground(), createPost.getMood(), 100, () -> {});
 
-        com.toda.api.TODASERVERSPRINGBOOT.entities.Post post = new com.toda.api.TODASERVERSPRINGBOOT.entities.Post();
+        Post post = new Post();
         post.setUserID(userID);
         post.setDiaryID(createPost.getDiary());
         post.setTitle(createPost.getTitle());
         post.setStatus(status);
         post.setCreateAt(toLocalDateTime(createPost.getDate()));
-        com.toda.api.TODASERVERSPRINGBOOT.entities.Post newPost = postRepository.save(post);
+        Post newPost = postRepository.save(post);
         addPostText(newPost.getPostID(),createPost);
 
         return newPost;
@@ -97,8 +97,8 @@ public class PostService extends AbstractService implements BaseService {
     }
 
     @Transactional
-    public void setFcmAndLog(Map<Long,String> map, UserData sendUserData, com.toda.api.TODASERVERSPRINGBOOT.entities.Post post, int type){
-        setKafkaTopicFcm(
+    public void setFcmAndLog(Map<Long,String> map, UserData sendUserData, Post post, int type){
+        setJmsTopicFcm(
                 sendUserData.getUserID(),
                 (userID, userName) -> {
                     // 발송 조건 : 상대방 유저가 다이어리에 존재할 경우
@@ -125,7 +125,7 @@ public class PostService extends AbstractService implements BaseService {
 
     @Transactional
     public void deletePost(long postID){
-        com.toda.api.TODASERVERSPRINGBOOT.entities.Post post = postRepository.findByPostID(postID);
+        Post post = postRepository.findByPostID(postID);
         post.setStatus(0);
         postRepository.save(post);
     }
@@ -134,7 +134,7 @@ public class PostService extends AbstractService implements BaseService {
     public void updatePost(UpdatePost updatePost){
         int status = getStatus(updatePost.getBackground(), updatePost.getMood(), 100, () -> {});
 
-        com.toda.api.TODASERVERSPRINGBOOT.entities.Post post = postRepository.findByPostID(updatePost.getPost());
+        Post post = postRepository.findByPostID(updatePost.getPost());
         post.setTitle(updatePost.getTitle());
         post.setStatus(status);
         if(!updatePost.getDate().equals("1901-01-01")) post.setCreateAt(toLocalDateTime(updatePost.getDate()));

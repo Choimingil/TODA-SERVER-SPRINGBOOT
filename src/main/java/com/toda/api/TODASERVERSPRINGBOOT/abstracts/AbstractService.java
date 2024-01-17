@@ -32,7 +32,7 @@ public abstract class AbstractService extends AbstractUtil implements BaseServic
     private final DelegateFcm delegateFcm;
     private final DelegateUserAuth delegateUserAuth;
     private final DelegateFcmTokenAuth delegateFcmTokenAuth;
-    private final DelegateKafka delegateKafka;
+    private final DelegateJms delegateJms;
 
     public AbstractService(
             DelegateDateTime delegateDateTime,
@@ -42,14 +42,14 @@ public abstract class AbstractService extends AbstractUtil implements BaseServic
             DelegateFcm delegateFcm,
             DelegateUserAuth delegateUserAuth,
             DelegateFcmTokenAuth delegateFcmTokenAuth,
-            DelegateKafka delegateKafka
+            DelegateJms delegateJms
     ) {
         super(delegateDateTime, delegateFile, delegateStatus);
         this.delegateJwt = delegateJwt;
         this.delegateFcm = delegateFcm;
         this.delegateUserAuth = delegateUserAuth;
         this.delegateFcmTokenAuth = delegateFcmTokenAuth;
-        this.delegateKafka = delegateKafka;
+        this.delegateJms = delegateJms;
     }
 
     protected long getUserID(String token) {
@@ -82,8 +82,8 @@ public abstract class AbstractService extends AbstractUtil implements BaseServic
     protected void deleteFcm(long userID, String fcm) {
         delegateFcmTokenAuth.deleteFcm(userID,fcm);
     }
-    protected void setKafkaTopicFcm(long sendID, BiFunction<Long,String,Boolean> check, BiFunction<Long,String, FcmGroup> fcmGroup, FcmDto fcmDto) {
-        delegateFcm.setKafkaTopicFcm(sendID,check,fcmGroup,fcmDto);
+    protected void setJmsTopicFcm(long sendID, BiFunction<Long,String,Boolean> check, BiFunction<Long,String, FcmGroup> fcmGroup, FcmDto fcmDto) {
+        delegateFcm.setJmsTopicFcm(sendID,check,fcmGroup,fcmDto);
     }
     protected <T> Map<Long, String> getFcmReceiveUserMap(BiFunction<T, Map<Long, String>, Boolean> check, BiConsumer<T, Map<Long, String>> run, List<T> entityList) {
         return delegateFcm.getFcmReceiveUserMap(check,run,entityList);
@@ -97,8 +97,8 @@ public abstract class AbstractService extends AbstractUtil implements BaseServic
     protected String getFcmBody(String userName, String userCode, String objName, int type) {
         return delegateFcm.getFcmBody(userName,userCode,objName,type);
     }
-    protected CompletableFuture<Boolean> getKafkaProducer(String topic, MessageLite message) {
-        return delegateKafka.getKafkaProducer(topic,message);
+    protected CompletableFuture<Boolean> sendJmsMessage(String destination, MessageLite message) {
+        return delegateJms.sendJmsMessage(destination,message);
     }
 
     @Override

@@ -1,7 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.handlers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateKafka;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJms;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.*;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractExceptionHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseExceptionHandler;
@@ -14,8 +14,8 @@ import java.io.IOException;
 
 @Component
 public final class FilterExceptionHandler extends AbstractExceptionHandler implements BaseExceptionHandler {
-    public FilterExceptionHandler(DelegateKafka delegateKafka) {
-        super(delegateKafka);
+    public FilterExceptionHandler(DelegateJms delegateJms) {
+        super(delegateJms);
     }
 
     public void getResponse(HttpServletRequest request, HttpServletResponse response, Exception e) {

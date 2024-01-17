@@ -3,9 +3,10 @@ package com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseMail;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
-import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.KafkaMailProto;
+import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.JmsMailProto;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
-import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.jms.annotation.JmsListener;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -22,27 +23,32 @@ public final class DelegateMail implements BaseMail {
     private final ThreadPoolTaskExecutor taskExecutor;
 
     /**
-     * Mail Kafka Consumer
+     * Mail Jms Consumer
      * byte array 역직렬화 후 메일 발송
      * @param byteCode
      */
-    @KafkaListener(topics = "mail")
-    private void getMailKafkaConsumer(byte[] byteCode){
+    @JmsListener(destination = "mail")
+    private void getMailJmsConsumer(byte[] byteCode){
         try {
-            KafkaMailProto.KafkaMailRequest kafkaMail = KafkaMailProto.KafkaMailRequest.parseFrom(byteCode);
+            JmsMailProto.JmsMailRequest jmsMail = JmsMailProto.JmsMailRequest.parseFrom(byteCode);
             SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(kafkaMail.getTo());
-            message.setSubject(kafkaMail.getSubject());
-            message.setText(kafkaMail.getText());
+            message.setTo(jmsMail.getTo());
+            message.setSubject(jmsMail.getSubject());
+            message.setText(jmsMail.getText());
             sendMail(message).get();
         }
         catch (ExecutionException | InterruptedException | InvalidProtocolBufferException e){
-            throw new WrongAccessException(WrongAccessException.of.KAFKA_CONNECTION_EXCEPTION);
+            throw new WrongAccessException(WrongAccessException.of.MQ_CONNECTION_EXCEPTION);
         }
     }
 
     @Override
     public Future<Void> sendMail(SimpleMailMessage message) {
         return CompletableFuture.runAsync(()->javaMailSender.send(message),taskExecutor);
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        taskExecutor.shutdown();
     }
 }

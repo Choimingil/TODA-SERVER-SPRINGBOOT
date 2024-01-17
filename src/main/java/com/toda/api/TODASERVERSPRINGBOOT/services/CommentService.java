@@ -2,6 +2,7 @@ package com.toda.api.TODASERVERSPRINGBOOT.services;
 
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.Comment;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.Post;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.User;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.CommentDetail;
@@ -36,20 +37,20 @@ public class CommentService extends AbstractService implements BaseService {
             DelegateFcm delegateFcm,
             DelegateUserAuth delegateUserAuth,
             DelegateFcmTokenAuth delegateFcmTokenAuth,
-            DelegateKafka delegateKafka,
+            DelegateJms delegateJms,
             PostRepository postRepository,
             CommentRepository commentRepository,
             UserRepository userRepository
     ) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateKafka);
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateJms);
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
         this.userRepository = userRepository;
     }
 
     @Transactional
-    public com.toda.api.TODASERVERSPRINGBOOT.entities.Comment addComment(long userID, long postID, String reply){
-        com.toda.api.TODASERVERSPRINGBOOT.entities.Comment comment = new com.toda.api.TODASERVERSPRINGBOOT.entities.Comment();
+    public Comment addComment(long userID, long postID, String reply){
+        Comment comment = new Comment();
         comment.setUserID(userID);
         comment.setPostID(postID);
         comment.setText(reply);
@@ -57,8 +58,8 @@ public class CommentService extends AbstractService implements BaseService {
     }
 
     @Transactional
-    public com.toda.api.TODASERVERSPRINGBOOT.entities.Comment addReComment(long userID, long postID, String reply, long parentID){
-        com.toda.api.TODASERVERSPRINGBOOT.entities.Comment comment = new com.toda.api.TODASERVERSPRINGBOOT.entities.Comment();
+    public Comment addReComment(long userID, long postID, String reply, long parentID){
+        Comment comment = new Comment();
         comment.setUserID(userID);
         comment.setPostID(postID);
         comment.setText(reply);
@@ -68,22 +69,22 @@ public class CommentService extends AbstractService implements BaseService {
 
     @Transactional
     public void deleteComment(long commentID){
-        com.toda.api.TODASERVERSPRINGBOOT.entities.Comment comment = commentRepository.findByCommentID(commentID);
+        Comment comment = commentRepository.findByCommentID(commentID);
         comment.setStatus(0);
         commentRepository.save(comment);
     }
 
     @Transactional
     public void updateComment(long commentID, String reply){
-        com.toda.api.TODASERVERSPRINGBOOT.entities.Comment comment = commentRepository.findByCommentID(commentID);
+        Comment comment = commentRepository.findByCommentID(commentID);
         comment.setText(reply);
         commentRepository.save(comment);
     }
 
     @Transactional
-    public void setFcmAndLog(Map<Long,String> map, UserData sendUserData, com.toda.api.TODASERVERSPRINGBOOT.entities.Comment comment, int type){
+    public void setFcmAndLog(Map<Long,String> map, UserData sendUserData, Comment comment, int type){
         Post post = comment.getPost() == null ? postRepository.findByPostID(comment.getPostID()) : comment.getPost();
-        setKafkaTopicFcm(
+        setJmsTopicFcm(
                 sendUserData.getUserID(),
                 (userID, userName) -> {
                     // 발송 조건 : 상대방 유저가 다이어리에 존재할 경우
@@ -122,7 +123,7 @@ public class CommentService extends AbstractService implements BaseService {
 
         Map<Long, CommentDetailResponse> map = new HashMap<>();
         for(CommentDetail commentDetail : commentList){
-            com.toda.api.TODASERVERSPRINGBOOT.entities.Comment comment = commentDetail.getComment();
+            Comment comment = commentDetail.getComment();
             CommentDetailResponse response = CommentDetailResponse.builder()
                     .commentID(comment.getCommentID())
                     .postID(comment.getPostID())
@@ -137,7 +138,7 @@ public class CommentService extends AbstractService implements BaseService {
         }
 
         for(CommentDetail commentDetail : reCommentList){
-            com.toda.api.TODASERVERSPRINGBOOT.entities.Comment reComment = commentDetail.getComment();
+            Comment reComment = commentDetail.getComment();
             ReCommentDetailResponse response = ReCommentDetailResponse.builder()
                     .commentID(reComment.getCommentID())
                     .comment(reComment.getText())
@@ -171,7 +172,7 @@ public class CommentService extends AbstractService implements BaseService {
      * @param comment
      * @return
      */
-    public Map<Long,String> getFcmAddCommentUserMap(long userID, com.toda.api.TODASERVERSPRINGBOOT.entities.Comment comment){
+    public Map<Long,String> getFcmAddCommentUserMap(long userID, Comment comment){
         User user = comment.getUser() == null ? postRepository.findByPostID(comment.getPostID()).getUser() : comment.getUser();
         Map<Long,String> res = new HashMap<>();
         if(userID != user.getUserID()) res.put(user.getUserID(), user.getUserName());
@@ -195,7 +196,7 @@ public class CommentService extends AbstractService implements BaseService {
                 commentRepository.findByParentIDAndStatusNot(parentID,0)
         );
 
-        com.toda.api.TODASERVERSPRINGBOOT.entities.Comment parent = commentRepository.findByCommentID(parentID);
+        Comment parent = commentRepository.findByCommentID(parentID);
         res.put(parent.getUserID(), parent.getUser().getUserName());
         return res;
     }

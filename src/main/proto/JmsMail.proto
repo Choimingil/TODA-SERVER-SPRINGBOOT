@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option java_outer_classname = "JmsMailProto";
+package com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers;
+
+message JmsMailRequest {
+  string to = 1;
+  string subject = 2;
+  string text = 3;
+}
+
+message JmsMailResponse {
+  string response = 1;
+}
+
+service JmsMailService {
+  rpc SendMail (JmsMailRequest) returns (JmsMailResponse) {}
+}

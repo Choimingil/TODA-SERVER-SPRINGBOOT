@@ -24,10 +24,10 @@ public class CustomUserDetailsService extends AbstractService implements BaseSer
             DelegateFcm delegateFcm,
             DelegateUserAuth delegateUserAuth,
             DelegateFcmTokenAuth delegateFcmTokenAuth,
-            DelegateKafka delegateKafka,
+            DelegateJms delegateJms,
             PasswordEncoder passwordEncoder
     ) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateKafka);
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateJms);
         this.passwordEncoder = passwordEncoder;
     }
 

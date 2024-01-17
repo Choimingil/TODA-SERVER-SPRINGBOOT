@@ -8,6 +8,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateStatus;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.Heart;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.Post;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreatePost;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.SetHeart;
@@ -46,7 +47,7 @@ public class PostController extends AbstractController implements BaseController
 
         // 현재 다이어리에 속해 있는 경우 게시글 추가 작업 진행
         if(userDiaryStatus == 100){
-            com.toda.api.TODASERVERSPRINGBOOT.entities.Post target = postService.addPost(userID, createPost);
+            Post target = postService.addPost(userID, createPost);
 
             if(!createPost.getImageList().isEmpty())
                 postService.addPostImage(target.getPostID(),createPost.getImageList());
@@ -128,7 +129,7 @@ public class PostController extends AbstractController implements BaseController
             // 최초 1회 좋아요 시에만 알림 발송
             if(heartList.isEmpty()){
                 postService.addHeart(userID,postID,setHeart.getMood());
-                com.toda.api.TODASERVERSPRINGBOOT.entities.Post target = postService.getPostByID(postID);
+                Post target = postService.getPostByID(postID);
 
                 // 자신이 작성한 게시글이 아닐 경우 게시글 주인에게 알림 발송
                 if(target.getUserID() != userID){

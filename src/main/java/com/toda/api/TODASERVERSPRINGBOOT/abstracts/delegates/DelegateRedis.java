@@ -3,6 +3,7 @@ package com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates;
 import com.google.protobuf.GeneratedMessageV3;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseRedis;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -98,5 +99,10 @@ public final class DelegateRedis implements BaseRedis {
         } catch (ExecutionException | InterruptedException e) {
             throw new WrongAccessException(WrongAccessException.of.REDIS_CONNECTION_EXCEPTION);
         }
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        taskExecutor.shutdown();
     }
 }

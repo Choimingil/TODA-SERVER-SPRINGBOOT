@@ -9,8 +9,9 @@ import com.toda.api.TODASERVERSPRINGBOOT.enums.FcmTypes;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.FcmDto;
 import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.*;
-import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.KafkaFcmProto;
+import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.JmsFcmProto;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserLogRepository;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
@@ -20,7 +21,7 @@ import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.jms.annotation.JmsListener;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
@@ -44,7 +45,7 @@ public final class DelegateFcm implements BaseFcm {
     private final PoolingHttpClientConnectionManager connectionManager;
     private final ThreadPoolTaskExecutor taskExecutor;
     private final UserLogRepository userLogRepository;
-    private final DelegateKafka delegateKafka;
+    private final DelegateJms delegateJms;
 
     @Value("${toda.server.fcm.url}")
     private String fcmServerDomain;
@@ -54,20 +55,20 @@ public final class DelegateFcm implements BaseFcm {
     private String authorization;
 
     /**
-     * Fcm Kafka Consumer
+     * Fcm Jms Consumer
      * byte array 역직렬화 후 알림 발송
      * @param byteCode
      */
-    @KafkaListener(topics = "fcm")
-    private void getFcmKafkaConsumer(byte[] byteCode){
+    @JmsListener(destination = "fcm", containerFactory = "myFactory")
+    private void getFcmJmsConsumer(byte[] byteCode){
         try {
-            KafkaFcmProto.KafkaFcmRequest kafkaFcm = KafkaFcmProto.KafkaFcmRequest.parseFrom(byteCode);
-            FcmGroup group = FcmGroup.builder().aosFcmList(kafkaFcm.getAosFcmList()).iosFcmList(kafkaFcm.getIosFcmList()).build();
-            FcmParams params = FcmParams.builder().title(kafkaFcm.getTitle()).body(kafkaFcm.getBody()).typeNum(kafkaFcm.getTypeNum()).dataID(kafkaFcm.getDataID()).fcmGroup(group).build();
+            JmsFcmProto.JmsFcmRequest jmsFcm = JmsFcmProto.JmsFcmRequest.parseFrom(byteCode);
+            FcmGroup group = FcmGroup.builder().aosFcmList(jmsFcm.getAosFcmList()).iosFcmList(jmsFcm.getIosFcmList()).build();
+            FcmParams params = FcmParams.builder().title(jmsFcm.getTitle()).body(jmsFcm.getBody()).typeNum(jmsFcm.getTypeNum()).dataID(jmsFcm.getDataID()).fcmGroup(group).build();
             sendFcm(params).get();
         }
         catch (ExecutionException | InterruptedException | InvalidProtocolBufferException e){
-            throw new WrongAccessException(WrongAccessException.of.KAFKA_CONNECTION_EXCEPTION);
+            throw new WrongAccessException(WrongAccessException.of.MQ_CONNECTION_EXCEPTION);
         }
     }
 
@@ -181,7 +182,7 @@ public final class DelegateFcm implements BaseFcm {
     }
 
     @Override
-    public void setKafkaTopicFcm(long sendID, BiFunction<Long,String,Boolean> check, BiFunction<Long,String,FcmGroup> fcmGroup, FcmDto fcmDto) {
+    public void setJmsTopicFcm(long sendID, BiFunction<Long,String,Boolean> check, BiFunction<Long,String,FcmGroup> fcmGroup, FcmDto fcmDto) {
         List<String> aosFcmList = new ArrayList<>();
         List<String> iosFcmList = new ArrayList<>();
 
@@ -200,7 +201,7 @@ public final class DelegateFcm implements BaseFcm {
         }
 
         try{
-            KafkaFcmProto.KafkaFcmRequest request = KafkaFcmProto.KafkaFcmRequest.newBuilder()
+            JmsFcmProto.JmsFcmRequest request = JmsFcmProto.JmsFcmRequest.newBuilder()
                     .setTitle(fcmDto.getTitle())
                     .setBody(fcmDto.getBody())
                     .setTypeNum(fcmDto.getTypeNum())
@@ -208,7 +209,7 @@ public final class DelegateFcm implements BaseFcm {
                     .addAllAosFcm(aosFcmList)
                     .addAllIosFcm(iosFcmList)
                     .build();
-            delegateKafka.getKafkaProducer("fcm", request).get();
+            delegateJms.sendJmsMessage("fcm", request).get();
         }
         catch (InterruptedException | ExecutionException e){
             throw new WrongAccessException(WrongAccessException.of.SEND_FCM_EXCEPTION);
@@ -251,5 +252,10 @@ public final class DelegateFcm implements BaseFcm {
             case 6 -> new StringBuilder().append(userName).append("님(").append(userCode).append(")이 대댓글을 남겼습니다:)").toString();
             default -> throw new WrongAccessException(WrongAccessException.of.FCM_BODY_EXCEPTION);
         };
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        taskExecutor.shutdown();
     }
 }

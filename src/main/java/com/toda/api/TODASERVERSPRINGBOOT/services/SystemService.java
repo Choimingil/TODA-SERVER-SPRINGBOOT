@@ -27,10 +27,10 @@ public class SystemService extends AbstractService implements BaseService {
             DelegateFcm delegateFcm,
             DelegateUserAuth delegateUserAuth,
             DelegateFcmTokenAuth delegateFcmTokenAuth,
-            DelegateKafka delegateKafka,
+            DelegateJms delegateJms,
             UserRepository userRepository
     ) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateKafka);
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateJms);
         this.userRepository = userRepository;
     }
 
@@ -38,8 +38,7 @@ public class SystemService extends AbstractService implements BaseService {
         return !userRepository.existsByEmailAndAppPasswordNot(email,99999);
     }
 
-    public boolean isMyEmail(String token, String email){
-        long userID = getUserID(token);
+    public boolean isMyEmail(long userID, String email){
         return userRepository.existsByUserIDAndEmail(userID, email);
     }
 

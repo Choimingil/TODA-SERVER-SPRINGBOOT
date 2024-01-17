@@ -2,11 +2,10 @@ package com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates;
 
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractAuth;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseFcmTokenAuth;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserFcm;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.Notification;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.NoArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmGroup;
 import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmMap;
-import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.UserFcmProto;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.NotificationRepository;
 import org.springframework.stereotype.Component;
@@ -55,9 +54,9 @@ public final class DelegateFcmTokenAuth extends AbstractAuth implements BaseFcmT
         if(tokenIDs.containsKey(fcm)) return tokenIDs.get(fcm);
         else{
             if(notificationRepository.existsByUserIDAndFcmAndStatusNot(userID,fcm,0)){
-                UserFcm userFcm = notificationRepository.findByUserIDAndFcmAndIsAllowedAndStatusNot(userID,fcm,"Y",0);
-                long notificationID = userFcm.getNotificationID();
-                setNewFcm(userID,fcm,notificationID,userFcm.getStatus());
+                Notification notification = notificationRepository.findByUserIDAndFcmAndIsAllowedAndStatusNot(userID,fcm,"Y",0);
+                long notificationID = notification.getNotificationID();
+                setNewFcm(userID,fcm,notificationID,notification.getStatus());
                 return notificationID;
             }
             else throw new NoArgException(NoArgException.of.NO_FCM_EXCEPTION);
@@ -127,9 +126,9 @@ public final class DelegateFcmTokenAuth extends AbstractAuth implements BaseFcmT
      * @return
      */
     private FcmMap getFcmMapWithDb(long userID){
-        List<UserFcm> userFcmList = notificationRepository.findByUserIDAndIsAllowedAndStatusNot(userID,"Y",0);
-        Map<String,Long> tokenIDs = userFcmList.stream().collect(Collectors.toMap(UserFcm::getFcm, UserFcm::getNotificationID));
-        Map<String,Integer> tokenStatus = userFcmList.stream().collect(Collectors.toMap(UserFcm::getFcm, UserFcm::getStatus));
+        List<Notification> userFcmList = notificationRepository.findByUserIDAndIsAllowedAndStatusNot(userID,"Y",0);
+        Map<String,Long> tokenIDs = userFcmList.stream().collect(Collectors.toMap(Notification::getFcm, Notification::getNotificationID));
+        Map<String,Integer> tokenStatus = userFcmList.stream().collect(Collectors.toMap(Notification::getFcm, Notification::getStatus));
         return FcmMap.builder().tokenIDs(tokenIDs).tokenStatus(tokenStatus).build();
     }
 

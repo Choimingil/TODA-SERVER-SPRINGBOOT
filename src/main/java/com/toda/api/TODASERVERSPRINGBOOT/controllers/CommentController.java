@@ -7,6 +7,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateStatus;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.Comment;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreateComment;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateComment;
@@ -50,7 +51,7 @@ public class CommentController extends AbstractController implements BaseControl
 
             // 부모 댓글 아이디가 존재하지 않으면 댓글 작성 진행
             if(comment == null){
-                com.toda.api.TODASERVERSPRINGBOOT.entities.Comment target = commentService.addComment(userID, createComment.getPost(), createComment.getReply());
+                Comment target = commentService.addComment(userID, createComment.getPost(), createComment.getReply());
                 commentService.setFcmAndLog(commentService.getFcmAddCommentUserMap(userID, target),sendUserData,target,5);
                 return new SuccessResponse.Builder(SuccessResponse.of.CREATE_COMMENT_SUCCESS).build().getResponse();
             }
@@ -60,7 +61,7 @@ public class CommentController extends AbstractController implements BaseControl
                 if(!commentService.isValidCommentPostDiary(comment,createComment.getPost()))
                     throw new BusinessLogicException(BusinessLogicException.of.NO_AUTH_COMMENT_EXCEPTION);
 
-                com.toda.api.TODASERVERSPRINGBOOT.entities.Comment target = commentService.addReComment(userID, createComment.getPost(), createComment.getReply(), comment);
+                Comment target = commentService.addReComment(userID, createComment.getPost(), createComment.getReply(), comment);
                 commentService.setFcmAndLog(commentService.getFcmAddReCommentUserMap(userID, comment),sendUserData,target,6);
                 return new SuccessResponse.Builder(SuccessResponse.of.CREATE_RE_COMMENT_SUCCESS).build().getResponse();
             }

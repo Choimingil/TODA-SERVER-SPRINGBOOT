@@ -1,6 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.handlers;
 
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateKafka;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJms;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.*;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractExceptionHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseExceptionHandler;
@@ -14,8 +14,8 @@ import java.util.Map;
 
 @RestControllerAdvice
 public final class ControllerExceptionHandler extends AbstractExceptionHandler implements BaseExceptionHandler {
-    public ControllerExceptionHandler(DelegateKafka delegateKafka) {
-        super(delegateKafka);
+    public ControllerExceptionHandler(DelegateJms delegateJms) {
+        super(delegateJms);
     }
 
     /**

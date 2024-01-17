@@ -78,7 +78,6 @@ dependencies {
 	implementation 'io.grpc:grpc-netty-shaded:1.58.0'
 	compileOnly 'org.apache.tomcat:annotations-api:6.0.53' // necessary for Java 9+
 
-
 	// Caffeine
 	implementation("com.github.ben-manes.caffeine:caffeine:3.1.7")
 	implementation("com.github.ben-manes.caffeine:guava:3.1.7")
@@ -87,11 +86,11 @@ dependencies {
 	// Mail
 	implementation "org.springframework.boot:spring-boot-starter-mail"
 
-	// Kafka
-	implementation 'org.springframework.kafka:spring-kafka'
-	implementation 'org.springframework.kafka:spring-kafka-test'
-	implementation 'org.testcontainers:kafka:1.15.3'
+	// JMS
+	implementation 'org.springframework.boot:spring-boot-starter-artemis'
+	runtimeOnly 'org.apache.activemq:artemis-jakarta-server'
 
+	// HttpClient
 	implementation 'org.apache.httpcomponents.client5:httpclient5:5.1.4'
 }
 

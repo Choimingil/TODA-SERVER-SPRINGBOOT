@@ -11,11 +11,10 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserLogDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserStickerDetail;
-import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.KafkaMailProto;
+import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.JmsMailProto;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -39,13 +38,13 @@ public class UserService extends AbstractService implements BaseService {
             DelegateFcm delegateFcm,
             DelegateUserAuth delegateUserAuth,
             DelegateFcmTokenAuth delegateFcmTokenAuth,
-            DelegateKafka delegateKafka,
+            DelegateJms delegateJms,
             UserRepository userRepository,
             UserImageRepository userImageRepository,
             UserStickerRepository userStickerRepository,
             UserLogRepository userLogRepository
     ) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateKafka);
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateJms);
         this.userRepository = userRepository;
         this.userImageRepository = userImageRepository;
         this.userStickerRepository = userStickerRepository;
@@ -165,8 +164,7 @@ public class UserService extends AbstractService implements BaseService {
         sendTempPassword(email,password);
     }
 
-    public List<UserLogDetail> getUserLog(String token, int page){
-        long userID = getUserID(token);
+    public List<UserLogDetail> getUserLog(long userID, int page){
         int start = (page-1)*20;
         Pageable pageable = PageRequest.of(start,20);
         return userLogRepository.getUserLogs(userID,pageable);
@@ -200,14 +198,14 @@ public class UserService extends AbstractService implements BaseService {
         sb.append("임시 비밀번호를 발급했어요! 이 비밀번호로 로그인하시고 마이페이지 -> 비밀번호 변경 에 들어가셔서 비밀번호를 변경해주세요!\n\n").append(password);
         String subject = "TODA에서 편지왔어요 :)";
 
-        KafkaMailProto.KafkaMailRequest params = KafkaMailProto.KafkaMailRequest.newBuilder()
+        JmsMailProto.JmsMailRequest params = JmsMailProto.JmsMailRequest.newBuilder()
                 .setTo(email)
                 .setSubject(subject)
                 .setText(sb.toString())
                 .build();
 
         try{
-            getKafkaProducer("mail", params).get();
+            sendJmsMessage("mail", params).get();
         }
         catch (InterruptedException | ExecutionException e){
             throw new WrongAccessException(WrongAccessException.of.SEND_MAIL_EXCEPTION);

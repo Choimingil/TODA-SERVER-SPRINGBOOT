@@ -38,7 +38,7 @@ public class StickerService extends AbstractService implements BaseService {
             DelegateFcm delegateFcm,
             DelegateUserAuth delegateUserAuth,
             DelegateFcmTokenAuth delegateFcmTokenAuth,
-            DelegateKafka delegateKafka,
+            DelegateJms delegateJms,
             UserStickerRepository userStickerRepository,
             PostStickerRepository postStickerRepository,
             PostStickerRotateRepository postStickerRotateRepository,
@@ -46,7 +46,7 @@ public class StickerService extends AbstractService implements BaseService {
             StickerRepository stickerRepository,
             StickerPackRepository stickerPackRepository
     ) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateKafka);
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateJms);
         this.userStickerRepository = userStickerRepository;
         this.postStickerRepository = postStickerRepository;
         this.postStickerRotateRepository = postStickerRotateRepository;

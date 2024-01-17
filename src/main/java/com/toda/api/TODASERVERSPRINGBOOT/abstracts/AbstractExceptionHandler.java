@@ -1,10 +1,10 @@
 package com.toda.api.TODASERVERSPRINGBOOT.abstracts;
 
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJms;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateKafka;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseExceptionHandler;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.SlackKeys;
-import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.KafkaSlackProto;
+import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.JmsSlackProto;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.FailResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ public abstract class AbstractExceptionHandler implements BaseExceptionHandler {
     private final Set<SlackKeys> slackKeysEnumSet = EnumSet.allOf(SlackKeys.class);
 
     /* Delegate Class */
-    private final DelegateKafka delegateKafka;
+    private final DelegateJms delegateJms;
 
     @Value("${slack.send.enable}")
     private boolean isSlackEnable;
@@ -39,12 +39,12 @@ public abstract class AbstractExceptionHandler implements BaseExceptionHandler {
             Map<String, String> slackFields = slackKeysEnumSet.stream()
                     .collect(Collectors.toMap(slackKeys -> slackKeys.slackTitle, slackKeys -> MDC.get(slackKeys.mdcTitle)));
 
-            KafkaSlackProto.KafkaSlackRequest kafkaSlackRequest = KafkaSlackProto.KafkaSlackRequest.newBuilder()
+            JmsSlackProto.JmsSlackRequest jmsSlackRequest = JmsSlackProto.JmsSlackRequest.newBuilder()
                     .setTitleLink(titleLink)
                     .putAllSlackFields(slackFields)
                     .setStackTrace(Arrays.toString(e.getStackTrace()))
                     .build();
-            delegateKafka.getKafkaProducer("slack",kafkaSlackRequest);
+            delegateJms.sendJmsMessage("slack",jmsSlackRequest);
         }
 
         return new FailResponse.Builder(elementCode, errorMessage)
@@ -59,7 +59,7 @@ public abstract class AbstractExceptionHandler implements BaseExceptionHandler {
 
         if(isSlackEnable){
             String titleLink = request.getContextPath();
-            KafkaSlackProto.KafkaSlackRequest kafkaSlackRequest = KafkaSlackProto.KafkaSlackRequest.newBuilder()
+            JmsSlackProto.JmsSlackRequest jmsSlackRequest = JmsSlackProto.JmsSlackRequest.newBuilder()
                     .setTitleLink(titleLink)
                     .putSlackFields("Request URL",request.getRequestURI())
                     .putSlackFields("Request Method",request.getMethod())
@@ -69,7 +69,7 @@ public abstract class AbstractExceptionHandler implements BaseExceptionHandler {
                     .putSlackFields("Request Query String",request.getQueryString()==null ? "No Query String" : request.getQueryString())
                     .setStackTrace(Arrays.toString(e.getStackTrace()))
                     .build();
-            delegateKafka.getKafkaProducer("slack",kafkaSlackRequest);
+            delegateJms.sendJmsMessage("slack",jmsSlackRequest);
         }
 
         return new FailResponse.Builder(elementCode, errorMessage)

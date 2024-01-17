@@ -4,14 +4,15 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseSlack;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.SlackKeys;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
-import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.KafkaSlackProto;
+import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.JmsSlackProto;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import net.gpedro.integrations.slack.SlackApi;
 import net.gpedro.integrations.slack.SlackAttachment;
 import net.gpedro.integrations.slack.SlackField;
 import net.gpedro.integrations.slack.SlackMessage;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.jms.annotation.JmsListener;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
@@ -30,21 +31,21 @@ public final class DelegateSlack implements BaseSlack, InitializingBean {
     private final Set<SlackKeys> slackKeysEnumSet = EnumSet.allOf(SlackKeys.class);
 
     /**
-     * Slack Kafka Consumer
+     * Slack Jms Consumer
      * byte array 역직렬화 후 메일 발송
      * @param byteCode
      */
-    @KafkaListener(topics = "slack")
-    private void getSlackKafkaConsumer(byte[] byteCode){
+    @JmsListener(destination = "slack")
+    private void getSlackJmsConsumer(byte[] byteCode){
         try {
-            KafkaSlackProto.KafkaSlackRequest kafkaSlack = KafkaSlackProto.KafkaSlackRequest.parseFrom(byteCode);
-            slackAttachment.setTitleLink(kafkaSlack.getTitleLink());
-            slackAttachment.setFields(getSlackFields(kafkaSlack.getSlackFieldsMap()));
-            slackAttachment.setText(kafkaSlack.getStackTrace());
+            JmsSlackProto.JmsSlackRequest jmsSlack = JmsSlackProto.JmsSlackRequest.parseFrom(byteCode);
+            slackAttachment.setTitleLink(jmsSlack.getTitleLink());
+            slackAttachment.setFields(getSlackFields(jmsSlack.getSlackFieldsMap()));
+            slackAttachment.setText(jmsSlack.getStackTrace());
             send().get();
         }
         catch (ExecutionException | InterruptedException | InvalidProtocolBufferException e){
-            throw new WrongAccessException(WrongAccessException.of.KAFKA_CONNECTION_EXCEPTION);
+            throw new WrongAccessException(WrongAccessException.of.MQ_CONNECTION_EXCEPTION);
         }
     }
 
@@ -58,7 +59,7 @@ public final class DelegateSlack implements BaseSlack, InitializingBean {
     }
 
     /**
-     * KafkaSlackRequest에서 가져온 값들을 SlackField로 변환
+     * JmsSlackRequest에서 가져온 값들을 SlackField로 변환
      * 키 : slackTitle, 벨류 : 각각의 값
      * @param map
      * @return
@@ -72,5 +73,10 @@ public final class DelegateSlack implements BaseSlack, InitializingBean {
     @Override
     public void afterPropertiesSet() {
         slackKeysEnumSet.remove(SlackKeys.REQUEST_BODY);
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        taskExecutor.shutdown();
     }
 }

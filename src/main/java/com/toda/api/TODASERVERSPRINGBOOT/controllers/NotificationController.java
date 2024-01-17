@@ -37,8 +37,9 @@ public class NotificationController extends AbstractController implements BaseCo
             @RequestBody @Valid SaveFcmToken saveFcmToken,
             BindingResult bindingResult
     ){
+        long userID = getUserID(token);
         int status = type==null ? 100 : (type.equals("2") ? 200 : 100);
-        notificationService.saveFcmToken(token,status,saveFcmToken);
+        notificationService.saveFcmToken(userID,status,saveFcmToken);
         return new SuccessResponse.Builder(SuccessResponse.of.SAVE_FCM_TOKEN_SUCCESS)
                 .build().getResponse();
     }
@@ -49,7 +50,8 @@ public class NotificationController extends AbstractController implements BaseCo
             @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @RequestParam(name="fcmToken") String fcm
     ){
-        Notification notification = notificationService.getNotification(token,fcm);
+        long userID = getUserID(token);
+        Notification notification = notificationService.getNotification(userID,fcm);
         return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
                 .add("isBasicAllowed",notification.getIsAllowed())
                 .add("isRemindAllowed",notification.getIsRemindAllowed())
@@ -65,7 +67,8 @@ public class NotificationController extends AbstractController implements BaseCo
             @RequestBody @Valid UpdateFcmAllowed updateFcmAllowed,
             BindingResult bindingResult
     ){
-        boolean updateNotificationAllowed = notificationService.updateFcmAllowed(token, updateFcmAllowed.getFcmToken(), updateFcmAllowed.getAlarmType());
+        long userID = getUserID(token);
+        boolean updateNotificationAllowed = notificationService.updateFcmAllowed(userID, updateFcmAllowed.getFcmToken(), updateFcmAllowed.getAlarmType());
         if(updateNotificationAllowed) return new SuccessResponse.Builder(SuccessResponse.of.DO_FCM_ALLOWED_SUCCESS).build().getResponse();
         else return new SuccessResponse.Builder(SuccessResponse.of.UNDO_FCM_ALLOWED_SUCCESS).build().getResponse();
     }
@@ -76,7 +79,8 @@ public class NotificationController extends AbstractController implements BaseCo
             @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @RequestParam(name="fcmToken") String fcm
     ){
-        Notification notification = notificationService.getNotification(token,fcm);
+        long userID = getUserID(token);
+        Notification notification = notificationService.getNotification(userID,fcm);
         return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
                 .add("result",notification.getTime())
                 .build().getResponse();
@@ -90,7 +94,8 @@ public class NotificationController extends AbstractController implements BaseCo
             @RequestBody @Valid UpdateFcmTime updateFcmTime,
             BindingResult bindingResult
     ){
-        notificationService.updateFcmTime(token, updateFcmTime.getFcmToken(), updateFcmTime.getTime());
+        long userID = getUserID(token);
+        notificationService.updateFcmTime(userID, updateFcmTime.getFcmToken(), updateFcmTime.getTime());
         return new SuccessResponse.Builder(SuccessResponse.of.UPDATE_FCM_TIME_SUCCESS).build().getResponse();
     }
 }

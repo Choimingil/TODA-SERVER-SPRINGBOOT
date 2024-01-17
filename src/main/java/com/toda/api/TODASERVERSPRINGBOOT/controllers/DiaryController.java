@@ -7,8 +7,8 @@ import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateStatus;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.Diary;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.UserDiary;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.DiaryRequestOfUser;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreateDiary;
@@ -20,11 +20,13 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryMemberListRes
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryNoticeResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.InviteRequestResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.services.DiaryService;
 import jakarta.validation.Valid;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +77,7 @@ public class DiaryController extends AbstractController implements BaseControlle
 
         UserData sendUserData = decodeToken(token);
         UserInfoDetail receiveUserData = diaryService.getReceiveUserData(userCode.getUserCode());
-        com.toda.api.TODASERVERSPRINGBOOT.entities.Diary diary = diaryService.getDiary(diaryID);
+        Diary diary = diaryService.getDiary(diaryID);
 
         long sendUserID = sendUserData.getUserID();
         long receiveUserID = receiveUserData.getUserID();
@@ -126,10 +128,9 @@ public class DiaryController extends AbstractController implements BaseControlle
             @PathVariable("diaryID") long diaryID
     ){
         long userID = getUserID(token);
-        DiaryRequestOfUser getRequestList = diaryService.getRequestOfUser(userID,diaryID);
-        return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
-                .add("result",getRequestList)
-                .build().getResponse();
+        List<InviteRequestResponse> responseList = diaryService.getInviteRequest(userID,diaryID);
+        if(responseList.isEmpty()) return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS).add("result",new ArrayList<>()).build().getResponse();
+        else return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS).add("result",responseList.get(0)).build().getResponse();
     }
 
     //13. 다이어리 퇴장 및 초대 거절 API

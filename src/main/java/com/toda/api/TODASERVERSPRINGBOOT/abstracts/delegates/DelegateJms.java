@@ -1,9 +1,10 @@
 package com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates;
 
 import com.google.protobuf.MessageLite;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseKafka;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseJms;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
@@ -11,14 +12,20 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 @RequiredArgsConstructor
-public final class DelegateKafka implements BaseKafka {
-    private final KafkaTemplate<String,byte[]> kafkaTemplate;
+public class DelegateJms implements BaseJms {
+    private final JmsTemplate jmsTemplate;
     private final ThreadPoolTaskExecutor taskExecutor;
+
     @Override
-    public CompletableFuture<Boolean> getKafkaProducer(String topic, MessageLite message) {
+    public CompletableFuture<Boolean> sendJmsMessage(String destination, MessageLite message) {
         return CompletableFuture.supplyAsync(()->{
-            kafkaTemplate.send(topic, message.toByteArray());
+            jmsTemplate.convertAndSend(destination,message.toByteArray());
             return true;
         },taskExecutor);
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        taskExecutor.shutdown();
     }
 }

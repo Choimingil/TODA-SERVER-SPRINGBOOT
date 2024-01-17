@@ -22,16 +22,15 @@ public class NotificationService extends AbstractService implements BaseService 
             DelegateFcm delegateFcm,
             DelegateUserAuth delegateUserAuth,
             DelegateFcmTokenAuth delegateFcmTokenAuth,
-            DelegateKafka delegateKafka,
+            DelegateJms delegateJms,
             NotificationRepository notificationRepository
     ) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateKafka);
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateJms);
         this.notificationRepository = notificationRepository;
     }
 
     @Transactional
-    public void saveFcmToken(String jwt, int status, SaveFcmToken saveFcmToken){
-        long userID = getUserID(jwt);
+    public void saveFcmToken(long userID, int status, SaveFcmToken saveFcmToken){
         String fcm = saveFcmToken.getToken();
         String allowable = saveFcmToken.getIsAllowed();
 
@@ -47,15 +46,13 @@ public class NotificationService extends AbstractService implements BaseService 
         setNewFcm(userID, fcm, newNotification.getNotificationID(), status);
     }
 
-    public Notification getNotification(String jwt, String fcm){
-        long userID = getUserID(jwt);
+    public Notification getNotification(long userID, String fcm){
         long notificationID = getNotificationID(userID,fcm);
         return notificationRepository.findByNotificationID(notificationID);
     }
 
     @Transactional
-    public boolean updateFcmAllowed(String jwt, String fcm, int status) {
-        long userID = getUserID(jwt);
+    public boolean updateFcmAllowed(long userID, String fcm, int status) {
         long notificationID = getNotificationID(userID, fcm);
         Notification notification = notificationRepository.findByNotificationID(notificationID);
 
@@ -88,8 +85,7 @@ public class NotificationService extends AbstractService implements BaseService 
     }
 
     @Transactional
-    public void updateFcmTime(String jwt, String fcm, String time){
-        long userID = getUserID(jwt);
+    public void updateFcmTime(long userID, String fcm, String time){
         long notificationID = getNotificationID(userID, fcm);
         if(notificationRepository.existsByNotificationIDAndIsRemindAllowed(notificationID,"N"))
             throw new WrongArgException(WrongArgException.of.WRONG_REMIND_FCM_EXCEPTION);

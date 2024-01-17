@@ -212,7 +212,8 @@ public class UserController extends AbstractController implements BaseController
             @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @RequestParam(name="page") int page
     ){
-        List<UserLogDetail> userLogs = userService.getUserLog(token,page);
+        long userID = getUserID(token);
+        List<UserLogDetail> userLogs = userService.getUserLog(userID,page);
         if(userLogs == null) return new SuccessResponse.Builder(SuccessResponse.of.NO_USER_LOG_SUCCESS).build().getResponse();
 
         List<Map<String,Object>> userLogDetails = userLogs.stream().map(element -> {

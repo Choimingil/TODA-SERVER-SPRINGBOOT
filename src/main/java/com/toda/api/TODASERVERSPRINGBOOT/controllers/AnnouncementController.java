@@ -29,7 +29,8 @@ public class AnnouncementController extends AbstractController implements BaseCo
             @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @RequestParam(name="page") int page
     ){
-        List<Map<String,Object>> announcementList = announcementService.getAnnouncement(token,page);
+        long userID = getUserID(token);
+        List<Map<String,Object>> announcementList = announcementService.getAnnouncement(userID,page);
         return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
                 .add("result",announcementList)
                 .build().getResponse();
@@ -41,8 +42,9 @@ public class AnnouncementController extends AbstractController implements BaseCo
             @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @PathVariable("announcementID") String id
     ){
+        long userID = getUserID(token);
         long announcementID = Long.parseLong(id);
-        List<Map<String,Object>> announcementDetails = announcementService.getAnnouncementDetail(token,announcementID);
+        List<Map<String,Object>> announcementDetails = announcementService.getAnnouncementDetail(userID,announcementID);
         return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
                 .add("result",announcementDetails.get(0))
                 .build().getResponse();
@@ -53,7 +55,8 @@ public class AnnouncementController extends AbstractController implements BaseCo
     public Map<String, ?> checkAnnouncement(
             @RequestHeader(DelegateJwt.HEADER_NAME) String token
     ){
-        boolean isAllAnnouncementRead = announcementService.isAllAnnouncementRead(token);
+        long userID = getUserID(token);
+        boolean isAllAnnouncementRead = announcementService.isAllAnnouncementRead(userID);
         return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
                 .add("result",isAllAnnouncementRead)
                 .build().getResponse();

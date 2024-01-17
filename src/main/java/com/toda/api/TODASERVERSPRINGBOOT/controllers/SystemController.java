@@ -71,7 +71,8 @@ public class SystemController extends AbstractController implements BaseControll
             @RequestBody @Valid ValidateEmail validateEmail,
             BindingResult bindingResult
     ){
-        if(systemService.isMyEmail(token, validateEmail.getEmail()))
+        long userID = getUserID(token);
+        if(systemService.isMyEmail(userID, validateEmail.getEmail()))
             return new SuccessResponse.Builder(SuccessResponse.of.RIGHT_USER_EMAIL_SUCCESS)
                     .add("result",true)
                     .build().getResponse();

@@ -3,8 +3,6 @@ package com.toda.api.TODASERVERSPRINGBOOT.repositories;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.Post;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.PostDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.PostList;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
-import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostListResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

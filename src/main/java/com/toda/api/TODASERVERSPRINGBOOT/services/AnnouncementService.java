@@ -3,9 +3,8 @@ package com.toda.api.TODASERVERSPRINGBOOT.services;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.Announcement;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.UserAnnouncement;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.AnnouncementDetail;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.AnnouncementList;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.AnnouncementRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserAnnouncementRepository;
 import org.springframework.data.domain.PageRequest;
@@ -32,20 +31,19 @@ public class AnnouncementService extends AbstractService implements BaseService 
             DelegateFcm delegateFcm,
             DelegateUserAuth delegateUserAuth,
             DelegateFcmTokenAuth delegateFcmTokenAuth,
-            DelegateKafka delegateKafka,
+            DelegateJms delegateJms,
             AnnouncementRepository announcementRepository,
             UserAnnouncementRepository userAnnouncementRepository
     ) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateKafka);
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateJms);
         this.announcementRepository = announcementRepository;
         this.userAnnouncementRepository = userAnnouncementRepository;
     }
 
-    public List<Map<String,Object>> getAnnouncement(String token, int page){
-        long userID = getUserID(token);
+    public List<Map<String,Object>> getAnnouncement(long userID, int page){
         int start = (page-1)*20;
         Pageable pageable = PageRequest.of(start,20);
-        List<AnnouncementList> announcementList = announcementRepository.findByStatusNotOrderByCreateAtDesc(0,pageable);
+        List<Announcement> announcementList = announcementRepository.findByStatusNotOrderByCreateAtDesc(0,pageable);
 
         return announcementList.stream().map(element -> {
             Map<String, Object> map = new HashMap<>();
@@ -57,13 +55,12 @@ public class AnnouncementService extends AbstractService implements BaseService 
         }).collect(Collectors.toList());
     }
 
-    public List<Map<String,Object>> getAnnouncementDetail(String token, long announcementID){
-        long userID = getUserID(token);
-        List<AnnouncementDetail> announcementDetails = announcementRepository.findByStatusNotAndAnnouncementID(0,announcementID);
+    public List<Map<String,Object>> getAnnouncementDetail(long userID, long announcementID){
+        List<Announcement> announcementList = announcementRepository.findByStatusNotAndAnnouncementID(0,announcementID);
         boolean isRead = userAnnouncementRepository.existsByUserIDAndAnnouncementID(userID,announcementID);
         if(!isRead) readAnnouncement(userID,announcementID);
 
-        return announcementDetails.stream().map(element -> {
+        return announcementList.stream().map(element -> {
             Map<String, Object> map = new HashMap<>();
             map.put("title", element.getTitle());
             map.put("date", element.getCreateAt().format(DateTimeFormatter.ofPattern("yyyy.MM.dd")));
@@ -73,8 +70,7 @@ public class AnnouncementService extends AbstractService implements BaseService 
         }).collect(Collectors.toList());
     }
 
-    public boolean isAllAnnouncementRead(String token){
-        long userID = getUserID(token);
+    public boolean isAllAnnouncementRead(long userID){
         long announcementNum = announcementRepository.count();
         long userReadNum = userAnnouncementRepository.countByUserID(userID);
         return announcementNum == userReadNum;

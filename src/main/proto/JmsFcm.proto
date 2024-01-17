@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-option java_outer_classname = "KafkaFcmProto";
+option java_outer_classname = "JmsFcmProto";
 package com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers;
 
-message KafkaFcmRequest {
+message JmsFcmRequest {
   string title = 1;
   string body = 2;
   int32 typeNum = 3;
@@ -12,10 +12,10 @@ message KafkaFcmRequest {
   repeated string iosFcm = 6;
 }
 
-message KafkaFcmResponse {
+message JmsFcmResponse {
   string response = 1;
 }
 
-service KafkaFcmService {
-  rpc SendFcm (KafkaFcmRequest) returns (KafkaFcmResponse) {}
+service JmsFcmService {
+  rpc SendFcm (JmsFcmRequest) returns (JmsFcmResponse) {}
 }

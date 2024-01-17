@@ -2,6 +2,7 @@ package com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates;
 
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseFile;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.annotation.Async;
@@ -44,5 +45,10 @@ public final class DelegateFile implements BaseFile {
         catch (IOException e){
             throw new WrongAccessException(WrongAccessException.of.READ_TXT_EXCEPTION);
         }
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        taskExecutor.shutdown();
     }
 }
