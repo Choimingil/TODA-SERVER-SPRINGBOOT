@@ -44,14 +44,17 @@ public final class DelegateUri implements BaseUri {
         // uri = /url_name 이기 때문에 /으로 파싱하면 맨 앞이 공백, 따라서 맨 앞을 스킵
         List<String> list = new ArrayList<>(List.of(request.getRequestURI().toUpperCase().trim().split("/")));
         list.add(1, request.getMethod());
-
-        for(String str : list) System.out.println("pass : " + str);
+        
         if (list.size() == 5 && "USERCODE".equals(list.get(2)) && "USER".equals(list.get(4))) {
             list.set(3, "NUMBER");
         }
 
         return list.stream()
                 .skip(1)
+                .map(item -> {
+                    if (RegularExpressions.NUMBER.getPattern().matcher(item).matches()) return "NUMBER";
+                    else return item;
+                })
                 .collect(Collectors.joining("_", "", ""));
     }
 }
