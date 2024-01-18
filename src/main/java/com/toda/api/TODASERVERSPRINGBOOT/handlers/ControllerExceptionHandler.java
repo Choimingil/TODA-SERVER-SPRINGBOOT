@@ -19,6 +19,16 @@ public final class ControllerExceptionHandler extends AbstractExceptionHandler i
     }
 
     /**
+     * BusinessLogicException Handler
+     * @param e
+     * @return
+     */
+    @ExceptionHandler(BusinessLogicException.class)
+    public Map<String,?> getResponseOfBusinessLogicException(BusinessLogicException e) {
+        return getErrorSpringContainer(e, e.getElement().getCode(), e.getElement().getMessage());
+    }
+
+    /**
      * NoArgException Handler
      * @param e
      * @return

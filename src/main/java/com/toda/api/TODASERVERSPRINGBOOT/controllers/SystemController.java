@@ -42,7 +42,7 @@ public class SystemController extends AbstractController implements BaseControll
     // 1-6. 강제 업데이트 API
     @GetMapping("/update")
     public Map<String, ?> checkUpdate(
-            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
+            @RequestHeader(value = DelegateJwt.HEADER_NAME, required = false) String token,
             @RequestParam(name="type") int type,
             @RequestParam(name="version") String version
     ){

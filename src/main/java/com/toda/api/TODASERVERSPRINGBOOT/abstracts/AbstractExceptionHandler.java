@@ -37,7 +37,10 @@ public abstract class AbstractExceptionHandler implements BaseExceptionHandler {
             String titleLink = MDC.get("request_context_path");
             slackKeysEnumSet.add(SlackKeys.REQUEST_BODY);
             Map<String, String> slackFields = slackKeysEnumSet.stream()
-                    .collect(Collectors.toMap(slackKeys -> slackKeys.slackTitle, slackKeys -> MDC.get(slackKeys.mdcTitle)));
+                    .collect(Collectors.toMap(
+                            slackKeys -> slackKeys.slackTitle==null?"empty key":slackKeys.slackTitle,
+                            slackKeys -> MDC.get(slackKeys.mdcTitle)==null?"empty value":MDC.get(slackKeys.mdcTitle)
+                    ));
 
             JmsSlackProto.JmsSlackRequest jmsSlackRequest = JmsSlackProto.JmsSlackRequest.newBuilder()
                     .setTitleLink(titleLink)

@@ -67,6 +67,26 @@ public final class FilterExceptionHandler extends AbstractExceptionHandler imple
             }
 
             /**
+             * WrongAccessException Handler
+             */
+            else if(e.getClass() == WrongAccessException.class){
+                WrongAccessException exception = (WrongAccessException) e;
+                jsonResponse = new ObjectMapper().writeValueAsString(
+                        getErrorFilter(request,exception,exception.getElement().getCode(),exception.getElement().getMessage())
+                );
+            }
+
+            /**
+             * BusinessLogicException Handler
+             */
+            else if(e.getClass() == BusinessLogicException.class){
+                BusinessLogicException exception = (BusinessLogicException) e;
+                jsonResponse = new ObjectMapper().writeValueAsString(
+                        getErrorFilter(request,exception,exception.getElement().getCode(),exception.getElement().getMessage())
+                );
+            }
+
+            /**
              * NoBodyException Handler
              */
             else if(e.getClass() == NoBodyException.class){
@@ -91,5 +111,13 @@ public final class FilterExceptionHandler extends AbstractExceptionHandler imple
             logger.error("IOException");
         }
 
+    }
+
+    private String parsingException(Exception e){
+        String message = e.getMessage();
+        String[] arr = message.split(": ");
+        String[] parse = arr[1].split("\\.");
+        int length = parse.length;
+        return parse[length-1];
     }
 }

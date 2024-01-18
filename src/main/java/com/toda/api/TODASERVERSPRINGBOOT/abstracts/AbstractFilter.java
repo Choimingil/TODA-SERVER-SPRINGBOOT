@@ -4,14 +4,17 @@ import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateUri;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.RegularExpressions;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.Uris;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseFilter;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.handlers.FilterExceptionHandler;
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
