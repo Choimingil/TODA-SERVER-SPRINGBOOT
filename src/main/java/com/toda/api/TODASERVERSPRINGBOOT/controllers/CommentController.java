@@ -123,10 +123,11 @@ public class CommentController extends AbstractController implements BaseControl
 
             // 댓글이 존재하지 않을 경우 메시지 출력
             if(res.getComment().isEmpty()){
-                Map<String,String> emptyRes = new HashMap<>();
-                emptyRes.put("message","등록된 댓글이 없습니다.");
-                return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
-                        .add("result",emptyRes)
+                return new SuccessResponse.Builder(
+                        SuccessResponse.of.GET_SUCCESS.getCode(),
+                        "등록된 댓글이 없습니다."
+                )
+                        .add("result",res)
                         .build().getResponse();
             }
             // 댓글이 존재할 경우 댓글 리스트 출력

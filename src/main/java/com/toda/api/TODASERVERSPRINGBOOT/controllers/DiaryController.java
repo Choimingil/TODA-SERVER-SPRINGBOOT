@@ -192,10 +192,11 @@ public class DiaryController extends AbstractController implements BaseControlle
 
         // 다이어리가 존재하지 않을 경우 메시지 출력
         if(res.isEmpty()){
-            Map<String,String> emptyRes = new HashMap<>();
-            emptyRes.put("message","등록된 다이어리가 없습니다.");
-            return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
-                    .add("result",emptyRes)
+            return new SuccessResponse.Builder(
+                    SuccessResponse.of.GET_SUCCESS.getCode(),
+                    "등록된 다이어리가 없습니다."
+            )
+                    .add("result",res)
                     .build().getResponse();
         }
         // 다이어리 존재할 경우 다이어리 데이터 리턴
@@ -221,10 +222,11 @@ public class DiaryController extends AbstractController implements BaseControlle
 
             // 다이어리가 존재하지 않을 경우 메시지 출력
             if(res.isEmpty()){
-                Map<String,String> emptyRes = new HashMap<>();
-                emptyRes.put("message","등록된 친구가 없습니다.");
-                return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
-                        .add("result",emptyRes)
+                return new SuccessResponse.Builder(
+                        SuccessResponse.of.GET_SUCCESS.getCode(),
+                        "등록된 친구가 없습니다."
+                )
+                        .add("result",res)
                         .build().getResponse();
             }
             // 다이어리 존재할 경우 다이어리 데이터 리턴

@@ -99,6 +99,11 @@ public class SuccessResponse extends Response {
     }
 
     public static class Builder extends Response.Builder<Builder>{
+        public Builder(int code, String message){
+            this.response.put("isSuccess",true);
+            this.response.put("code",code);
+            this.response.put("message",message);
+        }
         public Builder(of element){
             this.response.put("isSuccess",true);
             this.response.put("code",element.getCode());
