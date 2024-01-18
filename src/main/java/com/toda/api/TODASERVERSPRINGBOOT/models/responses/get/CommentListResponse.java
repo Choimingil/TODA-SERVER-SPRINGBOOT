@@ -10,13 +10,13 @@ import java.util.List;
 @ToString
 public final class CommentListResponse {
     private int totalCommentNum;
-    private List<CommentDetailResponse> Comment;
+    private List<CommentDetailResponse> comment;
 
     public CommentListResponse(){}
 
     @Builder
-    public CommentListResponse(int totalCommentNum, List<CommentDetailResponse> Comment){
+    public CommentListResponse(int totalCommentNum, List<CommentDetailResponse> comment){
         this.totalCommentNum = totalCommentNum;
-        this.Comment = Comment;
+        this.comment = comment;
     }
 }

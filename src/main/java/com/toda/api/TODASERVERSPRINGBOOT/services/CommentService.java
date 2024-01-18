@@ -159,7 +159,7 @@ public class CommentService extends AbstractService implements BaseService {
 
         return CommentListResponse.builder()
                 .totalCommentNum(commentRepository.countByPostIDAndStatusNot(postID,0))
-                .Comment(commentDetailResponseList)
+                .comment(commentDetailResponseList)
                 .build();
     }
 
