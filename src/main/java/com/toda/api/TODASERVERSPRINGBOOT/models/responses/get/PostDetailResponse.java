@@ -1,6 +1,5 @@
 package com.toda.api.TODASERVERSPRINGBOOT.models.responses.get;
 
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.ImageItem;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
@@ -23,12 +22,13 @@ public final class PostDetailResponse {
     private int icon;
     private int aligned;
     private int font;
-    private List<ImageItem> image;
+    private List<PostImageResponse> image;
     private boolean isMyLike;
     private int likeNum;
     private int commentNum;
 
     public boolean getIsMyLike(){return isMyLike;}
+    public boolean getIsMyPost(){return isMyPost;}
 
     public PostDetailResponse(){}
 
@@ -47,7 +47,7 @@ public final class PostDetailResponse {
             int icon,
             int aligned,
             int font,
-            List<ImageItem> image,
+            List<PostImageResponse> image,
             boolean isMyLike,
             int likeNum,
             int commentNum

@@ -1,7 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.repositories;
 
 import com.toda.api.TODASERVERSPRINGBOOT.entities.User;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,13 +15,11 @@ public interface UserRepository extends JpaRepository<User,Long> {
     boolean existsByUserIDAndPasswordAndAppPasswordNot(long userID, String password, int appPassword);
     User findByUserID(long userID);
 
-    @Query("select u.userID as userID, u.userCode as userCode, u.email as email, u.password as password, u.createAt as createAt, u.userName as userName, u.appPassword as appPassword, ui.url as profile from User u " +
-            "inner join UserImage ui on ui.userID = u.userID where u.userCode like :userCode and ui.status not like 0")
-    UserInfoDetail getUserDataByUserCode(String userCode);
+    @Query("select u as user, ui.url as profile from User u inner join UserImage ui on ui.userID = u.userID where u.userCode like :userCode and ui.status not like 0")
+    UserDetail getUserDetailByUserCode(String userCode);
 
-    @Query("select u.userID as userID, u.userCode as userCode, u.email as email, u.password as password, u.createAt as createAt, u.userName as userName, u.appPassword as appPassword, ui.url as profile from User u " +
-            "inner join UserImage ui on ui.userID = u.userID where u.email like :email and ui.status not like 0")
-    UserInfoDetail getUserDataByEmail(String email);
+    @Query("select u as user, ui.url as profile from User u inner join UserImage ui on ui.userID = u.userID where u.email like :email and ui.status not like 0")
+    UserDetail getUserDetailByEmail(String email);
 
     @Modifying
     @Query("UPDATE User SET appPassword = 99999 WHERE userID = :userID")

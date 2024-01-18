@@ -1,9 +1,6 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateDateTime;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateFile;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateStatus;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
@@ -22,8 +19,8 @@ import java.util.Map;
 public class SystemController extends AbstractController implements BaseController {
     private final SystemService systemService;
 
-    public SystemController(DelegateDateTime delegateDateTime, DelegateFile delegateFile, DelegateStatus delegateStatus, DelegateJwt delegateJwt, SystemService systemService) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt);
+    public SystemController(DelegateDateTime delegateDateTime, DelegateFile delegateFile, DelegateStatus delegateStatus, DelegateJwt delegateJwt, DelegateUserAuth delegateUserAuth, SystemService systemService) {
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateUserAuth);
         this.systemService = systemService;
     }
 

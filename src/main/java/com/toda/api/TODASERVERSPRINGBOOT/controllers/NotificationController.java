@@ -1,10 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateDateTime;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateFile;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateStatus;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.SaveFcmToken;
@@ -12,6 +9,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateFcmAllowed;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateFcmTime;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.Notification;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.FcmAllowedResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.services.NotificationService;
 import jakarta.validation.Valid;
 import org.springframework.validation.BindingResult;
@@ -23,8 +21,8 @@ import java.util.Map;
 public class NotificationController extends AbstractController implements BaseController {
     private final NotificationService notificationService;
 
-    public NotificationController(DelegateDateTime delegateDateTime, DelegateFile delegateFile, DelegateStatus delegateStatus, DelegateJwt delegateJwt, NotificationService notificationService) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt);
+    public NotificationController(DelegateDateTime delegateDateTime, DelegateFile delegateFile, DelegateStatus delegateStatus, DelegateJwt delegateJwt, DelegateUserAuth delegateUserAuth, NotificationService notificationService) {
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateUserAuth);
         this.notificationService = notificationService;
     }
 
@@ -53,9 +51,11 @@ public class NotificationController extends AbstractController implements BaseCo
         long userID = getUserID(token);
         Notification notification = notificationService.getNotification(userID,fcm);
         return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
-                .add("isBasicAllowed",notification.getIsAllowed())
-                .add("isRemindAllowed",notification.getIsRemindAllowed())
-                .add("isEventAllowed",notification.getIsEventAllowed())
+                .add("result", FcmAllowedResponse.builder()
+                        .isBasicAllowed(notification.getIsAllowed().equals("Y"))
+                        .isRemindAllowed(notification.getIsRemindAllowed().equals("Y"))
+                        .isEventAllowed(notification.getIsEventAllowed().equals("Y"))
+                        .build())
                 .build().getResponse();
     }
 

@@ -1,6 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces;
 
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.User;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 
 public interface BaseUserAuth {
     /**
@@ -8,13 +9,14 @@ public interface BaseUserAuth {
      * @param value : email or token (문자열 길이로 구별)
      * @return : User type
      */
-    UserData getUserInfo(String value);
+    UserDetail getUserInfo(String value);
 
     /**
      * MDC 및 Redis 정보 추가
-     * @param userData
+     * @param user
+     * @param profile
      */
-    void setUserInfo(UserData userData);
+    void updateUserRedis(User user, String profile);
 
     /**
      * MDC 및 Redis에 저장되어 있는 유저 정보 삭제

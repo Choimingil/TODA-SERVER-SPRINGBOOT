@@ -1,15 +1,16 @@
 package com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces;
 
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.User;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 import jakarta.servlet.http.HttpServletRequest;
-import org.slf4j.MDC;
 
 public interface BaseMdc {
     /**
      * MDC에 읽은 유저 정보 저장
-     * @param userData
+     * @param user
+     * @param profile
      */
-    void setMdc(UserData userData);
+    void setMdc(User user, String profile);
 
     /**
      * MDC에 저장한 유저 정보 삭제

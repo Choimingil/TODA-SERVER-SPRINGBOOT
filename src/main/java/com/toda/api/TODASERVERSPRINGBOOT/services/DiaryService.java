@@ -84,21 +84,21 @@ public class DiaryService extends AbstractService implements BaseService {
     }
 
     @Transactional
-    public void inviteDiary(UserData sendUserData, UserInfoDetail receiveUserData, Diary diary){
-        long sendUserID = sendUserData.getUserID();
-        long receiveUserID = receiveUserData.getUserID();
+    public void inviteDiary(UserDetail sendUser, UserDetail receiveUserDetail, Diary diary){
+        long sendUserID = sendUser.getUser().getUserID();
+        long receiveUserID = receiveUserDetail.getUser().getUserID();
         long diaryID = diary.getDiaryID();
         String diaryName = diary.getDiaryName();
         int status = (int)(sendUserID*10);
 
         // 이미 다이어리를 탈퇴한 기록이 있는 경우 해당 값을 초대값으로 변경
         List<UserDiary> deleteList = userDiaryRepository.findByUserIDAndDiaryIDAndStatus(receiveUserID,diaryID,999);
-        AtomicBoolean isEdit = new AtomicBoolean(false);
+        AtomicBoolean isEdit = new AtomicBoolean(true);
         updateListAndDelete(
                 userDiary -> isEdit.get(),
                 userDiary -> {
                     userDiary.setStatus(status);
-                    isEdit.set(true);
+                    isEdit.set(false);
                 },
                 deleteList,
                 userDiaryRepository
@@ -130,10 +130,10 @@ public class DiaryService extends AbstractService implements BaseService {
     }
 
     @Transactional
-    public void setFcmAndLog(Map<Long,String> receiveUserMap, UserData sendUserData, Diary diary, int type){
+    public void setFcmAndLog(Map<Long,String> receiveUserMap, UserDetail sendUser, Diary diary, int type){
 
         setJmsTopicFcm(
-                sendUserData.getUserID(),
+                sendUser.getUser().getUserID(),
                 (userID, userName) -> {
                     // 초대 시 발송 조건 : 상대방 유저가 다이어리 초대를 받았을 경우
                     if(type == 1) return getUserDiaryStatus(userID,diary.getDiaryID()) == 200;
@@ -143,12 +143,12 @@ public class DiaryService extends AbstractService implements BaseService {
                 },
                 // 조건 만족 시 FCM 발송
                 (userID, userName) -> {
-                    addUserLog(userID,sendUserData.getUserID(),diary.getDiaryID(),type,100);
+                    addUserLog(userID,sendUser.getUser().getUserID(),diary.getDiaryID(),type,100);
                     return getUserFcmTokenList(userID);
                 },
                 FcmDto.builder()
                         .title(getFcmTitle())
-                        .body(getFcmBody(sendUserData.getUserName(), sendUserData.getUserCode(), diary.getDiaryName(), type))
+                        .body(getFcmBody(sendUser.getUser().getUserName(), sendUser.getUser().getUserCode(), diary.getDiaryName(), type))
                         .typeNum(type)
                         .dataID(diary.getDiaryID())
                         .map(receiveUserMap)
@@ -159,12 +159,12 @@ public class DiaryService extends AbstractService implements BaseService {
     @Transactional
     public void deleteDiary(long userID, long diaryID){
         List<UserDiary> userDiaryList = userDiaryRepository.findByUserIDAndDiaryIDAndStatusNot(userID,diaryID,999);
-        AtomicBoolean isEdit = new AtomicBoolean(false);
+        AtomicBoolean isEdit = new AtomicBoolean(true);
         updateListAndDelete(
                 userDiary -> isEdit.get(),
                 userDiary -> {
                     userDiary.setStatus(999);
-                    isEdit.set(true);
+                    isEdit.set(false);
                 },
                 userDiaryList,
                 userDiaryRepository
@@ -174,12 +174,12 @@ public class DiaryService extends AbstractService implements BaseService {
     @Transactional
     public void rejectInvitation(long userID, long diaryID){
         List<UserDiary> userDiaryList = userDiaryRepository.findByUserIDAndDiaryIDAndStatusNot(userID,diaryID,999);
-        AtomicBoolean isEdit = new AtomicBoolean(false);
+        AtomicBoolean isEdit = new AtomicBoolean(true);
         updateListAndDelete(
                 userDiary -> isEdit.get(),
                 userDiary -> {
                     userDiary.setStatus(999);
-                    isEdit.set(true);
+                    isEdit.set(false);
                 },
                 userDiaryList,
                 userDiaryRepository
@@ -193,13 +193,14 @@ public class DiaryService extends AbstractService implements BaseService {
     public void updateDiary(long userID, UpdateDiary updateDiary){
         List<UserDiary> userDiaryList = userDiaryRepository.findByUserIDAndDiaryIDAndStatusNot(userID,updateDiary.getDiary(),999);
         int newStatus = getDiaryStatus(updateDiary.getStatus(), updateDiary.getColor());
-        AtomicBoolean isEdit = new AtomicBoolean(false);
+        AtomicBoolean isEdit = new AtomicBoolean(true);
         updateListAndDelete(
                 userDiary -> isEdit.get(),
                 userDiary -> {
                     checkDiaryStatus(userDiary,newStatus);
                     userDiary.setDiaryName(updateDiary.getTitle());
                     userDiary.setStatus(newStatus);
+                    isEdit.set(false);
                 },
                 userDiaryList,
                 userDiaryRepository
@@ -300,12 +301,12 @@ public class DiaryService extends AbstractService implements BaseService {
     @Transactional
     public void updateNotice(long userID, long diaryID, String notice){
         List<DiaryNotice> noticeList = diaryNoticeRepository.findByUserIDAndDiaryIDAndStatusNot(userID,diaryID,0);
-        AtomicBoolean isEdit = new AtomicBoolean(false);
+        AtomicBoolean isEdit = new AtomicBoolean(true);
         updateListAndDelete(
                 diaryNotice -> isEdit.get(),
                 diaryNotice -> {
                     diaryNotice.setNotice(notice);
-                    isEdit.set(true);
+                    isEdit.set(false);
                 },
                 noticeList,
                 diaryNoticeRepository
@@ -361,7 +362,7 @@ public class DiaryService extends AbstractService implements BaseService {
 
         // 현재 상태값이 3일 경우 원본 다이어리의 상태값을 적용하여 검증
         if(currDiaryStatus == 3){
-            if(newDiaryStatus != origin.getDiary().getStatus())
+            if(newDiaryStatus != origin.getDiary().getStatus()%100)
                 throw new BusinessLogicException(BusinessLogicException.of.WRONG_DIARY_STATUS_EXCEPTION);
         }
     }
@@ -377,17 +378,17 @@ public class DiaryService extends AbstractService implements BaseService {
 
     /**
      * 다이어리 초대 요청 시 FCM 발송받을 유저 데이터 getter
-     * @param receiveUserDataList
+     * @param receiveUserDetailList
      * @return
      */
-    public Map<Long,String> getFcmDiaryInviteUserMap(List<UserInfoDetail> receiveUserDataList){
+    public Map<Long,String> getFcmDiaryInviteUserMap(List<UserDetail> receiveUserDetailList){
         return getFcmReceiveUserMap(
-                (userInfoDetail,map)-> !map.containsKey(userInfoDetail.getUserID()),
-                (userInfoDetail,map)-> map.put(
-                        userInfoDetail.getUserID(),
-                        userInfoDetail.getUserName()
+                (userDetail,map)-> !map.containsKey(userDetail.getUser().getUserID()),
+                (userDetail,map)-> map.put(
+                        userDetail.getUser().getUserID(),
+                        userDetail.getUser().getUserName()
                 ),
-                receiveUserDataList
+                receiveUserDetailList
         );
     }
 
@@ -421,8 +422,8 @@ public class DiaryService extends AbstractService implements BaseService {
         return res;
     }
 
-    public UserInfoDetail getReceiveUserData(String userCode){
-        return userRepository.getUserDataByUserCode(userCode);
+    public UserDetail getReceiveUserDetail(String userCode){
+        return userRepository.getUserDetailByUserCode(userCode);
     }
 
     public Diary getDiary(long diaryID){

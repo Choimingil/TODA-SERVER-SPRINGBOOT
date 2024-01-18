@@ -6,8 +6,8 @@ import com.toda.api.TODASERVERSPRINGBOOT.entities.Comment;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.Post;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.User;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.CommentDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.FcmDto;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.CommentDetailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.CommentListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.ReCommentDetailResponse;
@@ -82,24 +82,24 @@ public class CommentService extends AbstractService implements BaseService {
     }
 
     @Transactional
-    public void setFcmAndLog(Map<Long,String> map, UserData sendUserData, Comment comment, int type){
+    public void setFcmAndLog(Map<Long,String> map, UserDetail sendUser, Comment comment, int type){
         Post post = comment.getPost() == null ? postRepository.findByPostID(comment.getPostID()) : comment.getPost();
         setJmsTopicFcm(
-                sendUserData.getUserID(),
+                sendUser.getUser().getUserID(),
                 (userID, userName) -> {
                     // 발송 조건 : 상대방 유저가 다이어리에 존재할 경우
                     return getUserDiaryStatus(userID,post.getDiaryID()) == 100;
                 },
                 // 조건 만족 시 FCM 발송
                 (userID, userName) -> {
-                    addUserLog(userID,sendUserData.getUserID(),post.getPostID(),type,100);
+                    addUserLog(userID,sendUser.getUser().getUserID(),post.getPostID(),type,100);
                     return getUserFcmTokenList(userID);
                 },
                 FcmDto.builder()
                         .title(getFcmTitle())
                         .body(getFcmBody(
-                                sendUserData.getUserName(),
-                                sendUserData.getUserCode(),
+                                sendUser.getUser().getUserName(),
+                                sendUser.getUser().getUserCode(),
                                 post.getUser() == null ? userRepository.findByUserID(post.getUserID()).getUserName() : post.getUser().getUserName(),
                                 type))
                         .typeNum(type)
@@ -112,13 +112,11 @@ public class CommentService extends AbstractService implements BaseService {
     public CommentListResponse getCommentList(long userID, long postID, int page){
         int start = (page-1)*20;
         Pageable pageable = PageRequest.of(start,20);
-//        List<Comment> commentList = commentRepository.findByPostIDAndStatusNot(postID, 0, pageable);
         List<CommentDetail> commentList = commentRepository.getCommentDetail(postID,pageable);
 
         List<Long> commentIDList = commentList.stream().map(commentDetail -> {
             return commentDetail.getComment().getCommentID();
         }).toList();
-//        List<Comment> reCommentList = commentRepository.findByParentIDInAndStatusNot(commentIDList,0);
         List<CommentDetail> reCommentList = commentRepository.getReCommentDetail(commentIDList);
 
         Map<Long, CommentDetailResponse> map = new HashMap<>();

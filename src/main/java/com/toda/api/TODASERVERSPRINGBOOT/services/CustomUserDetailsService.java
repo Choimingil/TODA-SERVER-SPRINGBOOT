@@ -1,9 +1,9 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -34,10 +34,10 @@ public class CustomUserDetailsService extends AbstractService implements BaseSer
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        UserData userdata = getUserInfo(email);
+        UserDetail userDetail = getUserInfo(email);
         return User.builder()
-                .username(userdata.getEmail())
-                .password(passwordEncoder.encode(userdata.getPassword()))
+                .username(userDetail.getUser().getEmail())
+                .password(passwordEncoder.encode(userDetail.getUser().getPassword()))
                 .roles("USER").build();
     }
 }

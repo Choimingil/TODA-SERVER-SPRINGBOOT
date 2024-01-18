@@ -2,10 +2,10 @@ package com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates;
 
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractAuth;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseUserAuth;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.User;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.TokenFields;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.UserInfoProto;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserRepository;
 import org.slf4j.MDC;
@@ -31,57 +31,31 @@ public final class DelegateUserAuth extends AbstractAuth implements BaseUserAuth
     }
 
     @Override
-    public UserData getUserInfo(String value) {
-        String email = value.length()>45 ? decodeToken(value).getEmail() : value;
-
-        if(MDC.get(TokenFields.USER_ID.value) == null){
-            UserData userData = getUserData(email);
-            if(userData == null){
-                UserInfoDetail user = userRepository.getUserDataByEmail(email);
-                userData = UserData.builder()
-                        .userID(user.getUserID())
-                        .userCode(user.getUserCode())
-                        .userName(user.getUserName())
-                        .email(user.getEmail())
-                        .password(user.getPassword())
-                        .appPassword(user.getAppPassword())
-                        .createAt(user.getCreateAt())
-                        .profile(user.getProfile())
-                        .build();
-                setUserInfo(userData);
-            }
-            if(!userData.getEmail().equals(email)) throw new WrongArgException(WrongArgException.of.WRONG_BODY_EXCEPTION);
-            return userData;
+    public UserDetail getUserInfo(String value) {
+        String email = value.length()>45 ? decodeToken(value).getUser().getEmail() : value;
+        UserDetail userDetail = getUserDetailOnCache(email);
+        if(userDetail == null){
+            userDetail = userRepository.getUserDetailByEmail(email);
+            updateUserRedis(userDetail.getUser(), userDetail.getProfile());
         }
-        else{
-            DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-            return UserData.builder()
-                    .userID(Long.parseLong(String.valueOf(MDC.get(TokenFields.USER_ID.value))))
-                    .userCode(String.valueOf(MDC.get(TokenFields.USER_CODE.value)))
-                    .password(MDC.get(TokenFields.PASSWORD.value))
-                    .appPassword(Integer.parseInt(String.valueOf(MDC.get(TokenFields.APP_PASSWORD.value))))
-                    .email(String.valueOf(MDC.get(TokenFields.EMAIL.value)))
-                    .userName(String.valueOf(MDC.get(TokenFields.USER_NAME.value)))
-                    .createAt(LocalDateTime.parse(String.valueOf(MDC.get(TokenFields.CREATE_AT.value)), formatter))
-                    .profile(String.valueOf(MDC.get(TokenFields.PROFILE.value)))
-                    .build();
-        }
+        if(!userDetail.getUser().getEmail().equals(email)) throw new WrongArgException(WrongArgException.of.WRONG_BODY_EXCEPTION);
+        return userDetail;
     }
 
     @Override
-    public void setUserInfo(UserData userData) {
-        setMdc(userData);
+    public void updateUserRedis(User user, String profile) {
+        setMdc(user,profile);
         UserInfoProto.UserInfo userProto = UserInfoProto.UserInfo.newBuilder()
-                .setUserID(userData.getUserID())
-                .setUserCode(userData.getUserCode())
-                .setEmail(userData.getEmail())
-                .setPassword(userData.getPassword())
-                .setUserName(userData.getUserName())
-                .setAppPassword(String.valueOf(userData.getAppPassword()))
-                .setCreateAt(userData.getCreateAt().toString())
-                .setProfile(userData.getProfile())
+                .setUserID(user.getUserID())
+                .setUserCode(user.getUserCode())
+                .setEmail(user.getEmail())
+                .setPassword(user.getPassword())
+                .setUserName(user.getUserName())
+                .setAppPassword(String.valueOf(user.getAppPassword()))
+                .setCreateAt(user.getCreateAt().toString())
+                .setProfile(profile)
                 .build();
-        delegateRedis.setRedis(userData.getEmail(), userProto.toByteArray());
+        delegateRedis.setRedis(user.getEmail(), userProto.toByteArray());
     }
 
     @Override
@@ -93,18 +67,28 @@ public final class DelegateUserAuth extends AbstractAuth implements BaseUserAuth
     /**
      * Redis 접속해서 key(Email)값으로 데이터 조회
      * @param key : email
-     * @return : UserData type
+     * @return : UserDetail type
      */
-    private UserData getUserData(String key) {
-        return delegateRedis.convertRedisData(key, UserInfoProto.UserInfo.class, userProto -> UserData.builder()
-                .userID(userProto.getUserID())
-                .userCode(userProto.getUserCode())
-                .email(userProto.getEmail())
-                .password(userProto.getPassword())
-                .userName(userProto.getUserName())
-                .appPassword(Integer.parseInt(userProto.getAppPassword()))
-                .createAt(LocalDateTime.parse(userProto.getCreateAt()))
-                .profile(userProto.getProfile())
-                .build());
+    private UserDetail getUserDetailOnCache(String key) {
+        return delegateRedis.convertRedisData(key, UserInfoProto.UserInfo.class, userProto -> new UserDetail() {
+                    @Override
+                    public User getUser() {
+                        return new User(
+                                userProto.getUserID(),
+                                userProto.getEmail(),
+                                userProto.getPassword(),
+                                userProto.getUserCode(),
+                                Integer.parseInt(userProto.getAppPassword()),
+                                userProto.getUserName(),
+                                LocalDateTime.parse(userProto.getCreateAt())
+                        );
+                    }
+
+                    @Override
+                    public String getProfile() {
+                        return userProto.getProfile();
+                    }
+                }
+        );
     }
 }

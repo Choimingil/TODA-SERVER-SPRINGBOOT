@@ -27,30 +27,51 @@ public final class DelegateUri implements BaseUri {
 
     @Override
     public boolean isValidUri(HttpServletRequest request) {
-        return uris.contains(Uris.valueOf(getUri(request)));
+        List<String> uriList = getUriList(request);
+        if(isStaticUri(uriList)) return true;
+        return uris.contains(Uris.valueOf(getUriString(uriList)));
     }
 
     @Override
     public boolean isValidPass(HttpServletRequest request) {
-        return validPassUris.contains(Uris.valueOf(getUri(request)));
+        List<String> uriList = getUriList(request);
+        if(isStaticUri(uriList)) return true;
+        return validPassUris.contains(Uris.valueOf(getUriString(uriList)));
+    }
+
+    /**
+     * HttpServletRequest를 받아 List<String<>으로 파싱
+     * 메소드,uri( / 단위로 파싱)
+     * @param request
+     * @return
+     */
+    private List<String> getUriList(HttpServletRequest request){
+        List<String> list = new ArrayList<>(List.of(request.getRequestURI().toUpperCase().trim().split("/")));
+        list.set(0, request.getMethod());
+
+        if (list.size() == 4 && "USERCODE".equals(list.get(1)) && "USER".equals(list.get(3))) {
+            list.set(2, "USERCODE_VALUE");
+        }
+        return list;
+    }
+
+    /**
+     * 정적 파일 읽어오는 uri는 패스
+     * @param uriList
+     * @return
+     */
+    private boolean isStaticUri(List<String> uriList){
+        return uriList.get(0).equals("GET") && uriList.get(1).equals("UPLOADS");
     }
 
     /**
      * URI를 Enum에 존재하는 값으로 변환
-     * @param request
+     * @param uriList
      * @return
      */
-    private String getUri(HttpServletRequest request) {
-        // uri = /url_name 이기 때문에 /으로 파싱하면 맨 앞이 공백, 따라서 맨 앞을 스킵
-        List<String> list = new ArrayList<>(List.of(request.getRequestURI().toUpperCase().trim().split("/")));
-        list.add(1, request.getMethod());
-        
-        if (list.size() == 5 && "USERCODE".equals(list.get(2)) && "USER".equals(list.get(4))) {
-            list.set(3, "NUMBER");
-        }
-
-        return list.stream()
-                .skip(1)
+    private String getUriString(List<String> uriList) {
+        return uriList.stream()
+//                .skip(1)
                 .map(item -> {
                     if (RegularExpressions.NUMBER.getPattern().matcher(item).matches()) return "NUMBER";
                     else return item;

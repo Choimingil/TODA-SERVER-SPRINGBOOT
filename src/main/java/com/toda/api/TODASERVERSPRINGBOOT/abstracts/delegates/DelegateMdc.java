@@ -1,9 +1,10 @@
 package com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates;
 
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseMdc;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.User;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.LogFields;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.TokenFields;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -29,15 +30,15 @@ public final class DelegateMdc implements BaseMdc {
     );
 
     @Override
-    public void setMdc(UserData userData) {
-        MDC.put(TokenFields.USER_ID.value, String.valueOf(userData.getUserID()));
-        MDC.put(TokenFields.USER_CODE.value, userData.getUserCode());
-        MDC.put(TokenFields.EMAIL.value, userData.getEmail());
-        MDC.put(TokenFields.PASSWORD.value, userData.getPassword());
-        MDC.put(TokenFields.USER_NAME.value, userData.getUserName());
-        MDC.put(TokenFields.APP_PASSWORD.value, String.valueOf(userData.getAppPassword()));
-        MDC.put(TokenFields.CREATE_AT.value, userData.getCreateAt().toString());
-        MDC.put(TokenFields.PROFILE.value, userData.getProfile());
+    public void setMdc(User user, String profile) {
+        MDC.put(TokenFields.USER_ID.value, String.valueOf(user.getUserID()));
+        MDC.put(TokenFields.USER_CODE.value, user.getUserCode());
+        MDC.put(TokenFields.EMAIL.value, user.getEmail());
+        MDC.put(TokenFields.PASSWORD.value, user.getPassword());
+        MDC.put(TokenFields.USER_NAME.value, user.getUserName());
+        MDC.put(TokenFields.APP_PASSWORD.value, String.valueOf(user.getAppPassword()));
+        MDC.put(TokenFields.CREATE_AT.value, user.getCreateAt().toString());
+        MDC.put(TokenFields.PROFILE.value, profile);
     }
 
     @Override

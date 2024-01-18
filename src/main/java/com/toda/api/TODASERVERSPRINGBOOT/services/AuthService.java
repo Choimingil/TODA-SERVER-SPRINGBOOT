@@ -1,9 +1,9 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
@@ -37,17 +37,17 @@ public class AuthService extends AbstractService implements BaseService {
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        UserData userData = getUserInfo(email);
-        return createToken(authentication, userData);
+        UserDetail userDetail = getUserInfo(email);
+        return createToken(authentication, userDetail);
     }
 
     public Map<String,?> getTokenData(String token) {
-        UserData userData = getUserInfo(token);
+        UserDetail userDetail = getUserInfo(token);
 
         Map<String,Object> map = new HashMap<>();
-        map.put("id", userData.getUserID());
-        map.put("pw", userData.getPassword());
-        map.put("appPw", userData.getAppPassword());
+        map.put("id", userDetail.getUser().getUserID());
+        map.put("pw", userDetail.getUser().getPassword());
+        map.put("appPw", userDetail.getUser().getAppPassword());
         return map;
     }
 }

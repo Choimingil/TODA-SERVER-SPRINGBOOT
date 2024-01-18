@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Getter
 @ToString
@@ -36,18 +37,10 @@ public final class InviteRequestResponse {
         this.userCode = userCode;
         this.email = email;
         this.name = name;
+        this.birth = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         this.selfie = selfie;
         this.diaryID = diaryID;
         this.diaryName = diaryName;
         this.date = date;
-
-        LocalDateTime curr = LocalDateTime.now();
-        StringBuilder sb = new StringBuilder();
-        sb.append(curr.getYear()).append("-");
-        if(curr.getMonthValue()<10) sb.append("0");
-        sb.append(curr.getMonthValue()).append("-");
-        if(curr.getDayOfMonth()<10) sb.append("0");
-        sb.append(curr.getDayOfMonth());
-        this.birth = sb.toString();
     }
 }

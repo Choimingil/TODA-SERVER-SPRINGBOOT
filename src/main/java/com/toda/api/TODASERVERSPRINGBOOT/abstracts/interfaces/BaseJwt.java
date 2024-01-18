@@ -1,6 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces;
 
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserRepository;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;
@@ -40,15 +41,15 @@ public interface BaseJwt {
      * @param token
      * @return
      */
-    UserData decodeToken(String token);
+    UserDetail decodeToken(String token);
 
     /**
      * 토큰 생성 메서드
      * @param authentication
-     * @param userData
+     * @param userDetail
      * @return
      */
-    String createToken(Authentication authentication, UserData userData);
+    String createToken(Authentication authentication, UserDetail userDetail);
 
     /**
      * 헤더값이 존재하는지 확인

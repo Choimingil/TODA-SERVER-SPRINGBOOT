@@ -5,11 +5,11 @@ import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.*;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.PostDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.PostList;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreatePost;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdatePost;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.FcmDto;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.ImageItem;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostImageResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostDetailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
@@ -97,23 +97,23 @@ public class PostService extends AbstractService implements BaseService {
     }
 
     @Transactional
-    public void setFcmAndLog(Map<Long,String> map, UserData sendUserData, Post post, int type){
+    public void setFcmAndLog(Map<Long,String> map, UserDetail sendUser, Post post, int type){
         setJmsTopicFcm(
-                sendUserData.getUserID(),
+                sendUser.getUser().getUserID(),
                 (userID, userName) -> {
                     // 발송 조건 : 상대방 유저가 다이어리에 존재할 경우
                     return getUserDiaryStatus(userID,post.getDiaryID()) == 100;
                 },
                 // 조건 만족 시 FCM 발송
                 (userID, userName) -> {
-                    addUserLog(userID,sendUserData.getUserID(),post.getPostID(),type,100);
+                    addUserLog(userID,sendUser.getUser().getUserID(),post.getPostID(),type,100);
                     return getUserFcmTokenList(userID);
                 },
                 FcmDto.builder()
                         .title(getFcmTitle())
                         .body(getFcmBody(
-                                sendUserData.getUserName(),
-                                sendUserData.getUserCode(),
+                                sendUser.getUser().getUserName(),
+                                sendUser.getUser().getUserCode(),
                                 post.getUser() == null ? userRepository.findByUserID(post.getUserID()).getUserName() : post.getUser().getUserName(),
                                 type))
                         .typeNum(type)
@@ -146,13 +146,13 @@ public class PostService extends AbstractService implements BaseService {
         int status = getStatus(updatePost.getAligned(), updatePost.getFont(), 100, () -> {});
 
         List<PostText> postTextList = postTextRepository.findByPostID(updatePost.getPost());
-        AtomicBoolean isEdit = new AtomicBoolean(false);
+        AtomicBoolean isEdit = new AtomicBoolean(true);
         updateListAndDelete(
                 postText -> isEdit.get(),
                 postText -> {
                     postText.setText(updatePost.getText());
                     postText.setStatus(status);
-                    isEdit.set(true);
+                    isEdit.set(false);
                 },
                 postTextList,
                 postTextRepository
@@ -220,10 +220,10 @@ public class PostService extends AbstractService implements BaseService {
         int fontCode = postDetail.getPostText().getStatus()%100;
         int alignedCode = postDetail.getPostText().getStatus()/100;
 
-        List<ImageItem> validImageList = postImageList.stream()
-                .map(postImage -> ImageItem.builder()
+        List<PostImageResponse> validImageList = postImageList.stream()
+                .map(postImage -> PostImageResponse.builder()
                         .imageID(postImage.getPostImageID())
-                        .URL(postImage.getUrl())
+                        .url(postImage.getUrl())
                         .build())
                 .collect(Collectors.toList());
 
@@ -263,12 +263,12 @@ public class PostService extends AbstractService implements BaseService {
      */
     public Heart getValidHeart(List<Heart> heartList){
         Queue<Heart> queue = new ArrayDeque<>();
-        AtomicBoolean isEdit = new AtomicBoolean(false);
+        AtomicBoolean isEdit = new AtomicBoolean(true);
         updateListAndDelete(
                 heart -> !isEdit.get(),
                 heart -> {
                     queue.add(heart);
-                    isEdit.set(true);
+                    isEdit.set(false);
                 },
                 heartList,
                 heartRepository
@@ -329,7 +329,4 @@ public class PostService extends AbstractService implements BaseService {
 
     public Post getPostByID(long postID){return postRepository.findByPostID(postID);}
     public List<Heart> getHeartList(long userID, long postID){return heartRepository.findByUserIDAndPostIDOrderByCreateAtDesc(userID,postID);}
-//    public int getUserPostStatus(long userID, long postID){return getUserPostStatus(userID,postID,userDiaryRepository,postRepository);}
-//    public UserData getSendUserData(String token){return decodeToken(token);}
-//    public int getUserDiaryStatus(long userID, long diaryID){return getUserDiaryStatus(userID, diaryID, userDiaryRepository);}
 }

@@ -56,6 +56,8 @@ public class SuccessResponse extends Response {
         REJECT_DIARY_SUCCESS(100, "다이어리 초대가 거절되었습니다."),
         DELETE_DIARY_SUCCESS(100, "다이어리에서 나갔습니다."),
         UPDATE_DIARY_SUCCESS(100, "다이어리 수정이 완료되었습니다."),
+        POST_DIARY_NOTICE_SUCCESS(100, "다이어리 공지 등록이 완료되었습니다."),
+        DELETE_DIARY_NOTICE_SUCCESS(100, "다이어리 공지가 삭제되었습니다."),
         UPDATE_DIARY_NOTICE_SUCCESS(100, "다이어리 공지 수정이 완료되었습니다."),
 
         /**

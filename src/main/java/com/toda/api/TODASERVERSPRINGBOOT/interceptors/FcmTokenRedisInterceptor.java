@@ -3,11 +3,10 @@ package com.toda.api.TODASERVERSPRINGBOOT.interceptors;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractInterceptor;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateFcmTokenAuth;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
-import lombok.RequiredArgsConstructor;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -29,8 +28,8 @@ public final class FcmTokenRedisInterceptor extends AbstractInterceptor implemen
             @NotNull Object handler
     ) throws Exception {
         if(haveValidHeader(request)){
-            UserData userData = decodeToken(getToken(request));
-            delegateFcmTokenAuth.setFcmMap(userData.getUserID());
+            UserDetail sendUser = decodeToken(getToken(request));
+            delegateFcmTokenAuth.setFcmMap(sendUser.getUser().getUserID());
         }
         return true;
     }

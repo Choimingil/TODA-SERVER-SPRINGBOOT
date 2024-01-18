@@ -2,16 +2,16 @@ package com.toda.api.TODASERVERSPRINGBOOT.abstracts;
 
 import com.google.protobuf.MessageLite;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.User;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryColors;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryStatus;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.FcmDto;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
 
 import java.util.*;
@@ -55,17 +55,17 @@ public abstract class AbstractService extends AbstractUtil implements BaseServic
     protected long getUserID(String token) {
         return delegateJwt.getUserID(token);
     }
-    protected String createToken(Authentication authentication, UserData userData) {
-        return delegateJwt.createToken(authentication,userData);
+    protected String createToken(Authentication authentication, UserDetail userDetail) {
+        return delegateJwt.createToken(authentication,userDetail);
     }
-    protected UserData decodeToken(String token) {
+    protected UserDetail decodeToken(String token) {
         return delegateJwt.decodeToken(token);
     }
-    protected UserData getUserInfo(String value) {
+    protected UserDetail getUserInfo(String value) {
         return delegateUserAuth.getUserInfo(value);
     }
-    protected void setUserInfo(UserData userData) {
-        delegateUserAuth.setUserInfo(userData);
+    protected void updateUserRedis(User user, String profile) {
+        delegateUserAuth.updateUserRedis(user, profile);
     }
     protected void deleteUserInfo(String email) {
         delegateUserAuth.deleteUserInfo(email);

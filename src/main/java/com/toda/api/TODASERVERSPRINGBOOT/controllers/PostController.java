@@ -1,19 +1,16 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateDateTime;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateFile;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateStatus;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.Heart;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.Post;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreatePost;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.SetHeart;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdatePost;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.PostListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.services.PostService;
@@ -29,8 +26,8 @@ import java.util.Map;
 public class PostController extends AbstractController implements BaseController {
     private final PostService postService;
 
-    public PostController(DelegateDateTime delegateDateTime, DelegateFile delegateFile, DelegateStatus delegateStatus, DelegateJwt delegateJwt, PostService postService) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt);
+    public PostController(DelegateDateTime delegateDateTime, DelegateFile delegateFile, DelegateStatus delegateStatus, DelegateJwt delegateJwt, DelegateUserAuth delegateUserAuth, PostService postService) {
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateUserAuth);
         this.postService = postService;
     }
 
@@ -53,8 +50,8 @@ public class PostController extends AbstractController implements BaseController
                 postService.addPostImage(target.getPostID(),createPost.getImageList());
 
             // 알림 발송
-            UserData sendUserData = decodeToken(token);
-            postService.setFcmAndLog(postService.getFcmAddPostUserMap(userID, createPost.getDiary()),sendUserData,target,3);
+            UserDetail sendUser = getUserInfo(token);
+            postService.setFcmAndLog(postService.getFcmAddPostUserMap(userID, createPost.getDiary()),sendUser,target,3);
             return new SuccessResponse.Builder(SuccessResponse.of.CREATE_POST_SUCCESS).build().getResponse();
         }
 
@@ -133,8 +130,8 @@ public class PostController extends AbstractController implements BaseController
 
                 // 자신이 작성한 게시글이 아닐 경우 게시글 주인에게 알림 발송
                 if(target.getUserID() != userID){
-                    UserData sendUserData = decodeToken(token);
-                    postService.setFcmAndLog(postService.getFcmAddHeartUserMap(userID, target.getUser()),sendUserData,target,4);
+                    UserDetail sendUser = getUserInfo(token);
+                    postService.setFcmAndLog(postService.getFcmAddHeartUserMap(userID, target.getUser()),sendUser,target,4);
                 }
 
                 return new SuccessResponse.Builder(SuccessResponse.of.DO_HEART_SUCCESS).build().getResponse();

@@ -2,17 +2,18 @@ package com.toda.api.TODASERVERSPRINGBOOT.models.responses.get;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
-import lombok.Getter;
 import lombok.ToString;
 
 import java.util.List;
 
-@Getter
 @ToString
 public final class CommentListResponse {
+    @JsonProperty("totalCommentNum")
     private int totalCommentNum;
     @JsonProperty("Comment")
     private List<CommentDetailResponse> comment;
+
+    public List<CommentDetailResponse> getComment(){return this.comment;}
 
     public CommentListResponse(){}
 

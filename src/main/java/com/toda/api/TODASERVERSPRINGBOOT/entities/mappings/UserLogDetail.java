@@ -1,12 +1,19 @@
 package com.toda.api.TODASERVERSPRINGBOOT.entities.mappings;
 
+import com.toda.api.TODASERVERSPRINGBOOT.entities.UserLog;
+
 import java.time.LocalDateTime;
 
 public interface UserLogDetail {
-    public long getType();
-    public long getID();
-    public String getName();
-    public String getSelfie();
-    public LocalDateTime getDate();
-    public boolean getIsReplied();
+//    long getType();
+//    long getID();
+//    String getName();
+//    String getSelfie();
+//    LocalDateTime getDate();
+//    boolean getIsReplied();
+
+    UserLog getUserLog();
+    String getSelfie();
+    String getImage();
+    boolean getIsReplied();
 }

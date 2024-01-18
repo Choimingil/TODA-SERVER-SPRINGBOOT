@@ -1,24 +1,20 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateDateTime;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateFile;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateStatus;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.Diary;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.UserDiary;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreateDiary;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateDiary;
-import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateNotice;
+import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.PostNotice;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UserCode;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryMemberListResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.DiaryNoticeResponse;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.InviteRequestResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.services.DiaryService;
@@ -27,7 +23,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,8 +30,8 @@ import java.util.Map;
 public class DiaryController extends AbstractController implements BaseController {
     private final DiaryService diaryService;
 
-    public DiaryController(DelegateDateTime delegateDateTime, DelegateFile delegateFile, DelegateStatus delegateStatus, DelegateJwt delegateJwt, DiaryService diaryService) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt);
+    public DiaryController(DelegateDateTime delegateDateTime, DelegateFile delegateFile, DelegateStatus delegateStatus, DelegateJwt delegateJwt, DelegateUserAuth delegateUserAuth, DiaryService diaryService) {
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateUserAuth);
         this.diaryService = diaryService;
     }
 
@@ -75,12 +70,12 @@ public class DiaryController extends AbstractController implements BaseControlle
             ReceiveUser : FCM 알림을 발송할 상대방
          */
 
-        UserData sendUserData = decodeToken(token);
-        UserInfoDetail receiveUserData = diaryService.getReceiveUserData(userCode.getUserCode());
+        UserDetail sendUser = getUserInfo(token);
+        UserDetail receiveUser = diaryService.getReceiveUserDetail(userCode.getUserCode());
         Diary diary = diaryService.getDiary(diaryID);
 
-        long sendUserID = sendUserData.getUserID();
-        long receiveUserID = receiveUserData.getUserID();
+        long sendUserID = sendUser.getUser().getUserID();
+        long receiveUserID = receiveUser.getUser().getUserID();
 
         if(sendUserID == receiveUserID) throw new BusinessLogicException(BusinessLogicException.of.SELF_INVITE_EXCEPTION);
         int sendUserDiaryStatus = getUserDiaryStatus(sendUserID,diaryID);
@@ -95,11 +90,11 @@ public class DiaryController extends AbstractController implements BaseControlle
             // 상대방 유저가 다이어리에 존재하지 않을 경우 다이어리 초대 진행
             if(receiveUserDiaryStatus == 404){
                 // 다이어리 초대
-                diaryService.inviteDiary(sendUserData,receiveUserData,diary);
+                diaryService.inviteDiary(sendUser,receiveUser,diary);
 
                 // FCM 발송
-                Map<Long,String> fcmDiaryInviteUserMap = diaryService.getFcmDiaryInviteUserMap(List.of(receiveUserData));
-                diaryService.setFcmAndLog(fcmDiaryInviteUserMap, sendUserData, diary, 1);
+                Map<Long,String> fcmDiaryInviteUserMap = diaryService.getFcmDiaryInviteUserMap(List.of(receiveUser));
+                diaryService.setFcmAndLog(fcmDiaryInviteUserMap, sendUser, diary, 1);
                 return new SuccessResponse.Builder(SuccessResponse.of.INVITE_DIARY_SUCCESS).build().getResponse();
             }
 
@@ -116,7 +111,7 @@ public class DiaryController extends AbstractController implements BaseControlle
 
             // FCM 발송
             Map<Long,String> acceptableDiaryMap = diaryService.getFcmDiaryAcceptUserMap(acceptableDiaryList);
-            diaryService.setFcmAndLog(acceptableDiaryMap, sendUserData, diary, 2);
+            diaryService.setFcmAndLog(acceptableDiaryMap, sendUser, diary, 2);
             return new SuccessResponse.Builder(SuccessResponse.of.ACCEPT_DIARY_SUCCESS).build().getResponse();
         }
     }
@@ -239,16 +234,40 @@ public class DiaryController extends AbstractController implements BaseControlle
         else throw new BusinessLogicException(BusinessLogicException.of.NO_DIARY_EXCEPTION);
     }
 
+    //15-1. 다이어리 공지 등록 API
+    @PostMapping("/notice")
+    @SetMdcBody
+    public Map<String, ?> createNotice(
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
+            @RequestBody @Valid PostNotice postNotice,
+            BindingResult bindingResult
+    ){
+        long userID = getUserID(token);
+        diaryService.updateNotice(userID, postNotice.getDiary(), postNotice.getNotice());
+        return new SuccessResponse.Builder(SuccessResponse.of.POST_DIARY_NOTICE_SUCCESS).build().getResponse();
+    }
+
+    //15-2. 다이어리 공지 삭제 API
+    @DeleteMapping("/notice/{diaryID}")
+    public Map<String, ?> createNotice(
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
+            @PathVariable("diaryID") long diaryID
+    ){
+        long userID = getUserID(token);
+        diaryService.updateNotice(userID, diaryID, "");
+        return new SuccessResponse.Builder(SuccessResponse.of.DELETE_DIARY_NOTICE_SUCCESS).build().getResponse();
+    }
+
     //15-3. 다이어리 공지 수정 API
     @PatchMapping("/notice")
     @SetMdcBody
     public Map<String, ?> updateNotice(
             @RequestHeader(DelegateJwt.HEADER_NAME) String token,
-            @RequestBody @Valid UpdateNotice updateNotice,
+            @RequestBody @Valid PostNotice postNotice,
             BindingResult bindingResult
     ){
         long userID = getUserID(token);
-        diaryService.updateNotice(userID, updateNotice.getDiary(), updateNotice.getNotice());
+        diaryService.updateNotice(userID, postNotice.getDiary(), postNotice.getNotice());
         return new SuccessResponse.Builder(SuccessResponse.of.UPDATE_DIARY_NOTICE_SUCCESS).build().getResponse();
     }
 

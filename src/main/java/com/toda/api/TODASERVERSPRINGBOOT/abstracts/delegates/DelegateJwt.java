@@ -1,11 +1,12 @@
 package com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates;
 
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseJwt;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.User;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.TokenFields;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.NoArgException;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
+import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserRepository;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -69,34 +70,44 @@ public final class DelegateJwt implements BaseJwt, InitializingBean {
     }
 
     @Override
-    public UserData decodeToken(String token) {
+    public UserDetail decodeToken(String token) {
         Claims claims = getClaims(token);
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
-        return UserData.builder()
-                .userID(Long.parseLong(String.valueOf(claims.get(TokenFields.USER_ID.value))))
-                .userCode(String.valueOf(claims.get(TokenFields.USER_CODE.value)))
-                .appPassword(Integer.parseInt(String.valueOf(claims.get(TokenFields.APP_PASSWORD.value))))
-                .email(String.valueOf(claims.get(TokenFields.EMAIL.value)))
-                .userName(String.valueOf(claims.get(TokenFields.USER_NAME.value)))
-                .createAt(LocalDateTime.parse(String.valueOf(claims.get(TokenFields.CREATE_AT.value)), formatter))
-                .profile(String.valueOf(claims.get(TokenFields.PROFILE.value)))
-                .build();
+        return new UserDetail() {
+            @Override
+            public User getUser() {
+                return new User(
+                        Long.parseLong(String.valueOf(claims.get(TokenFields.USER_ID.value))),
+                        String.valueOf(claims.get(TokenFields.EMAIL.value)),
+                        "PASSWORD",
+                        String.valueOf(claims.get(TokenFields.USER_CODE.value)),
+                        Integer.parseInt(String.valueOf(claims.get(TokenFields.APP_PASSWORD.value))),
+                        String.valueOf(claims.get(TokenFields.USER_NAME.value)),
+                        LocalDateTime.parse(String.valueOf(claims.get(TokenFields.CREATE_AT.value)), formatter)
+                );
+            }
+
+            @Override
+            public String getProfile() {
+                return String.valueOf(claims.get(TokenFields.PROFILE.value));
+            }
+        };
     }
 
     @Override
-    public String createToken(Authentication authentication, UserData userData) {
+    public String createToken(Authentication authentication, UserDetail userDetail) {
         String authorities = getAuthorities(authentication);
         return Jwts.builder()
                 // subject : email
                 .setSubject(authentication.getName())
-                .claim(TokenFields.USER_ID.value, userData.getUserID())
-                .claim(TokenFields.USER_CODE.value, userData.getUserCode())
-                .claim(TokenFields.APP_PASSWORD.value, userData.getAppPassword())
-                .claim(TokenFields.EMAIL.value, userData.getEmail())
-                .claim(TokenFields.USER_NAME.value, userData.getUserName())
-                .claim(TokenFields.CREATE_AT.value, userData.getCreateAt().toString())
-                .claim(TokenFields.PROFILE.value, userData.getProfile())
+                .claim(TokenFields.USER_ID.value, userDetail.getUser().getUserID())
+                .claim(TokenFields.USER_CODE.value, userDetail.getUser().getUserCode())
+                .claim(TokenFields.APP_PASSWORD.value, userDetail.getUser().getAppPassword())
+                .claim(TokenFields.EMAIL.value, userDetail.getUser().getEmail())
+                .claim(TokenFields.USER_NAME.value, userDetail.getUser().getUserName())
+                .claim(TokenFields.CREATE_AT.value, userDetail.getUser().getCreateAt().toString())
+                .claim(TokenFields.PROFILE.value, userDetail.getProfile())
                 .claim(AUTHORITIES_KEY,authorities)
                 .signWith(key, SignatureAlgorithm.HS512)
 //                .setExpiration(getValidity())

@@ -10,8 +10,10 @@ import lombok.ToString;
 @Getter
 @ToString
 public final class UpdateUser {
-    @ValidUserName private String name;
-    @ValidUrl private String image;
+//    @ValidUserName private String name;
+//    @ValidUrl private String image;
+    private String name;
+    private String image;
     public UpdateUser(){}
 
     @Builder

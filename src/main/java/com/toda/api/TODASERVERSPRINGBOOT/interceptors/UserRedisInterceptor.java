@@ -3,13 +3,12 @@ package com.toda.api.TODASERVERSPRINGBOOT.interceptors;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractInterceptor;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateUserAuth;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
 import io.micrometer.common.lang.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -31,8 +30,8 @@ public final class UserRedisInterceptor extends AbstractInterceptor implements H
     ) throws Exception {
         if(haveValidHeader(request)){
             String email = getSubject(request);
-            UserData user = delegateUserAuth.getUserInfo(email);
-            if(!user.getEmail().equals(email)) throw new WrongArgException(WrongArgException.of.WRONG_TOKEN_DATA_EXCEPTION);
+            UserDetail userDetail = delegateUserAuth.getUserInfo(email);
+            if(!userDetail.getUser().getEmail().equals(email)) throw new WrongArgException(WrongArgException.of.WRONG_TOKEN_DATA_EXCEPTION);
         }
         return true;
     }

@@ -1,18 +1,15 @@
 package com.toda.api.TODASERVERSPRINGBOOT.controllers;
 
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateDateTime;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateFile;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateStatus;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.*;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserLogDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.FailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.UserLogResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.services.AuthService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.SystemService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.UserService;
@@ -22,6 +19,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,11 +38,12 @@ public class UserController extends AbstractController implements BaseController
             DelegateFile delegateFile,
             DelegateStatus delegateStatus,
             DelegateJwt delegateJwt,
+            DelegateUserAuth delegateUserAuth,
             UserService userService,
             SystemService systemService,
             AuthService authService
     ) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt);
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateUserAuth);
         this.userService = userService;
         this.systemService = systemService;
         this.authService = authService;
@@ -105,13 +104,12 @@ public class UserController extends AbstractController implements BaseController
     @SetMdcBody
     public Map<String,?> updateUser(
             @RequestHeader(DelegateJwt.HEADER_NAME) String token,
-            @RequestBody @Valid UpdateUser updateUser,
+            @RequestBody UpdateUser updateUser,
             BindingResult bindingResult
     ){
-        if(!updateUser.getName().equals(DelegateJwt.SKIP_VALUE)) userService.updateName(token, updateUser.getName());
-        if(!updateUser.getImage().equals(DelegateJwt.SKIP_VALUE)) userService.updateProfile(token, updateUser.getImage());
-        return new SuccessResponse.Builder(SuccessResponse.of.UPDATE_USER_SUCCESS)
-                .build().getResponse();
+        if(updateUser.getName()!=null && !updateUser.getName().equals(DelegateJwt.SKIP_VALUE)) userService.updateName(token, updateUser.getName());
+        if(updateUser.getImage()!=null && !updateUser.getImage().equals(DelegateJwt.SKIP_VALUE)) userService.updateProfile(token, updateUser.getImage());
+        return new SuccessResponse.Builder(SuccessResponse.of.UPDATE_USER_SUCCESS).build().getResponse();
     }
 
     //6-0. 프로필 사진 삭제 API
@@ -126,19 +124,19 @@ public class UserController extends AbstractController implements BaseController
 
     //7. 회원정보조회 API
     @GetMapping("/user")
-    public Map<String,?> getUserInfo(
+    public Map<String,?> getUserDataInfo(
             @RequestHeader(DelegateJwt.HEADER_NAME) String token
     ){
-        UserData userData = userService.getUser(token);
+        UserDetail userDetail = getUserInfo(token);
 
         Map<String,Object> userInfo = new HashMap<>();
-        userInfo.put("userID",userData.getUserID());
-        userInfo.put("userCode",userData.getUserCode());
-        userInfo.put("email",userData.getEmail());
-        userInfo.put("birth",userData.getCreateAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-        userInfo.put("name",userData.getUserName());
-        userInfo.put("appPW",userData.getAppPassword());
-        userInfo.put("selfie",userData.getProfile());
+        userInfo.put("userID",userDetail.getUser().getUserID());
+        userInfo.put("userCode",userDetail.getUser().getUserCode());
+        userInfo.put("email",userDetail.getUser().getEmail());
+        userInfo.put("birth",userDetail.getUser().getCreateAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+        userInfo.put("name",userDetail.getUser().getUserName());
+        userInfo.put("appPW",userDetail.getUser().getAppPassword());
+        userInfo.put("selfie",userDetail.getProfile());
 
         return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
                 .add("result",userInfo)
@@ -151,16 +149,16 @@ public class UserController extends AbstractController implements BaseController
             @RequestHeader(DelegateJwt.HEADER_NAME) String token,
             @PathVariable("userCode") String userCode
     ){
-        UserInfoDetail userData = userService.getUserInfoWithUserCode(userCode);
+        UserDetail userDetail = userService.getUserInfoWithUserCode(userCode);
 
         Map<String,Object> userInfo = new HashMap<>();
-        userInfo.put("userID",userData.getUserID());
-        userInfo.put("userCode",userData.getUserCode());
-        userInfo.put("email",userData.getEmail());
-        userInfo.put("birth",userData.getCreateAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-        userInfo.put("name",userData.getUserName());
-        userInfo.put("appPW",userData.getAppPassword());
-        userInfo.put("selfie",userData.getProfile());
+        userInfo.put("userID",userDetail.getUser().getUserID());
+        userInfo.put("userCode",userDetail.getUser().getUserCode());
+        userInfo.put("email",userDetail.getUser().getEmail());
+        userInfo.put("birth",userDetail.getUser().getCreateAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+        userInfo.put("name",userDetail.getUser().getUserName());
+        userInfo.put("appPW",userDetail.getUser().getAppPassword());
+        userInfo.put("selfie",userDetail.getProfile());
 
         return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
                 .add("result",userInfo)
@@ -187,8 +185,8 @@ public class UserController extends AbstractController implements BaseController
             @RequestBody @Valid AppPassword appPassword,
             BindingResult bindingResult
     ){
-        UserData userData = userService.updateAppPassword(token, Integer.parseInt(appPassword.getAppPW()));
-        String jwt = authService.createJwt(userData.getEmail(), userData.getPassword());
+        UserDetail userDetail = userService.updateAppPassword(token, Integer.parseInt(appPassword.getAppPW()));
+        String jwt = authService.createJwt(userDetail.getUser().getEmail(), userDetail.getUser().getPassword());
         return new SuccessResponse.Builder(SuccessResponse.of.UPDATE_APP_PASSWORD_SUCCESS)
                 .add("token",jwt)
                 .build().getResponse();
@@ -199,8 +197,8 @@ public class UserController extends AbstractController implements BaseController
     public Map<String, ?> deleteAppPassword(
             @RequestHeader(DelegateJwt.HEADER_NAME) String token
     ){
-        UserData userData = userService.updateAppPassword(token, 10000);
-        String jwt = authService.createJwt(userData.getEmail(), userData.getPassword());
+        UserDetail userDetail = userService.updateAppPassword(token, 10000);
+        String jwt = authService.createJwt(userDetail.getUser().getEmail(), userDetail.getUser().getPassword());
         return new SuccessResponse.Builder(SuccessResponse.of.DELETE_APP_PASSWORD_SUCCESS)
                 .add("token",jwt)
                 .build().getResponse();
@@ -213,21 +211,10 @@ public class UserController extends AbstractController implements BaseController
             @RequestParam(name="page") int page
     ){
         long userID = getUserID(token);
-        List<UserLogDetail> userLogs = userService.getUserLog(userID,page);
-        if(userLogs == null) return new SuccessResponse.Builder(SuccessResponse.of.NO_USER_LOG_SUCCESS).build().getResponse();
-
-        List<Map<String,Object>> userLogDetails = userLogs.stream().map(element -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("type", element.getType());
-            map.put("ID", element.getID());
-            map.put("name", element.getName());
-            map.put("selfie", element.getSelfie());
-            map.put("date", getDateString(element.getDate()));
-            map.put("isReplied", element.getIsReplied());
-            return map;
-        }).toList();
+        List<UserLogResponse> userLogResponseList = userService.getUserLog(userID,page);
+        if(userLogResponseList == null) return new SuccessResponse.Builder(SuccessResponse.of.NO_USER_LOG_SUCCESS).add("result",new ArrayList<>()).build().getResponse();
         return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
-                .add("result",userLogDetails)
+                .add("result",userLogResponseList)
                 .build().getResponse();
     }
 }

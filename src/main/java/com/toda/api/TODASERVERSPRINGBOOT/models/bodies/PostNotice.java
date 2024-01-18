@@ -6,14 +6,14 @@ import lombok.ToString;
 
 @Getter
 @ToString
-public final class UpdateNotice {
+public final class PostNotice {
     private long diary;
     private String notice;
 
-    public UpdateNotice(){}
+    public PostNotice(){}
 
     @Builder
-    public UpdateNotice(long diary, String notice){
+    public PostNotice(long diary, String notice){
         this.diary = diary;
         this.notice = notice;
     }

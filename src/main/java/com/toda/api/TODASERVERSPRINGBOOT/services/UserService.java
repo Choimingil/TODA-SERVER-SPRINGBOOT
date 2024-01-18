@@ -4,14 +4,14 @@ import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.User;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.UserImage;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.UserSticker;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreateUser;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.UserData;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserInfoDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserLogDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserStickerDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.JmsMailProto;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.UserLogResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 @Component("userService")
 public class UserService extends AbstractService implements BaseService {
@@ -87,24 +88,24 @@ public class UserService extends AbstractService implements BaseService {
 
     @Transactional
     public void deleteUser(String token){
-        UserData userData = getUserInfo(token);
-        userRepository.deleteUser(userData.getUserID());
-        deleteUserInfo(userData.getEmail());
+        UserDetail userDetail = getUserInfo(token);
+        userRepository.deleteUser(userDetail.getUser().getUserID());
+        deleteUserInfo(userDetail.getUser().getEmail());
     }
 
     @Transactional
     public void updateName(String token, String name){
-        UserData userData = getUserInfo(token);
-        User user = userData.toUser();
+        UserDetail userDetail = getUserInfo(token);
+        User user = userDetail.getUser();
         user.setUserName(name);
         userRepository.save(user);
-        setUserInfo(userData);
+        updateUserRedis(user, userDetail.getProfile());
     }
 
     @Transactional
     public void updatePassword(String token, String password){
-        UserData userData = getUserInfo(token);
-        User user = userData.toUser();
+        UserDetail userDetail = getUserInfo(token);
+        User user = userDetail.getUser();
 
         if(userRepository.existsByUserIDAndPasswordAndAppPasswordNot(user.getUserID(), password, 99999))
             throw new WrongArgException(WrongArgException.of.SAME_PASSWORD_EXCEPTION);
@@ -114,42 +115,37 @@ public class UserService extends AbstractService implements BaseService {
 
         user.setPassword(password);
         userRepository.save(user);
-        setUserInfo(userData);
+        updateUserRedis(user, userDetail.getProfile());
     }
 
     @Transactional
-    public UserData updateAppPassword(String token, int appPassword){
-        UserData userData = getUserInfo(token);
-        User user = userData.toUser();
+    public UserDetail updateAppPassword(String token, int appPassword){
+        UserDetail userDetail = getUserInfo(token);
+        User user = userDetail.getUser();
         user.setAppPassword(appPassword);
         userRepository.save(user);
-        setUserInfo(userData);
-        return userData;
+        updateUserRedis(user, userDetail.getProfile());
+        return userDetail;
     }
 
     @Transactional
     public void updateProfile(String token, String profile){
-        UserData userData = getUserInfo(token);
-        long userID = userData.getUserID();
+        UserDetail userDetail = getUserInfo(token);
+        long userID = userDetail.getUser().getUserID();
 
         userImageRepository.deleteImage(userID);
-
         createUserImage(userID,profile);
-        setUserInfo(userData);
+        updateUserRedis(userDetail.getUser(), profile);
     }
 
-    public UserData getUser(String token){
-        return getUserInfo(token);
-    }
-
-    public UserInfoDetail getUserInfoWithUserCode(String userCode){
-        return userRepository.getUserDataByUserCode(userCode);
+    public UserDetail getUserInfoWithUserCode(String userCode){
+        return userRepository.getUserDetailByUserCode(userCode);
     }
 
     @Transactional
     public void updateTempPassword(String email) {
-        UserData userData = getUserInfo(email);
-        User user = userData.toUser();
+        UserDetail userDetail = getUserInfo(email);
+        User user = userDetail.getUser();
         String password = createUserCode();
 
         if(userRepository.existsByUserIDAndPasswordAndAppPasswordNot(user.getUserID(), password, 99999))
@@ -164,10 +160,23 @@ public class UserService extends AbstractService implements BaseService {
         sendTempPassword(email,password);
     }
 
-    public List<UserLogDetail> getUserLog(long userID, int page){
+    public List<UserLogResponse> getUserLog(long userID, int page){
         int start = (page-1)*20;
         Pageable pageable = PageRequest.of(start,20);
-        return userLogRepository.getUserLogs(userID,pageable);
+        List<UserLogDetail> userLogList = userLogRepository.getUserLogs(userID,pageable);
+
+        return userLogList.stream()
+                .map(userLogDetail -> UserLogResponse.builder()
+                        .type(userLogDetail.getUserLog().getType())
+                        .id(userLogDetail.getUserLog().getTypeID())
+                        .name(userLogDetail.getUserLog().getUser().getUserName())
+                        .selfie(userLogDetail.getSelfie())
+                        .image(userLogDetail.getImage())
+                        .date(getDateString(userLogDetail.getUserLog().getUpdateAt()))
+                        .isReplied(userLogDetail.getIsReplied())
+                        .build()
+                )
+                .collect(Collectors.toList());
     }
 
     private String createUserCode(){
