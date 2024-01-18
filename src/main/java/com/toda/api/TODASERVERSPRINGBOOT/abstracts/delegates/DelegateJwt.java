@@ -117,6 +117,7 @@ public final class DelegateJwt implements BaseJwt, InitializingBean {
 
     @Override
     public void setSecurityContextHolder(HttpServletRequest request) {
+        SecurityContextHolder.clearContext();
         SecurityContextHolder.getContext().setAuthentication(getAuthentication(getToken(request)));
     }
 
@@ -126,7 +127,6 @@ public final class DelegateJwt implements BaseJwt, InitializingBean {
         key = Keys.hmacShaKeyFor(keyBytes);
         SKIP_VALUE = secret;
     }
-
 
     /**
      * authorities 설정
@@ -165,6 +165,7 @@ public final class DelegateJwt implements BaseJwt, InitializingBean {
         Collection<? extends GrantedAuthority> authorities =
                 Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
                         .map(SimpleGrantedAuthority::new)
+                        .distinct()
                         .collect(Collectors.toList());
 
         // claim과 authorities 이용하여 User 객체 생성

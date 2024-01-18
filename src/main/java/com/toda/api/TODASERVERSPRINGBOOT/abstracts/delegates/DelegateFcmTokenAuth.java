@@ -127,8 +127,20 @@ public final class DelegateFcmTokenAuth extends AbstractAuth implements BaseFcmT
      */
     private FcmMap getFcmMapWithDb(long userID){
         List<Notification> userFcmList = notificationRepository.findByUserIDAndIsAllowedAndStatusNot(userID,"Y",0);
-        Map<String,Long> tokenIDs = userFcmList.stream().collect(Collectors.toMap(Notification::getFcm, Notification::getNotificationID));
-        Map<String,Integer> tokenStatus = userFcmList.stream().collect(Collectors.toMap(Notification::getFcm, Notification::getStatus));
+        Map<String, Long> tokenIDs = userFcmList.stream()
+                .collect(Collectors.toMap(
+                        Notification::getFcm,
+                        Notification::getNotificationID,
+                        // Merge 함수를 사용하여 중복된 키에 대한 충돌 처리
+                        (existingValue, newValue) -> existingValue
+                ));
+        Map<String, Integer> tokenStatus = userFcmList.stream()
+                .collect(Collectors.toMap(
+                        Notification::getFcm,
+                        Notification::getStatus,
+                        // Merge 함수를 사용하여 중복된 키에 대한 충돌 처리
+                        (existingValue, newValue) -> existingValue
+                ));
         return FcmMap.builder().tokenIDs(tokenIDs).tokenStatus(tokenStatus).build();
     }
 
