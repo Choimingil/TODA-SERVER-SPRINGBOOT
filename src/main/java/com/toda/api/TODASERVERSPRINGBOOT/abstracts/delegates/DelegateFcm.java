@@ -189,24 +189,24 @@ public final class DelegateFcm implements BaseFcm {
 
     @Override
     public void setJmsTopicFcm(long sendID, BiFunction<Long,String,Boolean> check, BiFunction<Long,String,FcmGroup> fcmGroup, FcmDto fcmDto) {
-        List<String> aosFcmList = new ArrayList<>();
-        List<String> iosFcmList = new ArrayList<>();
-
-        for(Map.Entry<Long,String> entry : fcmDto.getMap().entrySet()){
-            long userID = entry.getKey();
-            String userName = entry.getValue();
-
-            // 발신자와 수신자가 같을 경우 알림 미발송
-            if(userID == sendID) continue;
-
-            // 상대방 유저가 FCM 수신 조건 만족 시 발송
-            if(check.apply(userID,userName)){
-                aosFcmList.addAll(fcmGroup.apply(userID,userName).getAosFcmList());
-                iosFcmList.addAll(fcmGroup.apply(userID,userName).getIosFcmList());
-            }
-        }
-
         if(fcmEnable){
+            List<String> aosFcmList = new ArrayList<>();
+            List<String> iosFcmList = new ArrayList<>();
+
+            for(Map.Entry<Long,String> entry : fcmDto.getMap().entrySet()){
+                long userID = entry.getKey();
+                String userName = entry.getValue();
+
+                // 발신자와 수신자가 같을 경우 알림 미발송
+                if(userID == sendID) continue;
+
+                // 상대방 유저가 FCM 수신 조건 만족 시 발송
+                if(check.apply(userID,userName)){
+                    aosFcmList.addAll(fcmGroup.apply(userID,userName).getAosFcmList());
+                    iosFcmList.addAll(fcmGroup.apply(userID,userName).getIosFcmList());
+                }
+            }
+
             try{
                 JmsFcmProto.JmsFcmRequest request = JmsFcmProto.JmsFcmRequest.newBuilder()
                         .setTitle(fcmDto.getTitle())

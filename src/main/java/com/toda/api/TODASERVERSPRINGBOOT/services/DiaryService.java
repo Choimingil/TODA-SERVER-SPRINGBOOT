@@ -215,10 +215,10 @@ public class DiaryService extends AbstractService implements BaseService {
         List<InviteRequestResponse> responseList = new ArrayList<>();
         for(InviteRequest request : requestList){
             responseList.add(InviteRequestResponse.builder()
-                    .userID(request.getUserDiary().getUserID())
-                    .userCode(request.getUserDiary().getUser().getUserCode())
-                    .email(request.getUserDiary().getUser().getEmail())
-                    .name(request.getUserDiary().getUser().getUserName())
+                    .userID(request.getUser().getUserID())
+                    .userCode(request.getUser().getUserCode())
+                    .email(request.getUser().getEmail())
+                    .name(request.getUser().getUserName())
                     .selfie(request.getSelfie())
                     .diaryID(request.getUserDiary().getDiaryID())
                     .diaryName(request.getUserDiary().getDiary().getDiaryName())

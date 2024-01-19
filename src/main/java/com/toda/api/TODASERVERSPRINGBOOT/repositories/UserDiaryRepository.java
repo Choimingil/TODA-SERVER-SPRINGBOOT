@@ -21,10 +21,10 @@ public interface UserDiaryRepository extends JpaRepository<UserDiary,Long> {
     @Query("select ud as userDiary from UserDiary ud where ud.userID = :sendID and ud.status/10 = :receiveID and ud.diaryID = :diaryID")
     List<UserDiary> getAcceptableRequest(long sendID, long receiveID, long diaryID);
 
-    @Query("select ud as userDiary, ui.url as selfie from User u " +
+    @Query("select u as user, ud as userDiary, ui.url as selfie from UserDiary ud " +
+            "inner join User u on ud.status/10 = u.userID and u.appPassword not like 99999 " +
             "inner join UserImage ui on u.userID = ui.userID and ui.status not like 0 " +
-            "inner join UserDiary ud on ud.status/10 = u.userID and ud.diaryID= :diaryID " +
-            "where ud.userID = :userID")
+            "where ud.userID = :userID and ud.diaryID= :diaryID")
     List<InviteRequest> getInviteRequest(long userID, long diaryID);
 
     @Query("select ud as userDiary, " +
@@ -32,6 +32,7 @@ public interface UserDiaryRepository extends JpaRepository<UserDiary,Long> {
             "join nud.user u " +
             "where nud.diaryID = ud.diaryID and nud.status not like 999 " +
             "and u.appPassword not like 99999 " +
+            "and MOD(nud.status,10) not like 0 " +
             "group by nud.diaryID) as userNum " +
             "from UserDiary ud where ud.userID = :userID and MOD(ud.status,100) = :status order by ud.createAt desc")
     List<DiaryList> getDiaryList(long userID, int status, Pageable pageable);
@@ -41,6 +42,7 @@ public interface UserDiaryRepository extends JpaRepository<UserDiary,Long> {
             "join nud.user u " +
             "where nud.diaryID = ud.diaryID and nud.status not like 999 " +
             "and u.appPassword not like 99999 " +
+            "and MOD(nud.status,10) not like 0 " +
             "group by nud.diaryID) as userNum " +
             "from UserDiary ud where ud.userID = :userID and MOD(ud.status,100) = :status and ud.diaryName like concat('%',:keyword,'%')" +
             "order by ud.createAt desc")
@@ -51,6 +53,7 @@ public interface UserDiaryRepository extends JpaRepository<UserDiary,Long> {
             "join nud.user u " +
             "where nud.diaryID = ud.diaryID and nud.status not like 999 " +
             "and u.appPassword not like 99999 " +
+            "and MOD(nud.status,10) not like 0 " +
             "group by nud.diaryID) as userNum, " +
             "ui.url as selfie " +
             "from UserDiary ud " +
