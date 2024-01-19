@@ -26,11 +26,10 @@ public class SystemService extends AbstractService implements BaseService {
             DelegateJwt delegateJwt,
             DelegateFcm delegateFcm,
             DelegateUserAuth delegateUserAuth,
-            DelegateFcmTokenAuth delegateFcmTokenAuth,
             DelegateJms delegateJms,
             UserRepository userRepository
     ) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateJms);
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateJms);
         this.userRepository = userRepository;
     }
 

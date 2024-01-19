@@ -24,8 +24,4 @@ public abstract class AbstractController extends AbstractUtil implements BaseCon
     protected UserDetail getUserInfo(String token){
         return delegateUserAuth.getUserInfo(token);
     }
-//    protected UserDetail decodeToken(String token) {
-//        return delegateJwt.decodeToken(token);
-//    }
-
 }

@@ -77,7 +77,6 @@ public class DiaryController extends AbstractController implements BaseControlle
         long sendUserID = sendUser.getUser().getUserID();
         long receiveUserID = receiveUser.getUser().getUserID();
 
-        if(sendUserID == receiveUserID) throw new BusinessLogicException(BusinessLogicException.of.SELF_INVITE_EXCEPTION);
         int sendUserDiaryStatus = getUserDiaryStatus(sendUserID,diaryID);
         int receiveUserDiaryStatus = getUserDiaryStatus(receiveUserID,diaryID);
 
@@ -86,6 +85,7 @@ public class DiaryController extends AbstractController implements BaseControlle
 
         // 현재 유저가 다이어리에 존재할 경우
         else if(sendUserDiaryStatus == 100){
+            if(sendUserID == receiveUserID) throw new BusinessLogicException(BusinessLogicException.of.SELF_INVITE_EXCEPTION);
 
             // 상대방 유저가 다이어리에 존재하지 않을 경우 다이어리 초대 진행
             if(receiveUserDiaryStatus == 404){
@@ -105,9 +105,11 @@ public class DiaryController extends AbstractController implements BaseControlle
 
         // 현재 유저가 다이어리 초대를 받은 경우 항상 다이어리 수락 진행
         else{
+            if(sendUserID == receiveUserID) throw new BusinessLogicException(BusinessLogicException.of.WRONG_INVITE_EXCEPTION);
+
             // 다이어리 수락
-            List<UserDiary> acceptableDiaryList = diaryService.getAcceptableDiaryList(sendUserID,diaryID);
-            diaryService.acceptDiary(acceptableDiaryList, receiveUserID, diary.getStatus());
+            List<UserDiary> acceptableDiaryList = diaryService.getAcceptableDiaryList(sendUserID,receiveUserID,diaryID);
+            diaryService.acceptDiary(sendUserID, receiveUserID, diaryID, diary.getStatus(), acceptableDiaryList);
 
             // FCM 발송
             Map<Long,String> acceptableDiaryMap = diaryService.getFcmDiaryAcceptUserMap(acceptableDiaryList);

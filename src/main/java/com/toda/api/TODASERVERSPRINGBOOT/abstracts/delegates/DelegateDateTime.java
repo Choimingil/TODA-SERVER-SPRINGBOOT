@@ -34,7 +34,7 @@ public final class DelegateDateTime implements BaseDateTime {
         sb.append(dateTime.getMonthValue()).append("-");
 
         if(dateTime.getDayOfMonth()<10) sb.append("0");
-        sb.append(dateTime.getDayOfMonth()).append("-");
+        sb.append(dateTime.getDayOfMonth()).append(" ");
 
         if(dateTime.getHour()<10) sb.append("0");
         sb.append(dateTime.getHour()).append(":");
@@ -51,6 +51,13 @@ public final class DelegateDateTime implements BaseDateTime {
     @Override
     public LocalDateTime toLocalDateTime(String date) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate localdate = LocalDate.parse(date, formatter);
+        return LocalDateTime.of(localdate, LocalDateTime.now().toLocalTime());
+    }
+
+    @Override
+    public LocalDateTime toLocalDateTimeFull(String date) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDate localdate = LocalDate.parse(date, formatter);
         return LocalDateTime.of(localdate, LocalDateTime.now().toLocalTime());
     }

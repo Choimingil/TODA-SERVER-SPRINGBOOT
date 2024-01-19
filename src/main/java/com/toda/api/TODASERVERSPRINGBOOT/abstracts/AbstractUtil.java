@@ -37,6 +37,9 @@ public abstract class AbstractUtil {
     protected LocalDateTime toLocalDateTime(String date){
         return delegateDateTime.toLocalDateTime(date);
     }
+    protected LocalDateTime toLocalDateTimeFull(String date){
+        return delegateDateTime.toLocalDateTimeFull(date);
+    }
 
     protected long getTimeDiffSec(LocalDateTime currentDateTime, LocalDateTime targetDateTime) {
         return delegateDateTime.getTimeDiffSec(currentDateTime,targetDateTime);

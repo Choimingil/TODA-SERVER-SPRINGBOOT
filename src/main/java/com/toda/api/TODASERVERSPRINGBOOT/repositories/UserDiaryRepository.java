@@ -18,6 +18,9 @@ public interface UserDiaryRepository extends JpaRepository<UserDiary,Long> {
     List<UserDiary> findByUserIDAndDiaryID(long userID, long diaryID);
     List<UserDiary> findByDiaryIDAndStatusNot(long diaryID, int status);
 
+    @Query("select ud as userDiary from UserDiary ud where ud.userID = :sendID and ud.status/10 = :receiveID and ud.diaryID = :diaryID")
+    List<UserDiary> getAcceptableRequest(long sendID, long receiveID, long diaryID);
+
     @Query("select ud as userDiary, ui.url as selfie from User u " +
             "inner join UserImage ui on u.userID = ui.userID and ui.status not like 0 " +
             "inner join UserDiary ud on ud.status/10 = u.userID and ud.diaryID= :diaryID " +

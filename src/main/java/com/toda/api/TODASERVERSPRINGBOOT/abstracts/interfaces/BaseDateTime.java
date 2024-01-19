@@ -25,6 +25,13 @@ public interface BaseDateTime {
     LocalDateTime toLocalDateTime(String date);
 
     /**
+     * "yyyy-MM-dd HH:mm:ss" 형식의 날짜 String을 LocalDateTime으로 변환
+     * @param date
+     * @return
+     */
+    LocalDateTime toLocalDateTimeFull(String date);
+
+    /**
      * 두 시간 사이의 초 시간 리턴
      * @param currentDateTime
      * @param targetDateTime

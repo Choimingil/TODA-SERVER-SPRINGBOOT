@@ -28,6 +28,7 @@ public class CommentService extends AbstractService implements BaseService {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
+    private final NotificationRepository notificationRepository;
 
     public CommentService(
             DelegateDateTime delegateDateTime,
@@ -36,16 +37,17 @@ public class CommentService extends AbstractService implements BaseService {
             DelegateJwt delegateJwt,
             DelegateFcm delegateFcm,
             DelegateUserAuth delegateUserAuth,
-            DelegateFcmTokenAuth delegateFcmTokenAuth,
             DelegateJms delegateJms,
             PostRepository postRepository,
             CommentRepository commentRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            NotificationRepository notificationRepository
     ) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateJms);
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateJms);
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
         this.userRepository = userRepository;
+        this.notificationRepository = notificationRepository;
     }
 
     @Transactional
@@ -93,7 +95,7 @@ public class CommentService extends AbstractService implements BaseService {
                 // 조건 만족 시 FCM 발송
                 (userID, userName) -> {
                     addUserLog(userID,sendUser.getUser().getUserID(),post.getPostID(),type,100);
-                    return getUserFcmTokenList(userID);
+                    return getUserFcmTokenList(userID, notificationRepository);
                 },
                 FcmDto.builder()
                         .title(getFcmTitle())

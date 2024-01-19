@@ -24,11 +24,10 @@ public class AuthService extends AbstractService implements BaseService {
             DelegateJwt delegateJwt,
             DelegateFcm delegateFcm,
             DelegateUserAuth delegateUserAuth,
-            DelegateFcmTokenAuth delegateFcmTokenAuth,
             DelegateJms delegateJms,
             AuthenticationManagerBuilder authenticationManagerBuilder
     ) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateJms);
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateJms);
         this.authenticationManagerBuilder = authenticationManagerBuilder;
     }
 

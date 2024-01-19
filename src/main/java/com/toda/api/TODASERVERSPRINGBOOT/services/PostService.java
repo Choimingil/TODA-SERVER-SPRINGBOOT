@@ -31,6 +31,7 @@ public class PostService extends AbstractService implements BaseService {
     private final PostTextRepository postTextRepository;
     private final PostImageRepository postImageRepository;
     private final HeartRepository heartRepository;
+    private final NotificationRepository notificationRepository;
 
     public PostService(
             DelegateDateTime delegateDateTime,
@@ -39,22 +40,23 @@ public class PostService extends AbstractService implements BaseService {
             DelegateJwt delegateJwt,
             DelegateFcm delegateFcm,
             DelegateUserAuth delegateUserAuth,
-            DelegateFcmTokenAuth delegateFcmTokenAuth,
             DelegateJms delegateJms,
             UserRepository userRepository,
             UserDiaryRepository userDiaryRepository,
             PostRepository postRepository,
             PostTextRepository postTextRepository,
             PostImageRepository postImageRepository,
-            HeartRepository heartRepository
+            HeartRepository heartRepository,
+            NotificationRepository notificationRepository
     ) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateJms);
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateJms);
         this.userRepository = userRepository;
         this.userDiaryRepository = userDiaryRepository;
         this.postRepository = postRepository;
         this.postTextRepository = postTextRepository;
         this.postImageRepository = postImageRepository;
         this.heartRepository = heartRepository;
+        this.notificationRepository = notificationRepository;
     }
 
     @Transactional
@@ -107,7 +109,7 @@ public class PostService extends AbstractService implements BaseService {
                 // 조건 만족 시 FCM 발송
                 (userID, userName) -> {
                     addUserLog(userID,sendUser.getUser().getUserID(),post.getPostID(),type,100);
-                    return getUserFcmTokenList(userID);
+                    return getUserFcmTokenList(userID, notificationRepository);
                 },
                 FcmDto.builder()
                         .title(getFcmTitle())
@@ -265,7 +267,7 @@ public class PostService extends AbstractService implements BaseService {
         Queue<Heart> queue = new ArrayDeque<>();
         AtomicBoolean isEdit = new AtomicBoolean(true);
         updateListAndDelete(
-                heart -> !isEdit.get(),
+                heart -> isEdit.get(),
                 heart -> {
                     queue.add(heart);
                     isEdit.set(false);

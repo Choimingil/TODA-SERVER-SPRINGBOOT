@@ -38,14 +38,13 @@ public class UserService extends AbstractService implements BaseService {
             DelegateJwt delegateJwt,
             DelegateFcm delegateFcm,
             DelegateUserAuth delegateUserAuth,
-            DelegateFcmTokenAuth delegateFcmTokenAuth,
             DelegateJms delegateJms,
             UserRepository userRepository,
             UserImageRepository userImageRepository,
             UserStickerRepository userStickerRepository,
             UserLogRepository userLogRepository
     ) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateJms);
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateJms);
         this.userRepository = userRepository;
         this.userImageRepository = userImageRepository;
         this.userStickerRepository = userStickerRepository;

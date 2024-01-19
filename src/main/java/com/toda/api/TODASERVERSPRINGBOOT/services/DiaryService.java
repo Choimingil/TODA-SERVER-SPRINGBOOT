@@ -31,6 +31,7 @@ public class DiaryService extends AbstractService implements BaseService {
     private final DiaryRepository diaryRepository;
     private final UserDiaryRepository userDiaryRepository;
     private final DiaryNoticeRepository diaryNoticeRepository;
+    private final NotificationRepository notificationRepository;
 
     public DiaryService(
             DelegateDateTime delegateDateTime,
@@ -39,20 +40,21 @@ public class DiaryService extends AbstractService implements BaseService {
             DelegateJwt delegateJwt,
             DelegateFcm delegateFcm,
             DelegateUserAuth delegateUserAuth,
-            DelegateFcmTokenAuth delegateFcmTokenAuth,
             DelegateJms delegateJms,
             UserRepository userRepository,
             UserLogRepository userLogRepository,
             DiaryRepository diaryRepository,
             UserDiaryRepository userDiaryRepository,
-            DiaryNoticeRepository diaryNoticeRepository
+            DiaryNoticeRepository diaryNoticeRepository,
+            NotificationRepository notificationRepository
     ) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateJms);
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateJms);
         this.userRepository = userRepository;
         this.userLogRepository = userLogRepository;
         this.diaryRepository = diaryRepository;
         this.userDiaryRepository = userDiaryRepository;
         this.diaryNoticeRepository = diaryNoticeRepository;
+        this.notificationRepository = notificationRepository;
     }
 
     @Transactional
@@ -105,28 +107,32 @@ public class DiaryService extends AbstractService implements BaseService {
         );
 
         // 다이어리 탈퇴 기록이 없다면 새롭게 추가 진행
-        if(!isEdit.get()) addUserDiary(receiveUserID,diaryID,diaryName,status);
+        if(isEdit.get()) addUserDiary(receiveUserID,diaryID,diaryName,status);
+
+        // 유저 로그 추가
+        addUserLog(sendUserID,receiveUserID,diary.getDiaryID(),1,100);
     }
 
     @Transactional
-    public void acceptDiary(List<UserDiary> acceptableDiaryList, long receiveUserID, int status){
-        List<UserDiary> copy = new ArrayList<>();
-        Collections.copy(acceptableDiaryList, copy);
-
+    public void acceptDiary(long sendUserID, long receiveUserID, long diaryID, int status, List<UserDiary> userDiaryList){
+        AtomicBoolean isEdit = new AtomicBoolean(true);
         updateListAndDelete(
-                userDiary -> {
-                    int originStatus = userDiary.getStatus();
-                    return originStatus/10 == receiveUserID;
-                },
+                userDiary -> isEdit.get(),
                 userDiary -> {
                     userDiary.setStatus(status);
 
                     // 초대 완료 로그 추가
                     List<UserLog> userLogList = userLogRepository.findByReceiveIDAndTypeAndTypeIDAndStatusNot(receiveUserID,1,userDiary.getDiaryID(),999);
                     updateList(userLogList,userLog -> userLog.setStatus(status),userLogRepository);
+
+                    isEdit.set(false);
                 },
-                copy, userDiaryRepository
+                userDiaryList,
+                userDiaryRepository
         );
+
+        // 유저 로그 추가
+        addUserLog(sendUserID,receiveUserID,diaryID,2,100);
     }
 
     @Transactional
@@ -137,15 +143,12 @@ public class DiaryService extends AbstractService implements BaseService {
                 (userID, userName) -> {
                     // 초대 시 발송 조건 : 상대방 유저가 다이어리 초대를 받았을 경우
                     if(type == 1) return getUserDiaryStatus(userID,diary.getDiaryID()) == 200;
-                        // 승낙 시 발송 조건 : 상대방 유저가 다이어리에 존재할 경우
+                    // 승낙 시 발송 조건 : 상대방 유저가 다이어리에 존재할 경우
                     else if(type == 2) return getUserDiaryStatus(userID,diary.getDiaryID()) == 100;
                     else throw new BusinessLogicException(BusinessLogicException.of.NO_DIARY_EXCEPTION);
                 },
                 // 조건 만족 시 FCM 발송
-                (userID, userName) -> {
-                    addUserLog(userID,sendUser.getUser().getUserID(),diary.getDiaryID(),type,100);
-                    return getUserFcmTokenList(userID);
-                },
+                (userID, userName) -> getUserFcmTokenList(userID, notificationRepository),
                 FcmDto.builder()
                         .title(getFcmTitle())
                         .body(getFcmBody(sendUser.getUser().getUserName(), sendUser.getUser().getUserCode(), diary.getDiaryName(), type))
@@ -415,11 +418,8 @@ public class DiaryService extends AbstractService implements BaseService {
         });
     }
 
-    public List<UserDiary> getAcceptableDiaryList(long userID, long diaryID){
-        List<UserDiary> res = new ArrayList<>();
-        List<UserDiary> userDiaryList = userDiaryRepository.findByUserIDAndDiaryID(userID,diaryID);
-        for(UserDiary userDiary : userDiaryList) if((userDiary.getStatus()%10) == 0) res.add(userDiary);
-        return res;
+    public List<UserDiary> getAcceptableDiaryList(long sendUserID, long receiveUserID, long diaryID){
+        return userDiaryRepository.getAcceptableRequest(sendUserID,receiveUserID,diaryID);
     }
 
     public UserDetail getReceiveUserDetail(String userCode){

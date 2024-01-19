@@ -9,6 +9,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.enums.DiaryStatus;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.FcmDto;
 import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmGroup;
+import com.toda.api.TODASERVERSPRINGBOOT.repositories.NotificationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,7 +32,6 @@ public abstract class AbstractService extends AbstractUtil implements BaseServic
     private final DelegateJwt delegateJwt;
     private final DelegateFcm delegateFcm;
     private final DelegateUserAuth delegateUserAuth;
-    private final DelegateFcmTokenAuth delegateFcmTokenAuth;
     private final DelegateJms delegateJms;
 
     public AbstractService(
@@ -41,14 +41,12 @@ public abstract class AbstractService extends AbstractUtil implements BaseServic
             DelegateJwt delegateJwt,
             DelegateFcm delegateFcm,
             DelegateUserAuth delegateUserAuth,
-            DelegateFcmTokenAuth delegateFcmTokenAuth,
             DelegateJms delegateJms
     ) {
         super(delegateDateTime, delegateFile, delegateStatus);
         this.delegateJwt = delegateJwt;
         this.delegateFcm = delegateFcm;
         this.delegateUserAuth = delegateUserAuth;
-        this.delegateFcmTokenAuth = delegateFcmTokenAuth;
         this.delegateJms = delegateJms;
     }
 
@@ -57,9 +55,6 @@ public abstract class AbstractService extends AbstractUtil implements BaseServic
     }
     protected String createToken(Authentication authentication, UserDetail userDetail) {
         return delegateJwt.createToken(authentication,userDetail);
-    }
-    protected UserDetail decodeToken(String token) {
-        return delegateJwt.decodeToken(token);
     }
     protected UserDetail getUserInfo(String value) {
         return delegateUserAuth.getUserInfo(value);
@@ -70,17 +65,8 @@ public abstract class AbstractService extends AbstractUtil implements BaseServic
     protected void deleteUserInfo(String email) {
         delegateUserAuth.deleteUserInfo(email);
     }
-    protected FcmGroup getUserFcmTokenList(long userID) {
-        return delegateFcmTokenAuth.getUserFcmTokenList(userID);
-    }
-    protected long getNotificationID(long userID, String fcm) {
-        return delegateFcmTokenAuth.getNotificationID(userID,fcm);
-    }
-    protected void setNewFcm(long userID, String fcm, long notificationID, int status) {
-        delegateFcmTokenAuth.setNewFcm(userID,fcm,notificationID,status);
-    }
-    protected void deleteFcm(long userID, String fcm) {
-        delegateFcmTokenAuth.deleteFcm(userID,fcm);
+    protected FcmGroup getUserFcmTokenList(long userID, NotificationRepository notificationRepository) {
+        return delegateFcm.getUserFcmTokenList(userID, notificationRepository);
     }
     protected void setJmsTopicFcm(long sendID, BiFunction<Long,String,Boolean> check, BiFunction<Long,String, FcmGroup> fcmGroup, FcmDto fcmDto) {
         delegateFcm.setJmsTopicFcm(sendID,check,fcmGroup,fcmDto);

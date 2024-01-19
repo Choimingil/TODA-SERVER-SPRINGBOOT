@@ -139,9 +139,10 @@ public class PostController extends AbstractController implements BaseController
             else{
                 // 하나의 좋아요 값만 가져오고 나머지 값은 제거
                 Heart heart = postService.getValidHeart(heartList);
+                if(heart == null) throw new BusinessLogicException(BusinessLogicException.of.WRONG_HEART_STATUS_EXCEPTION);
 
                 // 좋아요 상태가 999일 경우 : 좋아요 취소 진행
-                if(heart.getStatus() == 999){
+                else if(heart.getStatus() == 999){
                     postService.updateHeart(heart,0);
                     return new SuccessResponse.Builder(SuccessResponse.of.UNDO_HEART_SUCCESS).build().getResponse();
                 }

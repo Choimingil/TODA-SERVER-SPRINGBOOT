@@ -5,6 +5,8 @@ import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseUserAuth;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.User;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.TokenFields;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.BusinessLogicException;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.NoArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.UserInfoProto;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserRepository;
@@ -32,10 +34,12 @@ public final class DelegateUserAuth extends AbstractAuth implements BaseUserAuth
 
     @Override
     public UserDetail getUserInfo(String value) {
-        String email = value.length()>45 ? decodeToken(value).getUser().getEmail() : value;
+        String email = value.length()>45 ? decodeToken(value).getEmail() : value;
+
         UserDetail userDetail = getUserDetailOnCache(email);
         if(userDetail == null){
             userDetail = userRepository.getUserDetailByEmail(email);
+            if(userDetail == null) throw new NoArgException(NoArgException.of.NO_EMAIL_EXCEPTION);
             updateUserRedis(userDetail.getUser(), userDetail.getProfile());
         }
         if(!userDetail.getUser().getEmail().equals(email)) throw new WrongArgException(WrongArgException.of.WRONG_BODY_EXCEPTION);

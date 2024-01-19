@@ -4,12 +4,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseFcm;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.Notification;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.UserLog;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.FcmTypes;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.FcmDto;
 import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.*;
 import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.JmsFcmProto;
+import com.toda.api.TODASERVERSPRINGBOOT.repositories.NotificationRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserLogRepository;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +41,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -53,6 +57,8 @@ public final class DelegateFcm implements BaseFcm {
     private String contentType;
     @Value("${toda.server.alarm.authorization}")
     private String authorization;
+    @Value("${toda.server.alarm.enable}")
+    private boolean fcmEnable;
 
     /**
      * Fcm Jms Consumer
@@ -84,9 +90,9 @@ public final class DelegateFcm implements BaseFcm {
 
         try (CloseableHttpClient client = HttpClientBuilder.create().setConnectionManager(connectionManager).build()){
             CompletableFuture<FcmResponse> aosFcmFuture = !aosFcmList.isEmpty() ?
-                    connectFcmUrl(getFcmAosBody(aosFcmList, params.getTitle(), params.getBody(), fcmType, params.getDataID()),client) : null;
+                    connectFcmUrl(getFcmAosBody(aosFcmList, params.getTitle(), params.getBody(), fcmType, params.getDataID()),client) : new CompletableFuture<>();
             CompletableFuture<FcmResponse> iosFcmFuture = !iosFcmList.isEmpty() ?
-                    connectFcmUrl(getFcmIosBody(iosFcmList, params.getTitle(), params.getBody(), fcmType, params.getDataID()),client) : null;
+                    connectFcmUrl(getFcmIosBody(iosFcmList, params.getTitle(), params.getBody(), fcmType, params.getDataID()),client) : new CompletableFuture<>();
             CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(aosFcmFuture, iosFcmFuture);
             combinedFuture.join();
             return combinedFuture;
@@ -200,19 +206,21 @@ public final class DelegateFcm implements BaseFcm {
             }
         }
 
-        try{
-            JmsFcmProto.JmsFcmRequest request = JmsFcmProto.JmsFcmRequest.newBuilder()
-                    .setTitle(fcmDto.getTitle())
-                    .setBody(fcmDto.getBody())
-                    .setTypeNum(fcmDto.getTypeNum())
-                    .setDataID(fcmDto.getDataID())
-                    .addAllAosFcm(aosFcmList)
-                    .addAllIosFcm(iosFcmList)
-                    .build();
-            delegateJms.sendJmsMessage("fcm", request).get();
-        }
-        catch (InterruptedException | ExecutionException e){
-            throw new WrongAccessException(WrongAccessException.of.SEND_FCM_EXCEPTION);
+        if(fcmEnable){
+            try{
+                JmsFcmProto.JmsFcmRequest request = JmsFcmProto.JmsFcmRequest.newBuilder()
+                        .setTitle(fcmDto.getTitle())
+                        .setBody(fcmDto.getBody())
+                        .setTypeNum(fcmDto.getTypeNum())
+                        .setDataID(fcmDto.getDataID())
+                        .addAllAosFcm(aosFcmList)
+                        .addAllIosFcm(iosFcmList)
+                        .build();
+                delegateJms.sendJmsMessage("fcm", request).get();
+            }
+            catch (InterruptedException | ExecutionException e){
+                throw new WrongAccessException(WrongAccessException.of.SEND_FCM_EXCEPTION);
+            }
         }
     }
 
@@ -227,13 +235,25 @@ public final class DelegateFcm implements BaseFcm {
 
     @Override
     public void addUserLog(long sendUserID, long receiveUserID, long diaryID, int type, int status) {
-        UserLog userLog = new UserLog();
-        userLog.setReceiveID(receiveUserID);
-        userLog.setType(type);
-        userLog.setTypeID(diaryID);
-        userLog.setSendID(sendUserID);
-        userLog.setStatus(status);
-        userLogRepository.save(userLog);
+        List<UserLog> userLogList = userLogRepository.findBySendIDAndReceiveIDAndTypeAndTypeID(sendUserID,receiveUserID,type,diaryID);
+        if(userLogList.isEmpty()){
+            UserLog userLog = new UserLog();
+            userLog.setReceiveID(receiveUserID);
+            userLog.setType(type);
+            userLog.setTypeID(diaryID);
+            userLog.setSendID(sendUserID);
+            userLog.setStatus(status);
+            userLogRepository.save(userLog);
+        }
+        else{
+            UserLog curr = userLogList.get(0);
+            curr.setStatus(100);
+            curr.setCreateAt(LocalDateTime.now());
+            userLogList.remove(0);
+
+            userLogRepository.save(curr);
+            userLogRepository.deleteAll(userLogList);
+        }
     }
 
     @Override
@@ -253,6 +273,54 @@ public final class DelegateFcm implements BaseFcm {
             default -> throw new WrongAccessException(WrongAccessException.of.FCM_BODY_EXCEPTION);
         };
     }
+
+
+    /**
+     * 클라이언트 알림 발송 완료될때까지 임시로 사용
+     * @param userID
+     * @param notificationRepository
+     * @return
+     */
+    public FcmGroup getUserFcmTokenList(long userID, NotificationRepository notificationRepository){
+        List<String> aosFcmList = new ArrayList<>();
+        List<String> iosFcmList = new ArrayList<>();
+
+        Map<String,Integer> tokenStatus = getTokenStatus(userID, notificationRepository);
+        for(String fcm : tokenStatus.keySet()){
+            int status = tokenStatus.get(fcm);
+            if(status == 100) iosFcmList.add(fcm);
+            else if(status == 200) aosFcmList.add(fcm);
+        }
+
+        return FcmGroup.builder().aosFcmList(aosFcmList).iosFcmList(iosFcmList).build();
+    }
+
+    private Map<String, Integer> getTokenStatus(long userID, NotificationRepository notificationRepository) {
+        return getFcmMap(userID,notificationRepository).getTokenStatus();
+    }
+
+    private FcmMap getFcmMap(long userID, NotificationRepository notificationRepository){
+        List<Notification> userFcmList = notificationRepository.findByUserIDAndIsAllowedAndStatusNot(userID,"Y",0);
+        Map<String, Long> tokenIDs = userFcmList.stream()
+                .collect(Collectors.toMap(
+                        Notification::getFcm,
+                        Notification::getNotificationID,
+                        // Merge 함수를 사용하여 중복된 키에 대한 충돌 처리
+                        (existingValue, newValue) -> existingValue
+                ));
+        Map<String, Integer> tokenStatus = userFcmList.stream()
+                .collect(Collectors.toMap(
+                        Notification::getFcm,
+                        Notification::getStatus,
+                        // Merge 함수를 사용하여 중복된 키에 대한 충돌 처리
+                        (existingValue, newValue) -> existingValue
+                ));
+        return FcmMap.builder().tokenIDs(tokenIDs).tokenStatus(tokenStatus).build();
+    }
+
+
+
+
 
     @PreDestroy
     public void shutdown() {

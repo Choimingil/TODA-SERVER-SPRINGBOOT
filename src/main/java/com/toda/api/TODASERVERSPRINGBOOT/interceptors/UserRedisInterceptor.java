@@ -2,6 +2,7 @@ package com.toda.api.TODASERVERSPRINGBOOT.interceptors;
 
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractInterceptor;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateUri;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateUserAuth;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
@@ -17,8 +18,8 @@ import org.springframework.web.servlet.ModelAndView;
 public final class UserRedisInterceptor extends AbstractInterceptor implements HandlerInterceptor {
     private final DelegateUserAuth delegateUserAuth;
 
-    public UserRedisInterceptor(DelegateJwt delegateJwt, DelegateUserAuth delegateUserAuth) {
-        super(delegateJwt);
+    public UserRedisInterceptor(DelegateJwt delegateJwt, DelegateUri delegateUri, DelegateUserAuth delegateUserAuth) {
+        super(delegateJwt, delegateUri);
         this.delegateUserAuth = delegateUserAuth;
     }
 
@@ -29,7 +30,7 @@ public final class UserRedisInterceptor extends AbstractInterceptor implements H
             @NotNull Object handler
     ) throws Exception {
         if(haveValidHeader(request)){
-            String email = getSubject(request);
+            String email = decodeToken(request).getEmail();
             UserDetail userDetail = delegateUserAuth.getUserInfo(email);
             if(!userDetail.getUser().getEmail().equals(email)) throw new WrongArgException(WrongArgException.of.WRONG_TOKEN_DATA_EXCEPTION);
         }

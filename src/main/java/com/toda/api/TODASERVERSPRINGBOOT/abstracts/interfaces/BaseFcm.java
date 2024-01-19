@@ -2,6 +2,7 @@ package com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces;
 
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.FcmDto;
 import com.toda.api.TODASERVERSPRINGBOOT.models.fcms.FcmGroup;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.FcmResponse;
 
 import java.util.List;
 import java.util.Map;

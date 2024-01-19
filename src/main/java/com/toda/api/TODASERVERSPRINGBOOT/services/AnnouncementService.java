@@ -30,12 +30,11 @@ public class AnnouncementService extends AbstractService implements BaseService 
             DelegateJwt delegateJwt,
             DelegateFcm delegateFcm,
             DelegateUserAuth delegateUserAuth,
-            DelegateFcmTokenAuth delegateFcmTokenAuth,
             DelegateJms delegateJms,
             AnnouncementRepository announcementRepository,
             UserAnnouncementRepository userAnnouncementRepository
     ) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateJms);
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateJms);
         this.announcementRepository = announcementRepository;
         this.userAnnouncementRepository = userAnnouncementRepository;
     }

@@ -11,13 +11,6 @@ import java.util.List;
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification,Long> {
     void deleteByUserIDAndStatus(long userID, int status);
-    boolean existsByNotificationIDAndIsRemindAllowed(long notificationID, String isRemindAllowed);
-    boolean existsByUserIDAndFcmAndStatusNot(long userID, String fcm, int status);
-    Notification findByUserIDAndFcmAndIsAllowedAndStatusNot(long userID, String fcm, String isAllowed, int status);
-    List<Notification> findByUserIDAndIsAllowedAndStatusNot(long userID, String isAllowed, int status);
-    Notification findByNotificationID(long notificationID);
-
-    @Modifying
-    @Query("UPDATE Notification SET time = :time WHERE notificationID = :notificationID")
-    void updateFcmTime(String time, long notificationID);
+    Notification findByUserIDAndFcmAndStatusNot(long userID, String fcm, int status);
+    List<Notification> findByUserIDAndIsAllowedAndStatusNot(long userID,String isAllowed,int status);
 }

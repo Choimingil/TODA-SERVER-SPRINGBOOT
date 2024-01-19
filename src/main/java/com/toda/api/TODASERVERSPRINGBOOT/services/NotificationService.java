@@ -21,11 +21,10 @@ public class NotificationService extends AbstractService implements BaseService 
             DelegateJwt delegateJwt,
             DelegateFcm delegateFcm,
             DelegateUserAuth delegateUserAuth,
-            DelegateFcmTokenAuth delegateFcmTokenAuth,
             DelegateJms delegateJms,
             NotificationRepository notificationRepository
     ) {
-        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateFcmTokenAuth, delegateJms);
+        super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateJms);
         this.notificationRepository = notificationRepository;
     }
 
@@ -35,7 +34,7 @@ public class NotificationService extends AbstractService implements BaseService 
         String allowable = saveFcmToken.getIsAllowed();
 
         notificationRepository.deleteByUserIDAndStatus(userID,0);
-        Notification newNotification = notificationRepository.save(Notification.builder()
+        notificationRepository.save(Notification.builder()
                 .userID(userID)
                 .fcm(fcm)
                 .isAllowed(allowable)
@@ -43,53 +42,38 @@ public class NotificationService extends AbstractService implements BaseService 
                 .isRemindAllowed(allowable)
                 .status(status)
                 .build());
-        setNewFcm(userID, fcm, newNotification.getNotificationID(), status);
     }
 
     public Notification getNotification(long userID, String fcm){
-        long notificationID = getNotificationID(userID,fcm);
-        return notificationRepository.findByNotificationID(notificationID);
+        return notificationRepository.findByUserIDAndFcmAndStatusNot(userID,fcm,0);
     }
 
     @Transactional
-    public boolean updateFcmAllowed(long userID, String fcm, int status) {
-        long notificationID = getNotificationID(userID, fcm);
-        Notification notification = notificationRepository.findByNotificationID(notificationID);
-
-        String curr;
+    public boolean updateFcmAllowed(Notification notification, int status) {
+        String isCurrentAllowed;
         switch (status) {
             case 0 -> {
-                curr = notification.getIsAllowed().equals("Y") ? "N" : "Y";
-                notification.setIsAllowed(curr);
-                if (curr.equals("Y")) setNewFcm(
-                        notification.getUserID(),
-                        notification.getFcm(),
-                        notification.getNotificationID(),
-                        notification.getStatus()
-                );
-                else deleteFcm(notification.getUserID(), notification.getFcm());
+                isCurrentAllowed = notification.getIsAllowed().equals("Y") ? "N" : "Y";
+                notification.setIsAllowed(isCurrentAllowed);
             }
             case 1 -> {
-                curr = notification.getIsRemindAllowed().equals("Y") ? "N" : "Y";
-                notification.setIsRemindAllowed(curr);
+                isCurrentAllowed = notification.getIsRemindAllowed().equals("Y") ? "N" : "Y";
+                notification.setIsRemindAllowed(isCurrentAllowed);
             }
             case 2 -> {
-                curr = notification.getIsEventAllowed().equals("Y") ? "N" : "Y";
-                notification.setIsEventAllowed(curr);
+                isCurrentAllowed = notification.getIsEventAllowed().equals("Y") ? "N" : "Y";
+                notification.setIsEventAllowed(isCurrentAllowed);
             }
             default -> throw new WrongArgException(WrongArgException.of.WRONG_BODY_EXCEPTION);
         }
 
         notificationRepository.save(notification);
-        return curr.equals("Y");
+        return isCurrentAllowed.equals("Y");
     }
 
     @Transactional
-    public void updateFcmTime(long userID, String fcm, String time){
-        long notificationID = getNotificationID(userID, fcm);
-        if(notificationRepository.existsByNotificationIDAndIsRemindAllowed(notificationID,"N"))
-            throw new WrongArgException(WrongArgException.of.WRONG_REMIND_FCM_EXCEPTION);
-
-        notificationRepository.updateFcmTime(time,notificationID);
+    public void updateFcmTime(Notification notification, String time){
+        notification.setTime(time);
+        notificationRepository.save(notification);
     }
 }

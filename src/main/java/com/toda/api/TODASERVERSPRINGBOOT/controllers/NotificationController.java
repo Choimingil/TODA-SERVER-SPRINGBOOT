@@ -4,6 +4,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.SaveFcmToken;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateFcmAllowed;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateFcmTime;
@@ -68,7 +69,8 @@ public class NotificationController extends AbstractController implements BaseCo
             BindingResult bindingResult
     ){
         long userID = getUserID(token);
-        boolean updateNotificationAllowed = notificationService.updateFcmAllowed(userID, updateFcmAllowed.getFcmToken(), updateFcmAllowed.getAlarmType());
+        Notification notification = notificationService.getNotification(userID,updateFcmAllowed.getFcmToken());
+        boolean updateNotificationAllowed = notificationService.updateFcmAllowed(notification, updateFcmAllowed.getAlarmType());
         if(updateNotificationAllowed) return new SuccessResponse.Builder(SuccessResponse.of.DO_FCM_ALLOWED_SUCCESS).build().getResponse();
         else return new SuccessResponse.Builder(SuccessResponse.of.UNDO_FCM_ALLOWED_SUCCESS).build().getResponse();
     }
@@ -95,7 +97,9 @@ public class NotificationController extends AbstractController implements BaseCo
             BindingResult bindingResult
     ){
         long userID = getUserID(token);
-        notificationService.updateFcmTime(userID, updateFcmTime.getFcmToken(), updateFcmTime.getTime());
+        Notification notification = notificationService.getNotification(userID,updateFcmTime.getFcmToken());
+        if(notification.getIsRemindAllowed().equals("N")) throw new WrongArgException(WrongArgException.of.WRONG_REMIND_FCM_EXCEPTION);
+        notificationService.updateFcmTime(notification, updateFcmTime.getTime());
         return new SuccessResponse.Builder(SuccessResponse.of.UPDATE_FCM_TIME_SUCCESS).build().getResponse();
     }
 }

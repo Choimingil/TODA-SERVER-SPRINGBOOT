@@ -3,6 +3,7 @@ package com.toda.api.TODASERVERSPRINGBOOT.interceptors;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractInterceptor;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateMdc;
+import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateUri;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongAccessException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,8 +19,8 @@ import org.springframework.web.servlet.ModelAndView;
 public final class MdcInterceptor extends AbstractInterceptor implements HandlerInterceptor {
     private final DelegateMdc delegateMdc;
 
-    public MdcInterceptor(DelegateJwt delegateJwt, DelegateMdc delegateMdc) {
-        super(delegateJwt);
+    public MdcInterceptor(DelegateJwt delegateJwt, DelegateUri delegateUri, DelegateMdc delegateMdc) {
+        super(delegateJwt, delegateUri);
         this.delegateMdc = delegateMdc;
     }
 

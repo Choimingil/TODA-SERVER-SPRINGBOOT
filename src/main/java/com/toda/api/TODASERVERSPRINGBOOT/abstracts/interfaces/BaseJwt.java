@@ -1,6 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces;
 
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.JwtHeader;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserRepository;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,13 +22,13 @@ public interface BaseJwt {
      */
     Claims getClaims(String token);
 
-    /**
-     * Claims 객체에서 Subject 추출
-     * Subject : Email
-     * @param request
-     * @return
-     */
-    String getSubject(HttpServletRequest request);
+//    /**
+//     * Claims 객체에서 Subject 추출
+//     * Subject : Email
+//     * @param request
+//     * @return
+//     */
+//    String getSubject(HttpServletRequest request);
 
     /**
      * token 생성
@@ -41,7 +42,7 @@ public interface BaseJwt {
      * @param token
      * @return
      */
-    UserDetail decodeToken(String token);
+    JwtHeader decodeToken(String token);
 
     /**
      * 토큰 생성 메서드
