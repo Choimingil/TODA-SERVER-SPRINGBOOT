@@ -1,6 +1,7 @@
 package com.toda.api.TODASERVERSPRINGBOOT.models.responses.get;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.RegistrationId;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
@@ -11,7 +12,7 @@ import java.util.List;
 @ToString
 public final class FcmResponse {
     @JsonProperty("registration_ids")
-    private List<String> registration_ids;
+    private List<RegistrationId> registration_ids;
     @JsonProperty("body")
     private String body;
     @JsonProperty("title")
@@ -24,7 +25,7 @@ public final class FcmResponse {
     FcmResponse(){}
 
     @Builder
-    FcmResponse(List<String> registration_ids, String body, String title, String type, Object data){
+    FcmResponse(List<RegistrationId> registration_ids, String body, String title, String type, Object data){
         this.registration_ids = registration_ids;
         this.body = body;
         this.title = title;

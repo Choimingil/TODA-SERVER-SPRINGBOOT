@@ -65,6 +65,47 @@ public class CommentController extends AbstractController implements BaseControl
         }
     }
 
+    //30-1. 댓글 작성 API(댓글 ID 리턴)
+    @PostMapping("/comment/ver2")
+    @SetMdcBody
+    public Map<String, ?> createCommentVer2(
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
+            @RequestBody @Valid CreateComment createComment,
+            @RequestParam(name="comment", required = false) Long comment,
+            @RequestParam(name="type", required = false) String type,
+            BindingResult bindingResult
+    ){
+        long userID = getUserID(token);
+        int userPostStatus = getUserPostStatus(userID,createComment.getPost());
+
+        // 현재 게시글에 속해 있지 않은 경우 게시물 볼 수 있는 권한 없음 리턴
+        if(userPostStatus == 404) throw new BusinessLogicException(BusinessLogicException.of.NO_AUTH_POST_EXCEPTION);
+        else{
+            UserDetail sendUser = getUserInfo(token);
+
+            // 부모 댓글 아이디가 존재하지 않으면 댓글 작성 진행
+            if(comment == null){
+                Comment target = commentService.addComment(userID, createComment.getPost(), createComment.getReply());
+                commentService.setFcmAndLog(commentService.getFcmAddCommentUserMap(userID, target),sendUser,target,5);
+                return new SuccessResponse.Builder(SuccessResponse.of.CREATE_COMMENT_SUCCESS)
+                        .add("commentID",target.getCommentID())
+                        .build().getResponse();
+            }
+            // 부모 댓글 아이디가 존재한다면 대댓글 작성 진행
+            else{
+                // 부모 댓글 아이디가 해당 게시글의 댓글이 아닐 경우 예외 리턴
+                if(!commentService.isValidCommentPostDiary(comment,createComment.getPost()))
+                    throw new BusinessLogicException(BusinessLogicException.of.NO_AUTH_COMMENT_EXCEPTION);
+
+                Comment target = commentService.addReComment(userID, createComment.getPost(), createComment.getReply(), comment);
+                commentService.setFcmAndLog(commentService.getFcmAddReCommentUserMap(userID, comment),sendUser,target,6);
+                return new SuccessResponse.Builder(SuccessResponse.of.CREATE_RE_COMMENT_SUCCESS)
+                        .add("commentID",target.getCommentID())
+                        .build().getResponse();
+            }
+        }
+    }
+
     //31. 댓글 삭제 API
     @DeleteMapping("/comment/{commentID}")
     public Map<String, ?> deleteComment(

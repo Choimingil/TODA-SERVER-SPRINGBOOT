@@ -59,6 +59,36 @@ public class PostController extends AbstractController implements BaseController
         else throw new BusinessLogicException(BusinessLogicException.of.NO_DIARY_EXCEPTION);
     }
 
+    //16-3. 게시물 작성 API(게시글 ID 리턴)
+    @PostMapping("/post/ver4")
+    @SetMdcBody
+    public Map<String, ?> createPostVer4(
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
+            @RequestBody @Valid CreatePost createPost,
+            BindingResult bindingResult
+    ){
+        long userID = getUserID(token);
+        int userDiaryStatus = getUserDiaryStatus(userID,createPost.getDiary());
+
+        // 현재 다이어리에 속해 있는 경우 게시글 추가 작업 진행
+        if(userDiaryStatus == 100){
+            Post target = postService.addPost(userID, createPost);
+
+            if(!createPost.getImageList().isEmpty())
+                postService.addPostImage(target.getPostID(),createPost.getImageList());
+
+            // 알림 발송
+            UserDetail sendUser = getUserInfo(token);
+            postService.setFcmAndLog(postService.getFcmAddPostUserMap(userID, createPost.getDiary()),sendUser,target,3);
+            return new SuccessResponse.Builder(SuccessResponse.of.CREATE_POST_SUCCESS)
+                    .add("postID",target.getPostID())
+                    .build().getResponse();
+        }
+
+        // 그 외의 경우 존재하지 않는 다이어리 리턴
+        else throw new BusinessLogicException(BusinessLogicException.of.NO_DIARY_EXCEPTION);
+    }
+
     //17. 게시물 삭제 API
     @DeleteMapping("/post/{postID}")
     public Map<String, ?> deletePost(

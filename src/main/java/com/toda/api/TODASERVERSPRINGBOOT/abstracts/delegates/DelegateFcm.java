@@ -265,7 +265,7 @@ public final class DelegateFcm implements BaseFcm {
     public String getFcmBody(String userName, String userCode, String objName, int type) {
         return switch (type) {
             case 1 -> new StringBuilder().append(userName).append("님(").append(userCode).append(")이 ").append(objName).append("에 초대합니다:)").toString();
-            case 2 -> new StringBuilder().append(userName).append("님(").append(userCode).append(")이 ").append(objName).append(" 초대에 수락하셨습니다:)").toString();
+            case 2 -> new StringBuilder().append(userName).append("님(").append(userCode).append(")이 ").append(objName).append("초대에 수락하셨습니다:)").toString();
             case 3 -> new StringBuilder().append(userName).append("님이 일기를 남겼습니다:)").toString();
             case 4 -> new StringBuilder().append(userName).append("님(").append(userCode).append(")이 ").append(objName).append("님의 일기를 좋아합니다:)").toString();
             case 5 -> new StringBuilder().append(userName).append("님(").append(userCode).append(")이 댓글을 남겼습니다:)").toString();

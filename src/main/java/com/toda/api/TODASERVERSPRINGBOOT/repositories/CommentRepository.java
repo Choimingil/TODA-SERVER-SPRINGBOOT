@@ -13,8 +13,6 @@ import java.util.List;
 @Repository
 public interface CommentRepository extends JpaRepository<Comment,Long> {
     boolean existsByCommentIDAndPostID(long commentID, long postID);
-    List<Comment> findByPostIDAndStatusNot(long postID, int status, Pageable pageable);
-    List<Comment> findByParentIDInAndStatusNot(List<Long> parentIDList, int status);
     List<Comment> findByParentIDAndStatusNot(long parentID, int status);
     Comment findByCommentID(long commentID);
     int countByPostIDAndStatusNot(long postID, int status);

@@ -13,4 +13,5 @@ public interface NotificationRepository extends JpaRepository<Notification,Long>
     void deleteByUserIDAndStatus(long userID, int status);
     Notification findByUserIDAndFcmAndStatusNot(long userID, String fcm, int status);
     List<Notification> findByUserIDAndIsAllowedAndStatusNot(long userID,String isAllowed,int status);
+    List<Notification> findByUserIDInAndIsAllowedAndStatusNot(List<Long> userIDList,String isAllowed,int status);
 }

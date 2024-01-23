@@ -38,6 +38,7 @@ public enum Uris {
     /** 15-3. 다이어리 공지 수정 API */ PATCH_NOTICE,
     /** 15-4. 다이어리 공지 조회 API */ GET_NOTICE_NUMBER,
     /** 16-2. 게시물 작성 API(날짜 폰트 추가) */ POST_POST_VER3,
+    /** 16-3. 게시물 작성 API(게시글 ID 리턴) */ POST_POST_VER4,
     /** 17. 게시물 삭제 API */ DELETE_POST_NUMBER,
     /** 18-2. 게시물 수정 API */ PATCH_POST_VER3,
     /** 19. 게시물 리스트 조회 API */ GET_DIARIES_NUMBER_POSTS,
@@ -48,12 +49,25 @@ public enum Uris {
     /** 24. 스티커 상세 조회 API */ GET_STICKERS_NUMBER,
     /** 25. 사용자가 사용한 스티커 리스트 조회 API */ GET_POSTS_NUMBER_STICKERS,
     /** 30. 댓글 작성 API */ POST_COMMENT,
+    /** 30-1. 댓글 작성 API(댓글 ID 리턴) */ POST_COMMENT_VER2,
     /** 31. 댓글 삭제 API */ DELETE_COMMENT_NUMBER,
     /** 32. 댓글 수정 API */ PATCH_COMMENT,
     /** 33. 댓글 리스트 조회 API */ GET_POSTS_NUMBER_COMMENTS,
     /** 38. 공지사항 리스트 조회 API */ GET_ANNOUNCEMENT,
     /** 39. 공지사항 상세 조회 API */ GET_ANNOUNCEMENT_NUMBER,
-    /** 40. 공지사항 읽었는지 안읽었는지 확인 API */ GET_ANNOUNCEMENT_CHECK;
+    /** 40. 공지사항 읽었는지 안읽었는지 확인 API */ GET_ANNOUNCEMENT_CHECK,
+
+
+    /** 다이어리 초대 알림 FCM 데이터 조회 */ GET_FCM_INVITE,
+    /** 다이어리 승낙 알림 FCM 데이터 조회 */ GET_FCM_ACCEPT,
+    /** 게시글 작성 알림 FCM 데이터 조회 */ GET_FCM_POST,
+    /** 좋아요 알림 FCM 데이터 조회 */ GET_FCM_LIKE,
+    /** 댓글 알림 FCM 데이터 조회 */ GET_FCM_COMMENT,
+    /** 대댓글 알림 FCM 데이터 조회 */ GET_FCM_REPLY;
+
+
+
+
 
 
     // 관리자 API 만들기
