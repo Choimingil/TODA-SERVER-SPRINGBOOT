@@ -6,6 +6,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.SaveFcmToken;
+import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.SaveFcmTokenVer2;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateFcmAllowed;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.UpdateFcmTime;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.Notification;
@@ -27,7 +28,7 @@ public class NotificationController extends AbstractController implements BaseCo
         this.notificationService = notificationService;
     }
 
-    //1-5. 알림 토큰 저장 API
+    //1-6. 알림 토큰 저장 API
     @PostMapping("/notification")
     @SetMdcBody
     public Map<String, ?> saveFcmToken(
@@ -39,6 +40,21 @@ public class NotificationController extends AbstractController implements BaseCo
         long userID = getUserID(token);
         int status = type==null ? 100 : (type.equals("2") ? 200 : 100);
         notificationService.saveFcmToken(userID,status,saveFcmToken);
+        return new SuccessResponse.Builder(SuccessResponse.of.SAVE_FCM_TOKEN_SUCCESS)
+                .build().getResponse();
+    }
+
+    //1-7. 알림 토큰 저장 API Ver2
+    @PostMapping("/notification/ver2")
+    @SetMdcBody
+    public Map<String, ?> saveFcmTokenVer2(
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
+            @RequestBody @Valid SaveFcmTokenVer2 saveFcmToken,
+            BindingResult bindingResult
+    ){
+        long userID = getUserID(token);
+        int status = saveFcmToken.getType()==1 ? 100 : 200;
+        notificationService.saveFcmTokenVer2(userID,status,saveFcmToken);
         return new SuccessResponse.Builder(SuccessResponse.of.SAVE_FCM_TOKEN_SUCCESS)
                 .build().getResponse();
     }

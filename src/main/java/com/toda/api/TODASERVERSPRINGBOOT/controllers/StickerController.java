@@ -29,7 +29,7 @@ public class StickerController extends AbstractController implements BaseControl
         this.stickerService = stickerService;
     }
 
-    //7-1. 유저 보유 스티커 조회 API
+    //7-2. 유저 보유 스티커 조회 API
     @GetMapping("/user/stickers")
     public Map<String,?> getUserStickers(
             @RequestHeader(DelegateJwt.HEADER_NAME) String token,
@@ -61,6 +61,64 @@ public class StickerController extends AbstractController implements BaseControl
             BindingResult bindingResult
     ){
         long userID = getUserID(token);
+        int userPostStatus = getUserPostStatus(userID,postID);
+
+        // 현재 게시글에 속해 있지 않은 경우 게시물 볼 수 있는 권한 없음 리턴
+        if(userPostStatus == 404) throw new BusinessLogicException(BusinessLogicException.of.NO_AUTH_POST_EXCEPTION);
+        else{
+            // 추가한 스티커가 보유 중인 스티커가 맞는지 체크
+            Set<Long> userStickerSet = stickerService.getUserStickerSet(userID);
+
+            Set<PostSticker> postStickerSet = new HashSet<>();
+            Set<PostStickerRotate> postStickerRotateSet = new HashSet<>();
+            Set<PostStickerScale> postStickerScaleSet = new HashSet<>();
+
+            // PostSticker 추가해서 아이디값 얻기
+            int idx = 0;
+            for(AddStickerDetail addStickerDetail : addSticker.getStickerArr()){
+                if(!userStickerSet.contains(addStickerDetail.getStickerID())) throw new BusinessLogicException(BusinessLogicException.of.NO_AUTH_STICKER_EXCEPTION);
+                stickerService.addPostSticker(postStickerSet,userID,postID,addStickerDetail,idx++);
+            }
+            List<PostSticker> res = stickerService.savePostStickerSet(postStickerSet);
+
+            // 얻은 아이디값 바탕으로 나머지값 추가
+            for(PostSticker postSticker : res){
+                AddStickerDetail curr = addSticker.getStickerArr().get(postSticker.getIdx());
+                stickerService.setPostStickerRotate(
+                        postStickerRotateSet,
+                        postSticker.getPostStickerID(),
+                        curr.getRotate().getA(),
+                        curr.getRotate().getB(),
+                        curr.getRotate().getC(),
+                        curr.getRotate().getD(),
+                        curr.getRotate().getTx(),
+                        curr.getRotate().getTy()
+                );
+                stickerService.setPostStickerScale(
+                        postStickerScaleSet,
+                        postSticker.getPostStickerID(),
+                        curr.getScale().getX(),
+                        curr.getScale().getY(),
+                        curr.getScale().getWidth(),
+                        curr.getScale().getHeight()
+                );
+            }
+            stickerService.savePostStickerRotateAndScaleSet(postStickerRotateSet,postStickerScaleSet);
+
+            return new SuccessResponse.Builder(SuccessResponse.of.ADD_STICKER_SUCCESS).build().getResponse();
+        }
+    }
+
+    //22-1. 스티커 사용 API Ver2
+    @PostMapping("/sticker/ver2")
+    @SetMdcBody
+    public Map<String, ?> addStickerVer2(
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
+            @RequestBody @Valid AddStickerVer2 addSticker,
+            BindingResult bindingResult
+    ){
+        long userID = getUserID(token);
+        long postID = addSticker.getPost();
         int userPostStatus = getUserPostStatus(userID,postID);
 
         // 현재 게시글에 속해 있지 않은 경우 게시물 볼 수 있는 권한 없음 리턴

@@ -19,9 +19,11 @@ public final class DelegateUri implements BaseUri {
     private final Set<Uris> uris = EnumSet.allOf(Uris.class);
     private final Set<Uris> validPassUris = EnumSet.of(
             Uris.POST_LOGIN,
+            Uris.POST_LOGIN_VER2,
             Uris.POST_EMAIL_VALID,
             Uris.GET_TERMS,
             Uris.POST_USER,
+            Uris.POST_USER_VER2,
             Uris.POST_USER_SEARCHPW
     );
 
@@ -49,8 +51,8 @@ public final class DelegateUri implements BaseUri {
         List<String> list = new ArrayList<>(List.of(request.getRequestURI().toUpperCase().trim().split("/")));
         list.set(0, request.getMethod());
 
-        if (list.size() == 4 && "USERCODE".equals(list.get(1)) && "USER".equals(list.get(3))) {
-            list.set(2, "USERCODE_VALUE");
+        if (list.size() >= 4 && "USERCODE".equals(list.get(1)) && "USER".equals(list.get(3))) {
+            list.set(2, "UCVALUE");
         }
         return list;
     }

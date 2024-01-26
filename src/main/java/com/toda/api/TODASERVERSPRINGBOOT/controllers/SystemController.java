@@ -36,9 +36,33 @@ public class SystemController extends AbstractController implements BaseControll
         else return new FailResponse.Builder(FailResponse.of.EXIST_EMAIL_EXCEPTION).build().getResponse();
     }
 
-    // 1-6. 강제 업데이트 API
+    // 1-8. 강제 업데이트 API
     @GetMapping("/update")
     public Map<String, ?> checkUpdate(
+            @RequestHeader(value = DelegateJwt.HEADER_NAME, required = false) String token,
+            @RequestParam(name="type") int type,
+            @RequestParam(name="version") String version
+    ){
+        switch (type) {
+            case 1 -> {
+                if (systemService.isValidIosVersion(version))
+                    return new SuccessResponse.Builder(SuccessResponse.of.CURR_DEVICE_VERSION_SUCCESS).build().getResponse();
+                else
+                    return new SuccessResponse.Builder(SuccessResponse.of.PREV_DEVICE_VERSION_SUCCESS).build().getResponse();
+            }
+            case 2 -> {
+                if (systemService.isValidAosVersion(version))
+                    return new SuccessResponse.Builder(SuccessResponse.of.CURR_DEVICE_VERSION_SUCCESS).build().getResponse();
+                else
+                    return new SuccessResponse.Builder(SuccessResponse.of.PREV_DEVICE_VERSION_SUCCESS).build().getResponse();
+            }
+            default -> throw new WrongArgException(WrongArgException.of.WRONG_DEVICE_TYPE_EXCEPTION);
+        }
+    }
+
+    // 1-9. 강제 업데이트 API Ver2
+    @GetMapping("/update/ver2")
+    public Map<String, ?> checkUpdateVer2(
             @RequestHeader(value = DelegateJwt.HEADER_NAME, required = false) String token,
             @RequestParam(name="type") int type,
             @RequestParam(name="version") String version

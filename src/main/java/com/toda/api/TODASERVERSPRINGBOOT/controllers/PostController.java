@@ -60,7 +60,7 @@ public class PostController extends AbstractController implements BaseController
     }
 
     //16-3. 게시물 작성 API(게시글 ID 리턴)
-    @PostMapping("/post/ver4")
+    @PostMapping("/post/ver5")
     @SetMdcBody
     public Map<String, ?> createPostVer4(
             @RequestHeader(DelegateJwt.HEADER_NAME) String token,

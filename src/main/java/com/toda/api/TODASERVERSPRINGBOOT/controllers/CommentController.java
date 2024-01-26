@@ -66,7 +66,7 @@ public class CommentController extends AbstractController implements BaseControl
     }
 
     //30-1. 댓글 작성 API(댓글 ID 리턴)
-    @PostMapping("/comment/ver2")
+    @PostMapping("/comment/ver3")
     @SetMdcBody
     public Map<String, ?> createCommentVer2(
             @RequestHeader(DelegateJwt.HEADER_NAME) String token,

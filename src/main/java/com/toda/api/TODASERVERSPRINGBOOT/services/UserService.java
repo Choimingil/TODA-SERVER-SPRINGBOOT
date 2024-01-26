@@ -10,6 +10,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreateUser;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserLogDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserStickerDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.FcmByDevice;
 import com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers.JmsMailProto;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.UserLogResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.*;
@@ -102,7 +103,7 @@ public class UserService extends AbstractService implements BaseService {
     }
 
     @Transactional
-    public void updatePassword(String token, String password){
+    public User updatePassword(String token, String password){
         UserDetail userDetail = getUserInfo(token);
         User user = userDetail.getUser();
 
@@ -115,6 +116,7 @@ public class UserService extends AbstractService implements BaseService {
         user.setPassword(password);
         userRepository.save(user);
         updateUserRedis(user, userDetail.getProfile());
+        return user;
     }
 
     @Transactional

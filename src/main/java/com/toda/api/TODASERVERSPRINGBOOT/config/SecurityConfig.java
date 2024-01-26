@@ -60,9 +60,11 @@ public class SecurityConfig {
 //                 토큰이 없는 상태에서 요청이 들어오는 API들은 permitAll
                     .authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests
                             .requestMatchers("/login").permitAll()
+                            .requestMatchers("/login/ver2").permitAll()
                             .requestMatchers("/email/valid").permitAll()
                             .requestMatchers("/terms").permitAll()
                             .requestMatchers("/user").permitAll()
+                            .requestMatchers("/user/ver2").permitAll()
                             .requestMatchers("/user/searchPW").permitAll()
                             .requestMatchers("/update").permitAll()
                             .anyRequest().authenticated()

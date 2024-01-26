@@ -4,13 +4,17 @@ import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
+import com.toda.api.TODASERVERSPRINGBOOT.entities.User;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.*;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserLogDetail;
+import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.FcmByDevice;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.FailResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.LoginResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.UserLogResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.services.AuthService;
+import com.toda.api.TODASERVERSPRINGBOOT.services.NotificationService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.SystemService;
 import com.toda.api.TODASERVERSPRINGBOOT.services.UserService;
 import jakarta.validation.Valid;
@@ -29,6 +33,7 @@ public class UserController extends AbstractController implements BaseController
     private final UserService userService;
     private final SystemService systemService;
     private final AuthService authService;
+    private final NotificationService notificationService;
 
     @Value("${toda.url.userImage}")
     private String defaultProfile;
@@ -41,12 +46,14 @@ public class UserController extends AbstractController implements BaseController
             DelegateUserAuth delegateUserAuth,
             UserService userService,
             SystemService systemService,
-            AuthService authService
+            AuthService authService,
+            NotificationService notificationService
     ) {
         super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateUserAuth);
         this.userService = userService;
         this.systemService = systemService;
         this.authService = authService;
+        this.notificationService = notificationService;
     }
 
     //2. 자체 회원가입 API
@@ -63,6 +70,22 @@ public class UserController extends AbstractController implements BaseController
         userService.createUserImage(userID,defaultProfile);
         userService.setUserSticker(userID, null);
         return new SuccessResponse.Builder(SuccessResponse.of.CREATE_USER_SUCCESS).build().getResponse();
+    }
+
+    //2-1. 자체 회원가입 API Ver2
+    @PostMapping("/user/ver2")
+    @SetMdcBody
+    public Map<String,?> createUserVer2(
+            @RequestBody @Valid CreateUser createUser,
+            BindingResult bindingResult
+    ) {
+        if(!systemService.isExistEmail(createUser.getEmail()))
+            return new FailResponse.Builder(FailResponse.of.EXIST_EMAIL_EXCEPTION).build().getResponse();
+
+        long userID = userService.createUser(createUser);
+        userService.createUserImage(userID,defaultProfile);
+        userService.setUserSticker(userID, null);
+        return new SuccessResponse.Builder(SuccessResponse.of.CREATE_USER_SUCCESS).add("result",userID).build().getResponse();
     }
 
     //3. 회원탈퇴 API
@@ -96,6 +119,25 @@ public class UserController extends AbstractController implements BaseController
     ){
         userService.updatePassword(token, updatePw.getPw());
         return new SuccessResponse.Builder(SuccessResponse.of.UPDATE_PASSWORD_SUCCESS)
+                .build().getResponse();
+    }
+
+    //5-1. 비밀번호 변경 API Ver2
+    @PatchMapping("/password/ver2")
+    @SetMdcBody
+    public Map<String,?> updatePwVer2(
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
+            @RequestBody @Valid UpdatePw updatePw,
+            BindingResult bindingResult
+    ){
+        User user = userService.updatePassword(token, updatePw.getPw());
+        String jwt = authService.createJwt(user.getEmail(), user.getPassword());
+        LoginResponse loginResponse = LoginResponse.builder()
+                .jwt(jwt)
+                .isUpdating(false)
+                .build();
+        return new SuccessResponse.Builder(SuccessResponse.of.UPDATE_PASSWORD_SUCCESS)
+                .add("result",loginResponse)
                 .build().getResponse();
     }
 
@@ -165,7 +207,29 @@ public class UserController extends AbstractController implements BaseController
                 .build().getResponse();
     }
 
-    //7-2. 임시 비밀번호 발급
+    //7-1. 유저코드를 통한 회원정보 조회 API Ver2
+    @GetMapping("/usercode/{userCode}/user/ver2")
+    public Map<String,?> getUserInfoWithUserCodeVer2(
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
+            @PathVariable("userCode") String userCode
+    ){
+        UserDetail userDetail = userService.getUserInfoWithUserCode(userCode);
+        List<FcmByDevice> fcmByDeviceList = notificationService.getFcmByDevice(userDetail.getUser().getUserID());
+
+        Map<String,Object> userInfo = new HashMap<>();
+        userInfo.put("userID",userDetail.getUser().getUserID());
+        userInfo.put("userCode",userDetail.getUser().getUserCode());
+        userInfo.put("email",userDetail.getUser().getEmail());
+        userInfo.put("name",userDetail.getUser().getUserName());
+        userInfo.put("selfie",userDetail.getProfile());
+        userInfo.put("token",fcmByDeviceList);
+
+        return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
+                .add("result",userInfo)
+                .build().getResponse();
+    }
+
+    //7-3. 임시 비밀번호 발급 API
     @PostMapping("/user/searchPW")
     @SetMdcBody
     public Map<String, ?> getTempPassword(
@@ -192,6 +256,25 @@ public class UserController extends AbstractController implements BaseController
                 .build().getResponse();
     }
 
+    //8-1. 앱 비밀번호 설정 API Ver2
+    @PostMapping("/lock/ver2")
+    @SetMdcBody
+    public Map<String, ?> setAppPasswordVer2(
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token,
+            @RequestBody @Valid AppPassword appPassword,
+            BindingResult bindingResult
+    ){
+        UserDetail userDetail = userService.updateAppPassword(token, Integer.parseInt(appPassword.getAppPW()));
+        String jwt = authService.createJwt(userDetail.getUser().getEmail(), userDetail.getUser().getPassword());
+        LoginResponse loginResponse = LoginResponse.builder()
+                .jwt(jwt)
+                .isUpdating(false)
+                .build();
+        return new SuccessResponse.Builder(SuccessResponse.of.UPDATE_APP_PASSWORD_SUCCESS)
+                .add("result",loginResponse)
+                .build().getResponse();
+    }
+
     //9. 앱 비밀번호 해제 API
     @DeleteMapping("/lock")
     public Map<String, ?> deleteAppPassword(
@@ -201,6 +284,22 @@ public class UserController extends AbstractController implements BaseController
         String jwt = authService.createJwt(userDetail.getUser().getEmail(), userDetail.getUser().getPassword());
         return new SuccessResponse.Builder(SuccessResponse.of.DELETE_APP_PASSWORD_SUCCESS)
                 .add("token",jwt)
+                .build().getResponse();
+    }
+
+    //9-1. 앱 비밀번호 해제 API Ver2
+    @DeleteMapping("/lock/ver2")
+    public Map<String, ?> deleteAppPasswordVer2(
+            @RequestHeader(DelegateJwt.HEADER_NAME) String token
+    ){
+        UserDetail userDetail = userService.updateAppPassword(token, 10000);
+        String jwt = authService.createJwt(userDetail.getUser().getEmail(), userDetail.getUser().getPassword());
+        LoginResponse loginResponse = LoginResponse.builder()
+                .jwt(jwt)
+                .isUpdating(false)
+                .build();
+        return new SuccessResponse.Builder(SuccessResponse.of.DELETE_APP_PASSWORD_SUCCESS)
+                .add("result",loginResponse)
                 .build().getResponse();
     }
 

@@ -13,7 +13,7 @@ public class SuccessResponse extends Response {
          * AuthController
          */
         LOGIN_SUCCESS(100,"성공적으로 로그인되었습니다."),
-        DECODE_TOKEN_SUCCESS(100,"자체 로그인 성공"),
+        DECODE_TOKEN_SUCCESS(100,"자체 로그인 헤더 성공"),
         CHECK_TOKEN_SUCCESS(100,"유효한 유저입니다."),
 
         /**

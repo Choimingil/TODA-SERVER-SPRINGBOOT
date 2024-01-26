@@ -4,11 +4,16 @@ import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.SaveFcmToken;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.Notification;
+import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.SaveFcmTokenVer2;
+import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.FcmByDevice;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.NotificationRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component("notificationService")
 public class NotificationService extends AbstractService implements BaseService {
@@ -44,8 +49,34 @@ public class NotificationService extends AbstractService implements BaseService 
                 .build());
     }
 
+    @Transactional
+    public void saveFcmTokenVer2(long userID, int status, SaveFcmTokenVer2 saveFcmToken){
+        String fcm = saveFcmToken.getToken();
+        String allowable = saveFcmToken.getIsAllowed();
+
+        notificationRepository.deleteByUserIDAndStatus(userID,0);
+        notificationRepository.save(Notification.builder()
+                .userID(userID)
+                .fcm(fcm)
+                .isAllowed(allowable)
+                .isEventAllowed(allowable)
+                .isRemindAllowed(allowable)
+                .status(status)
+                .build());
+    }
+
     public Notification getNotification(long userID, String fcm){
         return notificationRepository.findByUserIDAndFcmAndStatusNot(userID,fcm,0);
+    }
+
+    public List<FcmByDevice> getFcmByDevice(long userID){
+        List<Notification> notificationList = notificationRepository.findByUserIDAndIsAllowedAndStatusNot(userID,"Y",0);
+        return notificationList.stream().map(
+                element -> FcmByDevice.builder()
+                    .token(element.getFcm())
+                    .device(element.getStatus())
+                    .build()
+        ).collect(Collectors.toList());
     }
 
     @Transactional
