@@ -10,6 +10,10 @@ public final class LoginResponse {
     private String jwt;
     @JsonProperty("isUpdating")
     private boolean isUpdating;
+    @JsonProperty("startTime")
+    private final boolean startTime = false;
+    @JsonProperty("finishTime")
+    private final boolean finishTime = false;
 
     LoginResponse(){}
 
@@ -20,21 +24,5 @@ public final class LoginResponse {
     ){
         this.jwt = jwt;
         this.isUpdating = isUpdating;
-    }
-
-    @ToString
-    static class UpdateTime{
-        @JsonProperty("startTime")
-        private String startTime;
-        @JsonProperty("finishTime")
-        private String finishTime;
-
-        UpdateTime(){}
-
-        @Builder
-        UpdateTime(String startTime, String finishTime){
-            this.startTime = startTime;
-            this.finishTime = finishTime;
-        }
     }
 }
