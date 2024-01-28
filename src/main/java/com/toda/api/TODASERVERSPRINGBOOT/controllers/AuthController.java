@@ -100,6 +100,7 @@ public class AuthController extends AbstractController implements BaseController
                 .build();
         return new SuccessResponse.Builder(SuccessResponse.of.DECODE_TOKEN_SUCCESS)
                 .add("result",tokenResponse)
+                .add("appPW",10000)
                 .build().getResponse();
     }
 
