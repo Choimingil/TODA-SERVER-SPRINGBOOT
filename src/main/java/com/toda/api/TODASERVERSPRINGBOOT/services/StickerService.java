@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component("stickerService")
@@ -127,6 +128,46 @@ public class StickerService extends AbstractService implements BaseService {
         postStickerSet.add(postSticker);
     }
 
+    public void updatePostStickerRotate(
+            Map<Long, PostStickerRotate> input,
+            Set<PostStickerRotate> output,
+            long postStickerID,
+            double a,
+            double b,
+            double c,
+            double d,
+            double tx,
+            double ty
+    ){
+        PostStickerRotate postStickerRotate = input.get(postStickerID);
+        postStickerRotate.setA(a);
+        postStickerRotate.setB(b);
+        postStickerRotate.setC(c);
+        postStickerRotate.setD(d);
+        postStickerRotate.setTx(tx);
+        postStickerRotate.setTy(ty);
+
+        output.add(postStickerRotate);
+    }
+
+    public void updatePostStickerScale(
+            Map<Long, PostStickerScale> input,
+            Set<PostStickerScale> output,
+            long postStickerID,
+            double x,
+            double y,
+            double width,
+            double height
+    ){
+        PostStickerScale postStickerScale = input.get(postStickerID);
+        postStickerScale.setX(x);
+        postStickerScale.setY(y);
+        postStickerScale.setWidth(width);
+        postStickerScale.setHeight(height);
+
+        output.add(postStickerScale);
+    }
+
     public void deletePostSticker(Set<PostSticker> postStickerSet, PostSticker postSticker){
         postSticker.setStatus(0);
         postStickerSet.add(postSticker);
@@ -163,6 +204,7 @@ public class StickerService extends AbstractService implements BaseService {
                         .collect(Collectors.toMap(PostStickerScale::getUsedStickerID, psr -> psr));
 
         return postStickerList.stream()
+                .filter(postSticker -> rotateMap.containsKey(postSticker.getPostStickerID()) && scaleMap.containsKey(postSticker.getPostStickerID()))
                 .map(postSticker -> {
                     int inversion = postSticker.getStatus() % 10;
                     int layerNum = postSticker.getStatus() / 10;
@@ -202,7 +244,17 @@ public class StickerService extends AbstractService implements BaseService {
 
     }
 
+    public Map<Long, PostStickerRotate> getPostStickerRotateMap(Set<Long> usedStickerID){
+        List<PostStickerRotate> postStickerRotateList = postStickerRotateRepository.findByUsedStickerIDIn(usedStickerID);
+        return postStickerRotateList.stream()
+                .collect(Collectors.toMap(PostStickerRotate::getUsedStickerID, Function.identity()));
+    }
 
+    public Map<Long, PostStickerScale> getPostStickerScaleMap(Set<Long> usedStickerID){
+        List<PostStickerScale> postStickerScaleList = postStickerScaleRepository.findByUsedStickerIDIn(usedStickerID);
+        return postStickerScaleList.stream()
+                .collect(Collectors.toMap(PostStickerScale::getUsedStickerID, Function.identity()));
+    }
 
 
     @Transactional

@@ -11,8 +11,7 @@ import java.util.Set;
 
 @Repository
 public interface PostStickerScaleRepository extends JpaRepository<PostStickerScale,Long> {
-//    @Query("select pss from PostStickerScale pss inner join PostSticker ps on ps.postStickerID = pss.usedStickerID and ps.status not like 0 where ps.postID = :postID")
-//    List<PostStickerScale> getPostStickerScale(long postID, Pageable pageable);
+    List<PostStickerScale> findByUsedStickerIDIn(Set<Long> usedStickerIDSet);
 
     @Query("select pss from PostStickerScale pss inner join PostSticker ps on ps.postStickerID = pss.usedStickerID and ps.status not like 0 where ps.postStickerID in :postStickerIDSet")
     List<PostStickerScale> getPostStickerScale(Set<Long> postStickerIDSet, Pageable pageable);

@@ -12,7 +12,7 @@ public final class DiaryMemberListResponse {
     private long userID;
     private String userName;
     private String userSelfie;
-    private int userNum;
+    private String userNum;
 
     public DiaryMemberListResponse(){}
 
@@ -30,6 +30,6 @@ public final class DiaryMemberListResponse {
         this.userName = userName;
         this.userID = userID;
         this.userSelfie = userSelfie;
-        this.userNum = userNum;
+        this.userNum = String.valueOf(userNum);
     }
 }

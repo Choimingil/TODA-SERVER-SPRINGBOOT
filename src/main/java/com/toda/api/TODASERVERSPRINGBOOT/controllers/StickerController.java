@@ -183,9 +183,6 @@ public class StickerController extends AbstractController implements BaseControl
                 .collect(Collectors.toMap(PostSticker::getPostStickerID, Function.identity()));
 
         Set<PostSticker> postStickerSet = new HashSet<>();
-        Set<PostStickerRotate> postStickerRotateSet = new HashSet<>();
-        Set<PostStickerScale> postStickerScaleSet = new HashSet<>();
-
         for(UpdateStickerDetail updateStickerDetail : updateSticker.getUsedStickerArr()){
             // 입력받은 스티커 아이디가 실제 유저가 추가한 스티커인지 확인
             if(!userPostStickerMap.containsKey(updateStickerDetail.getUsedStickerID()))
@@ -194,8 +191,17 @@ public class StickerController extends AbstractController implements BaseControl
             // 수정하려는 스티커 아이디값의 PostSticker를 Map에서 찾아서 수정 데이터로 값 대체
             PostSticker curr = userPostStickerMap.get(updateStickerDetail.getUsedStickerID());
             stickerService.updatePostSticker(postStickerSet,curr,updateStickerDetail);
-            stickerService.setPostStickerRotate(
-                    postStickerRotateSet,
+        }
+        Set<Long> usedStickerIDSet = postStickerSet.stream().map(PostSticker::getPostStickerID).collect(Collectors.toSet());
+        Map<Long,PostStickerRotate> postStickerRotateInput = stickerService.getPostStickerRotateMap(usedStickerIDSet);
+        Map<Long,PostStickerScale> postStickerScaleInput = stickerService.getPostStickerScaleMap(usedStickerIDSet);
+
+        Set<PostStickerRotate> postStickerRotateOutput = new HashSet<>();
+        Set<PostStickerScale> postStickerScaleOutput = new HashSet<>();
+        for(UpdateStickerDetail updateStickerDetail : updateSticker.getUsedStickerArr()){
+            stickerService.updatePostStickerRotate(
+                    postStickerRotateInput,
+                    postStickerRotateOutput,
                     updateStickerDetail.getUsedStickerID(),
                     updateStickerDetail.getRotate().getA(),
                     updateStickerDetail.getRotate().getB(),
@@ -204,8 +210,10 @@ public class StickerController extends AbstractController implements BaseControl
                     updateStickerDetail.getRotate().getTx(),
                     updateStickerDetail.getRotate().getTy()
             );
-            stickerService.setPostStickerScale(
-                    postStickerScaleSet,
+
+            stickerService.updatePostStickerScale(
+                    postStickerScaleInput,
+                    postStickerScaleOutput,
                     updateStickerDetail.getUsedStickerID(),
                     updateStickerDetail.getScale().getX(),
                     updateStickerDetail.getScale().getY(),
@@ -221,7 +229,7 @@ public class StickerController extends AbstractController implements BaseControl
 
         // DB 수정 내용 반영
         stickerService.savePostStickerSet(postStickerSet);
-        stickerService.savePostStickerRotateAndScaleSet(postStickerRotateSet,postStickerScaleSet);
+        stickerService.savePostStickerRotateAndScaleSet(postStickerRotateOutput,postStickerScaleOutput);
         return new SuccessResponse.Builder(SuccessResponse.of.UPDATE_STICKER_SUCCESS).build().getResponse();
     }
 

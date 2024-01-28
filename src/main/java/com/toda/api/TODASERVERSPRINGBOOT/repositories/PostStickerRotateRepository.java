@@ -11,8 +11,7 @@ import java.util.Set;
 
 @Repository
 public interface PostStickerRotateRepository extends JpaRepository<PostStickerRotate,Long> {
-//    @Query("select psr from PostStickerRotate psr inner join PostSticker ps on ps.postStickerID = psr.usedStickerID and ps.status not like 0 where ps.postID = :postID")
-//    List<PostStickerRotate> getPostStickerRotate(long postID, Pageable pageable);
+    List<PostStickerRotate> findByUsedStickerIDIn(Set<Long> usedStickerIDSet);
 
     @Query("select psr from PostStickerRotate psr inner join PostSticker ps on ps.postStickerID = psr.usedStickerID and ps.status not like 0 where ps.postStickerID in :postStickerIDSet")
     List<PostStickerRotate> getPostStickerRotate(Set<Long> postStickerIDSet, Pageable pageable);

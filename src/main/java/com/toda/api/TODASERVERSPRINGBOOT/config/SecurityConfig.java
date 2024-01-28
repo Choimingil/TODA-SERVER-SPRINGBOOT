@@ -67,6 +67,7 @@ public class SecurityConfig {
                             .requestMatchers("/user/ver2").permitAll()
                             .requestMatchers("/user/searchPW").permitAll()
                             .requestMatchers("/update").permitAll()
+                            .requestMatchers("/update/ver2").permitAll()
                             .requestMatchers("/validation").permitAll()
                             .anyRequest().authenticated()
                     )

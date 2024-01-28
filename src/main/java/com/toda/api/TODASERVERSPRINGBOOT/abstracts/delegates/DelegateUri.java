@@ -25,7 +25,9 @@ public final class DelegateUri implements BaseUri {
             Uris.POST_USER,
             Uris.POST_USER_VER2,
             Uris.POST_USER_SEARCHPW,
-            Uris.GET_VALIDATION
+            Uris.GET_VALIDATION,
+            Uris.GET_UPDATE,
+            Uris.GET_UPDATE_VER2
     );
 
     @Override
