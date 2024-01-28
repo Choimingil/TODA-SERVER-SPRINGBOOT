@@ -120,7 +120,7 @@ public class AuthController extends AbstractController implements BaseController
         }
         else{
             int appPw = Integer.parseInt(appPassword.getAppPW());
-            if((int) checkTokenResult.get("appPw") == appPw)
+            if((int) checkTokenResult.get("appPw") == 10000 || (int) checkTokenResult.get("appPw") == appPw)
                 return new SuccessResponse.Builder(SuccessResponse.of.CHECK_TOKEN_SUCCESS).build().getResponse();
             else throw new WrongArgException(WrongArgException.of.WRONG_APP_PASSWORD_EXCEPTION);
         }
