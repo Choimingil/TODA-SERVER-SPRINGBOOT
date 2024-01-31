@@ -78,8 +78,6 @@ public class PostController extends AbstractController implements BaseController
                 postService.addPostImage(target.getPostID(),createPost.getImageList());
 
             // 알림 발송
-            UserDetail sendUser = getUserInfo(token);
-            postService.setFcmAndLog(postService.getFcmAddPostUserMap(userID, createPost.getDiary()),sendUser,target,3);
             return new SuccessResponse.Builder(SuccessResponse.of.CREATE_POST_SUCCESS)
                     .add("postID",target.getPostID())
                     .build().getResponse();

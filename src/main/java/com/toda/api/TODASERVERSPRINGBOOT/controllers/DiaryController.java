@@ -90,10 +90,10 @@ public class DiaryController extends AbstractController implements BaseControlle
             // 상대방 유저가 다이어리에 존재하지 않을 경우 다이어리 초대 진행
             if(receiveUserDiaryStatus == 404){
                 // 다이어리 초대
+                Map<Long,String> fcmDiaryInviteUserMap = diaryService.getFcmDiaryInviteUserMap(List.of(receiveUser));
                 diaryService.inviteDiary(sendUser,receiveUser,diary);
 
                 // FCM 발송
-                Map<Long,String> fcmDiaryInviteUserMap = diaryService.getFcmDiaryInviteUserMap(List.of(receiveUser));
                 diaryService.setFcmAndLog(fcmDiaryInviteUserMap, sendUser, diary, 1);
                 return new SuccessResponse.Builder(SuccessResponse.of.INVITE_DIARY_SUCCESS).build().getResponse();
             }
@@ -107,10 +107,10 @@ public class DiaryController extends AbstractController implements BaseControlle
         else{
             // 다이어리 수락
             List<UserDiary> acceptableDiaryList = diaryService.getAcceptableDiaryList(sendUserID,receiveUserID,diaryID);
+            Map<Long,String> acceptableDiaryMap = diaryService.getFcmDiaryAcceptUserMap(acceptableDiaryList);
             diaryService.acceptDiary(sendUserID, receiveUserID, diaryID, diary.getStatus(), acceptableDiaryList);
 
             // FCM 발송
-            Map<Long,String> acceptableDiaryMap = diaryService.getFcmDiaryAcceptUserMap(acceptableDiaryList);
             diaryService.setFcmAndLog(acceptableDiaryMap, sendUser, diary, 2);
             return new SuccessResponse.Builder(SuccessResponse.of.ACCEPT_DIARY_SUCCESS).build().getResponse();
         }

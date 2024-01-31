@@ -65,7 +65,8 @@ public final class DelegateFcm implements BaseFcm {
      * byte array 역직렬화 후 알림 발송
      * @param byteCode
      */
-    @JmsListener(destination = "fcm", containerFactory = "myFactory")
+//    @JmsListener(destination = "fcm", containerFactory = "myFactory")
+    @JmsListener(destination = "fcm")
     private void getFcmJmsConsumer(byte[] byteCode){
         try {
             JmsFcmProto.JmsFcmRequest jmsFcm = JmsFcmProto.JmsFcmRequest.parseFrom(byteCode);
@@ -88,18 +89,25 @@ public final class DelegateFcm implements BaseFcm {
         List<String> aosFcmList = params.getFcmGroup().getAosFcmList();
         List<String> iosFcmList = params.getFcmGroup().getIosFcmList();
 
-        try (CloseableHttpClient client = HttpClientBuilder.create().setConnectionManager(connectionManager).build()){
-            CompletableFuture<FcmResponse> aosFcmFuture = !aosFcmList.isEmpty() ?
-                    connectFcmUrl(getFcmAosBody(aosFcmList, params.getTitle(), params.getBody(), fcmType, params.getDataID()),client) : new CompletableFuture<>();
-            CompletableFuture<FcmResponse> iosFcmFuture = !iosFcmList.isEmpty() ?
-                    connectFcmUrl(getFcmIosBody(iosFcmList, params.getTitle(), params.getBody(), fcmType, params.getDataID()),client) : new CompletableFuture<>();
-            CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(aosFcmFuture, iosFcmFuture);
-            combinedFuture.join();
-            return combinedFuture;
+        System.out.println("pass 2");
+        System.out.println(aosFcmList.size());
+        System.out.println(iosFcmList.size());
+
+        if(!aosFcmList.isEmpty() || !iosFcmList.isEmpty()){
+            try (CloseableHttpClient client = HttpClientBuilder.create().setConnectionManager(connectionManager).build()){
+                CompletableFuture<FcmResponse> aosFcmFuture = !aosFcmList.isEmpty() ?
+                        connectFcmUrl(getFcmAosBody(aosFcmList, params.getTitle(), params.getBody(), fcmType, params.getDataID()),client) : new CompletableFuture<>();
+                CompletableFuture<FcmResponse> iosFcmFuture = !iosFcmList.isEmpty() ?
+                        connectFcmUrl(getFcmIosBody(iosFcmList, params.getTitle(), params.getBody(), fcmType, params.getDataID()),client) : new CompletableFuture<>();
+                CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(aosFcmFuture, iosFcmFuture);
+                combinedFuture.join();
+                return combinedFuture;
+            }
+            catch (IOException e){
+                throw new WrongAccessException(WrongAccessException.of.HTTP_CLIENT_CREATE_EXCEPTION);
+            }
         }
-        catch (IOException e){
-            throw new WrongAccessException(WrongAccessException.of.HTTP_CLIENT_CREATE_EXCEPTION);
-        }
+        return new CompletableFuture<>();
     }
 
     /**
@@ -196,6 +204,8 @@ public final class DelegateFcm implements BaseFcm {
             for(Map.Entry<Long,String> entry : fcmDto.getMap().entrySet()){
                 long userID = entry.getKey();
                 String userName = entry.getValue();
+                System.out.println("pass 0");
+                System.out.println(userID + " " + sendID);
 
                 // 발신자와 수신자가 같을 경우 알림 미발송
                 if(userID == sendID) continue;
@@ -301,6 +311,10 @@ public final class DelegateFcm implements BaseFcm {
 
     private FcmMap getFcmMap(long userID, NotificationRepository notificationRepository){
         List<Notification> userFcmList = notificationRepository.findByUserIDAndIsAllowedAndStatusNot(userID,"Y",0);
+
+        System.out.println("pass 1");
+        for(Notification notification : userFcmList) System.out.println(notification.getFcm());
+
         Map<String, Long> tokenIDs = userFcmList.stream()
                 .collect(Collectors.toMap(
                         Notification::getFcm,

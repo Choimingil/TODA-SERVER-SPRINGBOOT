@@ -81,12 +81,9 @@ public class CommentController extends AbstractController implements BaseControl
         // 현재 게시글에 속해 있지 않은 경우 게시물 볼 수 있는 권한 없음 리턴
         if(userPostStatus == 404) throw new BusinessLogicException(BusinessLogicException.of.NO_AUTH_POST_EXCEPTION);
         else{
-            UserDetail sendUser = getUserInfo(token);
-
             // 부모 댓글 아이디가 존재하지 않으면 댓글 작성 진행
             if(comment == null){
                 Comment target = commentService.addComment(userID, createComment.getPost(), createComment.getReply());
-                commentService.setFcmAndLog(commentService.getFcmAddCommentUserMap(userID, target),sendUser,target,5);
                 return new SuccessResponse.Builder(SuccessResponse.of.CREATE_COMMENT_SUCCESS)
                         .add("commentID",target.getCommentID())
                         .build().getResponse();
@@ -98,7 +95,6 @@ public class CommentController extends AbstractController implements BaseControl
                     throw new BusinessLogicException(BusinessLogicException.of.NO_AUTH_COMMENT_EXCEPTION);
 
                 Comment target = commentService.addReComment(userID, createComment.getPost(), createComment.getReply(), comment);
-                commentService.setFcmAndLog(commentService.getFcmAddReCommentUserMap(userID, comment),sendUser,target,6);
                 return new SuccessResponse.Builder(SuccessResponse.of.CREATE_RE_COMMENT_SUCCESS)
                         .add("commentID",target.getCommentID())
                         .build().getResponse();

@@ -39,7 +39,7 @@ public class NotificationController extends AbstractController implements BaseCo
     ){
         long userID = getUserID(token);
         int status = type==null ? 100 : (type.equals("2") ? 200 : 100);
-        notificationService.saveFcmToken(userID,status,saveFcmToken);
+        notificationService.saveFcmToken(userID,status,saveFcmToken.getToken(),saveFcmToken.getIsAllowed());
         return new SuccessResponse.Builder(SuccessResponse.of.SAVE_FCM_TOKEN_SUCCESS)
                 .build().getResponse();
     }
@@ -54,7 +54,7 @@ public class NotificationController extends AbstractController implements BaseCo
     ){
         long userID = getUserID(token);
         int status = saveFcmToken.getType()==1 ? 100 : 200;
-        notificationService.saveFcmTokenVer2(userID,status,saveFcmToken);
+        notificationService.saveFcmToken(userID,status,saveFcmToken.getToken(),saveFcmToken.getIsAllowed());
         return new SuccessResponse.Builder(SuccessResponse.of.SAVE_FCM_TOKEN_SUCCESS)
                 .build().getResponse();
     }

@@ -46,7 +46,7 @@ public class AuthService extends AbstractService implements BaseService {
         Map<String,Object> map = new HashMap<>();
         map.put("id", userDetail.getUser().getUserID());
         map.put("pw", userDetail.getUser().getPassword());
-        map.put("appPw", userDetail.getUser().getAppPassword());
+        map.put("appPW", userDetail.getUser().getAppPassword());
         return map;
     }
 }

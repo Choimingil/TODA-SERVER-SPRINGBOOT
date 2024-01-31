@@ -64,7 +64,6 @@ public class SecurityConfig {
                             .requestMatchers("/email/valid").permitAll()
                             .requestMatchers("/terms").permitAll()
                             .requestMatchers("/user").permitAll()
-                            .requestMatchers("/user/ver2").permitAll()
                             .requestMatchers("/user/searchPW").permitAll()
                             .requestMatchers("/update").permitAll()
                             .requestMatchers("/update/ver2").permitAll()

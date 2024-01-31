@@ -137,7 +137,6 @@ public class DiaryService extends AbstractService implements BaseService {
 
     @Transactional
     public void setFcmAndLog(Map<Long,String> receiveUserMap, UserDetail sendUser, Diary diary, int type){
-
         setJmsTopicFcm(
                 sendUser.getUser().getUserID(),
                 (userID, userName) -> {
@@ -402,7 +401,12 @@ public class DiaryService extends AbstractService implements BaseService {
      */
     public Map<Long,String> getFcmDiaryAcceptUserMap(List<UserDiary> entityList){
         return getFcmReceiveUserMap(
-                (userDiary,map)-> !map.containsKey((long)userDiary.getStatus()/10),
+                (userDiary,map)-> {
+                    System.out.println("pass getFcmDiaryAcceptUserMap");
+                    System.out.println((long)userDiary.getStatus());
+
+                    return !map.containsKey((long)userDiary.getStatus()/10);
+                },
                 (userDiary,map)-> map.put(
                         (long)userDiary.getStatus()/10,
                         userDiary.getUser().getUserName()

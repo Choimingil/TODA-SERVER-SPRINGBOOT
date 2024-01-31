@@ -34,26 +34,7 @@ public class NotificationService extends AbstractService implements BaseService 
     }
 
     @Transactional
-    public void saveFcmToken(long userID, int status, SaveFcmToken saveFcmToken){
-        String fcm = saveFcmToken.getToken();
-        String allowable = saveFcmToken.getIsAllowed();
-
-        notificationRepository.deleteByUserIDAndStatus(userID,0);
-        notificationRepository.save(Notification.builder()
-                .userID(userID)
-                .fcm(fcm)
-                .isAllowed(allowable)
-                .isEventAllowed(allowable)
-                .isRemindAllowed(allowable)
-                .status(status)
-                .build());
-    }
-
-    @Transactional
-    public void saveFcmTokenVer2(long userID, int status, SaveFcmTokenVer2 saveFcmToken){
-        String fcm = saveFcmToken.getToken();
-        String allowable = saveFcmToken.getIsAllowed();
-
+    public void saveFcmToken(long userID, int status, String fcm, String allowable){
         notificationRepository.deleteByUserIDAndStatus(userID,0);
         notificationRepository.save(Notification.builder()
                 .userID(userID)
