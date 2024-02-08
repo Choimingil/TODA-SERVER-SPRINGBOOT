@@ -72,7 +72,10 @@ public final class DelegateFcm implements BaseFcm {
             JmsFcmProto.JmsFcmRequest jmsFcm = JmsFcmProto.JmsFcmRequest.parseFrom(byteCode);
             FcmGroup group = FcmGroup.builder().aosFcmList(jmsFcm.getAosFcmList()).iosFcmList(jmsFcm.getIosFcmList()).build();
             FcmParams params = FcmParams.builder().title(jmsFcm.getTitle()).body(jmsFcm.getBody()).typeNum(jmsFcm.getTypeNum()).dataID(jmsFcm.getDataID()).fcmGroup(group).build();
-            sendFcm(params).get();
+
+            List<String> aosFcmList = params.getFcmGroup().getAosFcmList();
+            List<String> iosFcmList = params.getFcmGroup().getIosFcmList();
+            if(!aosFcmList.isEmpty() || !iosFcmList.isEmpty()) sendFcm(params).get();
         }
         catch (ExecutionException | InterruptedException | InvalidProtocolBufferException e){
             throw new WrongAccessException(WrongAccessException.of.MQ_CONNECTION_EXCEPTION);
@@ -88,10 +91,6 @@ public final class DelegateFcm implements BaseFcm {
         String fcmType = getFcmType(params.getTypeNum());
         List<String> aosFcmList = params.getFcmGroup().getAosFcmList();
         List<String> iosFcmList = params.getFcmGroup().getIosFcmList();
-
-        System.out.println("pass 2");
-        System.out.println(aosFcmList.size());
-        System.out.println(iosFcmList.size());
 
         if(!aosFcmList.isEmpty() || !iosFcmList.isEmpty()){
             try (CloseableHttpClient client = HttpClientBuilder.create().setConnectionManager(connectionManager).build()){
