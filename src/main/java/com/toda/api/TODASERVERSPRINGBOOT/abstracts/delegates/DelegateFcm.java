@@ -203,8 +203,6 @@ public final class DelegateFcm implements BaseFcm {
             for(Map.Entry<Long,String> entry : fcmDto.getMap().entrySet()){
                 long userID = entry.getKey();
                 String userName = entry.getValue();
-                System.out.println("pass 0");
-                System.out.println(userID + " " + sendID);
 
                 // 발신자와 수신자가 같을 경우 알림 미발송
                 if(userID == sendID) continue;
@@ -310,9 +308,6 @@ public final class DelegateFcm implements BaseFcm {
 
     private FcmMap getFcmMap(long userID, NotificationRepository notificationRepository){
         List<Notification> userFcmList = notificationRepository.findByUserIDAndIsAllowedAndStatusNot(userID,"Y",0);
-
-        System.out.println("pass 1");
-        for(Notification notification : userFcmList) System.out.println(notification.getFcm());
 
         Map<String, Long> tokenIDs = userFcmList.stream()
                 .collect(Collectors.toMap(
