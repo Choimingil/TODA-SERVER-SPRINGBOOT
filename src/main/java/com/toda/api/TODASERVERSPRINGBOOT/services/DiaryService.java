@@ -194,7 +194,11 @@ public class DiaryService extends AbstractService implements BaseService {
     @Transactional
     public void updateDiary(long userID, UpdateDiary updateDiary){
         List<UserDiary> userDiaryList = userDiaryRepository.findByUserIDAndDiaryIDAndStatusNot(userID,updateDiary.getDiary(),999);
-        int newStatus = getDiaryStatus(updateDiary.getStatus(), updateDiary.getColor());
+
+        Diary currDiary = diaryRepository.findByDiaryID(updateDiary.getDiary());
+        int status = updateDiary.getStatus() != 3 ? updateDiary.getStatus() : (currDiary.getStatus()%100 == 1 ? 3 : 4);
+        int newStatus = getDiaryStatus(status, updateDiary.getColor());
+
         AtomicBoolean isEdit = new AtomicBoolean(true);
         updateListAndDelete(
                 userDiary -> isEdit.get(),
@@ -232,7 +236,7 @@ public class DiaryService extends AbstractService implements BaseService {
         // 다이어리 정보 가져오기
         int start = (page-1)*20;
         Pageable pageable = PageRequest.of(start,20);
-        List<DiaryList> diaryList = userDiaryRepository.getDiaryList(userID,status,pageable);
+        List<DiaryList> diaryList = userDiaryRepository.getDiaryList(userID,getStatusList(status),pageable);
 
         // 가져온 정보 가공하여 정답 배열에 추가
         List<DiaryListResponse> res = new ArrayList<>();
@@ -257,7 +261,7 @@ public class DiaryService extends AbstractService implements BaseService {
         // 다이어리 정보 가져오기
         int start = (page-1)*20;
         Pageable pageable = PageRequest.of(start,20);
-        List<DiaryList> diaryList = userDiaryRepository.getDiaryListWithKeyword(userID,status,pageable,keyword);
+        List<DiaryList> diaryList = userDiaryRepository.getDiaryListWithKeyword(userID,getStatusList(status),pageable,keyword);
 
         // 가져온 정보 가공하여 정답 배열에 추가
         List<DiaryListResponse> res = new ArrayList<>();
@@ -430,5 +434,17 @@ public class DiaryService extends AbstractService implements BaseService {
         if(diary == null) throw new WrongArgException(WrongArgException.of.WRONG_DIARY_EXCEPTION);
         if(diary.getStatus()%100 == 2) throw new BusinessLogicException(BusinessLogicException.of.ALONE_DIARY_INVITATION_EXCEPTION);
         return diary;
+    }
+
+    private List<Integer> getStatusList(int status){
+        List<Integer> statusList = new ArrayList<>();
+        statusList.add(status);
+
+        if(status == 1) statusList.add(3);
+        else if(status == 2) statusList.add(4);
+        else if(status == 3) statusList.add(4);
+        else throw new WrongArgException(WrongArgException.of.WRONG_DIARY_STATUS_EXCEPTION);
+
+        return statusList;
     }
 }

@@ -34,8 +34,8 @@ public interface UserDiaryRepository extends JpaRepository<UserDiary,Long> {
             "and u.appPassword not like 99999 " +
             "and MOD(nud.status,10) not like 0 " +
             "group by nud.diaryID) as userNum " +
-            "from UserDiary ud where ud.userID = :userID and MOD(ud.status,100) = :status order by ud.createAt desc")
-    List<DiaryList> getDiaryList(long userID, int status, Pageable pageable);
+            "from UserDiary ud where ud.userID = :userID and MOD(ud.status,100) in :statusList order by ud.createAt desc")
+    List<DiaryList> getDiaryList(long userID, List<Integer> statusList, Pageable pageable);
 
     @Query("select ud as userDiary, " +
             "(select count(nud) from UserDiary nud " +
@@ -44,9 +44,9 @@ public interface UserDiaryRepository extends JpaRepository<UserDiary,Long> {
             "and u.appPassword not like 99999 " +
             "and MOD(nud.status,10) not like 0 " +
             "group by nud.diaryID) as userNum " +
-            "from UserDiary ud where ud.userID = :userID and MOD(ud.status,100) = :status and ud.diaryName like concat('%',:keyword,'%')" +
+            "from UserDiary ud where ud.userID = :userID and MOD(ud.status,100) in :statusList and ud.diaryName like concat('%',:keyword,'%')" +
             "order by ud.createAt desc")
-    List<DiaryList> getDiaryListWithKeyword(long userID, int status, Pageable pageable, String keyword);
+    List<DiaryList> getDiaryListWithKeyword(long userID, List<Integer> statusList, Pageable pageable, String keyword);
 
     @Query("select ud as userDiary, " +
             "(select count(nud) from UserDiary nud " +
