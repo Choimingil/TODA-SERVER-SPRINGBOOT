@@ -4,6 +4,7 @@ import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractController;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseController;
 import com.toda.api.TODASERVERSPRINGBOOT.annotations.SetMdcBody;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.NoArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.SaveFcmToken;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.SaveFcmTokenVer2;
@@ -67,7 +68,20 @@ public class NotificationController extends AbstractController implements BaseCo
     ){
         long userID = getUserID(token);
         Notification notification = notificationService.getNotification(userID,fcm);
-        return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
+        if(notification == null){
+            // IOS 알림 토큰 추가 오류 대비 토큰 추가 작업 진행
+            if(fcm != null) notificationService.saveFcmToken(userID,100,fcm,"Y");
+            else throw new NoArgException(NoArgException.of.NULL_PARAM_EXCEPTION);
+            
+            return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
+                    .add("result", FcmAllowedResponse.builder()
+                            .isBasicAllowed(true)
+                            .isRemindAllowed(true)
+                            .isEventAllowed(true)
+                            .build())
+                    .build().getResponse();
+        }
+        else return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
                 .add("result", FcmAllowedResponse.builder()
                         .isBasicAllowed(notification.getIsAllowed().equals("Y"))
                         .isRemindAllowed(notification.getIsRemindAllowed().equals("Y"))
