@@ -3,7 +3,6 @@ package com.toda.api.TODASERVERSPRINGBOOT.services;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.*;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.PostDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.PostList;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.CreatePost;
@@ -32,6 +31,7 @@ public class PostService extends AbstractService implements BaseService {
     private final PostImageRepository postImageRepository;
     private final HeartRepository heartRepository;
     private final NotificationRepository notificationRepository;
+    private final CommentRepository commentRepository;
 
     public PostService(
             DelegateDateTime delegateDateTime,
@@ -47,7 +47,8 @@ public class PostService extends AbstractService implements BaseService {
             PostTextRepository postTextRepository,
             PostImageRepository postImageRepository,
             HeartRepository heartRepository,
-            NotificationRepository notificationRepository
+            NotificationRepository notificationRepository,
+            CommentRepository commentRepository
     ) {
         super(delegateDateTime, delegateFile, delegateStatus, delegateJwt, delegateFcm, delegateUserAuth, delegateJms);
         this.userRepository = userRepository;
@@ -57,6 +58,7 @@ public class PostService extends AbstractService implements BaseService {
         this.postImageRepository = postImageRepository;
         this.heartRepository = heartRepository;
         this.notificationRepository = notificationRepository;
+        this.commentRepository = commentRepository;
     }
 
     @Transactional
@@ -214,13 +216,19 @@ public class PostService extends AbstractService implements BaseService {
     }
 
     public PostDetailResponse getPostDetail(long userID, long postID){
-        PostDetail postDetail = postRepository.getPostDetail(userID,postID);
+        PostText postText = postTextRepository.findByPostID(postID).get(0);
+
+        int isMyLike = heartRepository.getIsMyLike(userID,postID);
+        int likeNum = heartRepository.countByPostIDAndStatusNot(postID,0);
+        int commentNum = commentRepository.countByPostIDAndStatusNot(postID,0);
+
         List<PostImage> postImageList = postImageRepository.findByPostIDAndStatusNot(postID,0);
 
-        int moodCode = postDetail.getPost().getStatus()%100;
-        int backgroundCode = postDetail.getPost().getStatus()/100;
-        int fontCode = postDetail.getPostText().getStatus()%100;
-        int alignedCode = postDetail.getPostText().getStatus()/100;
+        Post post = postText.getPost();
+        int moodCode = post.getStatus()%100;
+        int backgroundCode = post.getStatus()/100;
+        int fontCode = postText.getStatus()%100;
+        int alignedCode = postText.getStatus()/100;
 
         List<PostImageResponse> validImageList = postImageList.stream()
                 .map(postImage -> PostImageResponse.builder()
@@ -230,22 +238,22 @@ public class PostService extends AbstractService implements BaseService {
                 .collect(Collectors.toList());
 
         return PostDetailResponse.builder()
-                .isMyPost(postDetail.getPost().getUserID() == userID)
-                .diaryID(postDetail.getPost().getDiaryID())
+                .isMyPost(post.getUserID() == userID)
+                .diaryID(post.getDiaryID())
                 .postID(postID)
-                .name(postDetail.getPost().getUser().getUserName())
-                .date(getDateString(postDetail.getPost().getCreateAt()))
-                .dateFull(toStringDateFullTime(postDetail.getPost().getCreateAt()))
-                .title(postDetail.getPost().getTitle())
-                .text(postDetail.getPostText().getText())
+                .name(post.getUser().getUserName())
+                .date(getDateString(post.getCreateAt()))
+                .dateFull(toStringDateFullTime(post.getCreateAt()))
+                .title(post.getTitle())
+                .text(postText.getText())
                 .icon(moodCode)
                 .mood(getMoodString(moodCode))
                 .background(backgroundCode)
                 .font(fontCode)
                 .aligned(alignedCode)
-                .isMyLike(postDetail.getIsMyLike()==1)
-                .likeNum(postDetail.getLikeNum())
-                .commentNum(postDetail.getCommentNum())
+                .isMyLike(isMyLike==1)
+                .likeNum(likeNum)
+                .commentNum(commentNum)
                 .image(validImageList)
                 .build();
     }

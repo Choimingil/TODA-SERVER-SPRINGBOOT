@@ -2,7 +2,6 @@ package com.toda.api.TODASERVERSPRINGBOOT.repositories;
 
 import com.toda.api.TODASERVERSPRINGBOOT.entities.Comment;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.CommentDetail;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.PostDetail;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
