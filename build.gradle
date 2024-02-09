@@ -1,0 +1,128 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.1.0'
+	id 'io.spring.dependency-management' version '1.1.0'
+	id 'org.graalvm.buildtools.native' version '0.9.20'
+	id 'com.google.protobuf' version '0.9.4'
+}
+
+group = 'com.toda.api'
+version = '1.0.7-SNAPSHOT'
+sourceCompatibility = '17'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+    testImplementation 'org.projectlombok:lombok:1.18.26'
+    compileOnly 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+
+	// JDBC
+	implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
+	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+
+	// JPA
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+	// Spring Security
+	implementation "org.springframework.boot:spring-boot-starter-security"
+	implementation "org.springframework.security:spring-security-test"
+
+	// JWT
+	implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.5'
+//	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.5'
+//	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.5'
+	implementation group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.5'
+	implementation group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.5'
+
+	// AOP
+	implementation 'org.springframework.boot:spring-boot-starter-aop'
+
+	// DataTypeConverter
+	implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
+	implementation group: 'com.sun.xml.bind', name: 'jaxb-core', version: '2.3.0.1'
+	implementation group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.3.1'
+
+	// Redis (7.0.11)
+	implementation('org.springframework.boot:spring-boot-starter-data-redis')
+
+	// Actuator
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+	// Validator
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// Slack
+	implementation "net.gpedro.integrations.slack:slack-webhook:1.4.0"
+
+	//HTTP
+	implementation 'org.apache.httpcomponents:httpclient:4.5.13'
+
+	// CompletableFuture
+	implementation 'org.apache.commons:commons-lang3:3.12.0'
+
+	// Protobuf
+	implementation 'io.grpc:grpc-protobuf:1.58.0'
+	implementation 'io.grpc:grpc-stub:1.58.0'
+	implementation 'io.grpc:grpc-netty-shaded:1.58.0'
+	compileOnly 'org.apache.tomcat:annotations-api:6.0.53' // necessary for Java 9+
+
+	// Caffeine
+	implementation("com.github.ben-manes.caffeine:caffeine:3.1.7")
+	implementation("com.github.ben-manes.caffeine:guava:3.1.7")
+	implementation("com.github.ben-manes.caffeine:jcache:3.1.7")
+
+	// Mail
+	implementation "org.springframework.boot:spring-boot-starter-mail"
+
+	// JMS
+	implementation 'org.springframework.boot:spring-boot-starter-artemis'
+	runtimeOnly 'org.apache.activemq:artemis-jakarta-server'
+
+	// HttpClient
+	implementation 'org.apache.httpcomponents.client5:httpclient5:5.1.4'
+}
+
+sourceSets {
+	src {
+		main {
+			java {
+				srcDirs 'build/generated/source/proto/main/grpc'
+				srcDirs 'build/generated/source/proto/main/java'
+			}
+		}
+	}
+}
+
+protobuf {
+	protoc {
+		artifact = 'com.google.protobuf:protoc:3.22.3'
+	}
+	plugins {
+		grpc {
+			artifact = 'io.grpc:protoc-gen-grpc-java:1.58.0'
+		}
+	}
+	generateProtoTasks {
+		all()*.plugins {
+			grpc {}
+		}
+	}
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

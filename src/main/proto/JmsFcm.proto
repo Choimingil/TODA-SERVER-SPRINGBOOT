@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option java_outer_classname = "JmsFcmProto";
+package com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers;
+
+message JmsFcmRequest {
+  string title = 1;
+  string body = 2;
+  int32 typeNum = 3;
+  int64 dataID = 4;
+  repeated string aosFcm = 5;
+  repeated string iosFcm = 6;
+}
+
+message JmsFcmResponse {
+  string response = 1;
+}
+
+service JmsFcmService {
+  rpc SendFcm (JmsFcmRequest) returns (JmsFcmResponse) {}
+}

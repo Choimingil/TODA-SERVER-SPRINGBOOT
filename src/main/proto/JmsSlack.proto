@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option java_outer_classname = "JmsSlackProto";
+package com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers;
+
+message JmsSlackRequest {
+  string titleLink = 1;
+  map<string, string> slackFields = 2;
+  string stackTrace = 3;
+}
+
+message JmsSlackResponse {
+  string response = 1;
+}
+
+service JmsSlackService {
+  rpc SendSlack (JmsSlackRequest) returns (JmsSlackResponse) {}
+}
