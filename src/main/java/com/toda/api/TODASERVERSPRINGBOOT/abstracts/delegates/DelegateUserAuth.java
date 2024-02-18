@@ -34,7 +34,7 @@ public final class DelegateUserAuth extends AbstractAuth implements BaseUserAuth
 
     @Override
     public UserDetail getUserInfo(String value) {
-        String email = value.length()>45 ? decodeToken(value).getEmail() : value;
+        String email = value.length()>45 ? getEmailWithDecodeToken(value) : value;
 
         UserDetail userDetail = getUserDetailOnCache(email);
         if(userDetail == null){

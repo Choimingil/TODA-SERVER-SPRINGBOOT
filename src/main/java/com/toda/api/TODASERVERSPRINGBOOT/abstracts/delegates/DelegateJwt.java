@@ -5,10 +5,8 @@ import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseJwt;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
 import com.toda.api.TODASERVERSPRINGBOOT.enums.TokenFields;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.NoArgException;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.JwtHeader;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +18,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import javax.crypto.spec.SecretKeySpec;
 import java.security.Key;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -65,14 +64,21 @@ public final class DelegateJwt extends AbstractUtil implements BaseJwt, Initiali
     }
 
     @Override
-    public JwtHeader decodeToken(String token) {
+    public String getEmailWithDecodeToken(String token) {
         Claims claims = getClaims(token);
-        return JwtHeader.builder()
-                .userID(Long.parseLong(String.valueOf(claims.get(TokenFields.USER_ID.value))))
-                .email(String.valueOf(claims.get(TokenFields.EMAIL.value)))
-                .appPw(Integer.parseInt(String.valueOf(claims.get(TokenFields.APP_PASSWORD.value))))
-                .date(toLocalDateTimeFull(String.valueOf(claims.get(TokenFields.CREATE_AT.value))))
-                .build();
+
+//        String.valueOf(Object obj) 메서드는 null을 인자로 받았을 때, "null"이라는 문자열을 반환합니다.
+//        따라서, claims.get("id")가 null을 반환하더라도 ver1은 실제로 null이 아닌 "null" 문자열이 되어버립니다.
+//        이것이 if (ver1 != null) 조건을 true로 만들고, 조건문이 통과되는 이유입니다.
+//        즉, ver1 변수는 절대 null이 될 수 없으며, 최소한 "null" 문자열이 됩니다. 이 때문에 if 문은 항상 참이 되어 조건문 내부의 코드가 실행됩니다.
+
+        Object ver1 = claims.get("id");
+        if(ver1 != null) return String.valueOf(ver1);
+
+        Object ver2 = claims.get(TokenFields.EMAIL.value);
+        if(ver2 != null) return String.valueOf(ver2);
+
+        throw new WrongArgException(WrongArgException.of.WRONG_HEADER_EXCEPTION);
     }
 
     @Override
@@ -107,8 +113,12 @@ public final class DelegateJwt extends AbstractUtil implements BaseJwt, Initiali
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        byte[] keyBytes = Decoders.BASE64URL.decode(secret);
-        key = Keys.hmacShaKeyFor(keyBytes);
+//        byte[] keyBytes = Decoders.BASE64URL.decode(secret);
+//        key = Keys.hmacShaKeyFor(keyBytes);
+//        SKIP_VALUE = secret;
+
+        byte[] keyBytes = secret.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        key = new SecretKeySpec(keyBytes, SignatureAlgorithm.HS256.getJcaName());
         SKIP_VALUE = secret;
     }
 

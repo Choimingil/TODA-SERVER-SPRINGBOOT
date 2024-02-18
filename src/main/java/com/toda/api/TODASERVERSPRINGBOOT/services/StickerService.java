@@ -77,8 +77,7 @@ public class StickerService extends AbstractService implements BaseService {
         postStickerSet.add(postSticker);
     }
 
-    public void setPostStickerRotate(
-            Set<PostStickerRotate> postStickerRotateSet,
+    private PostStickerRotate addPostStickerRotate(
             long postStickerID,
             double a,
             double b,
@@ -95,12 +94,10 @@ public class StickerService extends AbstractService implements BaseService {
         postStickerRotate.setD(d);
         postStickerRotate.setTx(tx);
         postStickerRotate.setTy(ty);
-
-        postStickerRotateSet.add(postStickerRotate);
+        return postStickerRotate;
     }
 
-    public void setPostStickerScale(
-            Set<PostStickerScale> postStickerScaleSet,
+    private PostStickerScale addPostStickerScale(
             long postStickerID,
             double x,
             double y,
@@ -113,7 +110,32 @@ public class StickerService extends AbstractService implements BaseService {
         postStickerScale.setY(y);
         postStickerScale.setWidth(width);
         postStickerScale.setHeight(height);
+        return postStickerScale;
+    }
 
+    public void setPostStickerRotate(
+            Set<PostStickerRotate> postStickerRotateSet,
+            long postStickerID,
+            double a,
+            double b,
+            double c,
+            double d,
+            double tx,
+            double ty
+    ){
+        PostStickerRotate postStickerRotate = addPostStickerRotate(postStickerID,a,b,c,d,tx,ty);
+        postStickerRotateSet.add(postStickerRotate);
+    }
+
+    public void setPostStickerScale(
+            Set<PostStickerScale> postStickerScaleSet,
+            long postStickerID,
+            double x,
+            double y,
+            double width,
+            double height
+    ){
+        PostStickerScale postStickerScale = addPostStickerScale(postStickerID,x,y,width,height);
         postStickerScaleSet.add(postStickerScale);
     }
 
@@ -140,12 +162,15 @@ public class StickerService extends AbstractService implements BaseService {
             double ty
     ){
         PostStickerRotate postStickerRotate = input.get(postStickerID);
-        postStickerRotate.setA(a);
-        postStickerRotate.setB(b);
-        postStickerRotate.setC(c);
-        postStickerRotate.setD(d);
-        postStickerRotate.setTx(tx);
-        postStickerRotate.setTy(ty);
+        if(postStickerRotate == null) postStickerRotate = addPostStickerRotate(postStickerID,a,b,c,d,tx,ty);
+        else{
+            postStickerRotate.setA(a);
+            postStickerRotate.setB(b);
+            postStickerRotate.setC(c);
+            postStickerRotate.setD(d);
+            postStickerRotate.setTx(tx);
+            postStickerRotate.setTy(ty);
+        }
 
         output.add(postStickerRotate);
     }
@@ -160,10 +185,13 @@ public class StickerService extends AbstractService implements BaseService {
             double height
     ){
         PostStickerScale postStickerScale = input.get(postStickerID);
-        postStickerScale.setX(x);
-        postStickerScale.setY(y);
-        postStickerScale.setWidth(width);
-        postStickerScale.setHeight(height);
+        if(postStickerScale == null) postStickerScale = addPostStickerScale(postStickerID,x,y,width,height);
+        else{
+            postStickerScale.setX(x);
+            postStickerScale.setY(y);
+            postStickerScale.setWidth(width);
+            postStickerScale.setHeight(height);
+        }
 
         output.add(postStickerScale);
     }

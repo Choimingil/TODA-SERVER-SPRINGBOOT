@@ -39,14 +39,4 @@ public class AuthService extends AbstractService implements BaseService {
         UserDetail userDetail = getUserInfo(email);
         return createToken(authentication, userDetail);
     }
-
-    public Map<String,?> getTokenData(String token) {
-        UserDetail userDetail = getUserInfo(token);
-
-        Map<String,Object> map = new HashMap<>();
-        map.put("id", userDetail.getUser().getUserID());
-        map.put("pw", userDetail.getUser().getPassword());
-        map.put("appPW", userDetail.getUser().getAppPassword());
-        return map;
-    }
 }

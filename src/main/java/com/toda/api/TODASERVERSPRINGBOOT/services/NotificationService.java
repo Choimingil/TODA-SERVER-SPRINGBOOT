@@ -1,11 +1,14 @@
 package com.toda.api.TODASERVERSPRINGBOOT.services;
 
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.*;
+import com.toda.api.TODASERVERSPRINGBOOT.exceptions.NoArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.exceptions.WrongArgException;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.SaveFcmToken;
 import com.toda.api.TODASERVERSPRINGBOOT.entities.Notification;
 import com.toda.api.TODASERVERSPRINGBOOT.models.bodies.SaveFcmTokenVer2;
 import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.FcmByDevice;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.SuccessResponse;
+import com.toda.api.TODASERVERSPRINGBOOT.models.responses.get.FcmAllowedResponse;
 import com.toda.api.TODASERVERSPRINGBOOT.repositories.NotificationRepository;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.AbstractService;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces.BaseService;
@@ -47,7 +50,16 @@ public class NotificationService extends AbstractService implements BaseService 
     }
 
     public Notification getNotification(long userID, String fcm){
-        return notificationRepository.findByUserIDAndFcmAndStatusNot(userID,fcm,0);
+        Notification notification = notificationRepository.findByUserIDAndFcmAndStatusNot(userID,fcm,0);
+        if(notification == null){
+            // 알림 토큰 추가 오류 대비 토큰 추가 작업 진행
+            if(fcm != null){
+                saveFcmToken(userID,100,fcm,"Y");
+                saveFcmToken(userID,200,fcm,"Y");
+            }
+            else throw new NoArgException(NoArgException.of.NULL_PARAM_EXCEPTION);
+        }
+        return notification;
     }
 
     public List<FcmByDevice> getFcmByDevice(long userID){

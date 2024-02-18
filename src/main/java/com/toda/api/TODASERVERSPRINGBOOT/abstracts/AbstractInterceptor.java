@@ -2,9 +2,6 @@ package com.toda.api.TODASERVERSPRINGBOOT.abstracts;
 
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateJwt;
 import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateUri;
-import com.toda.api.TODASERVERSPRINGBOOT.abstracts.delegates.DelegateUserAuth;
-import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.JwtHeader;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -22,9 +19,9 @@ public abstract class AbstractInterceptor {
         if(delegateUri.isValidPass(request)) return false;
         return delegateJwt.isExistHeader(request) && delegateJwt.isValidHeader(request);
     }
-    protected JwtHeader decodeToken(HttpServletRequest request){
+    protected String getEmailWithDecodeToken(HttpServletRequest request){
         String token = request.getHeader(DelegateJwt.HEADER_NAME);
-        return delegateJwt.decodeToken(token);
+        return delegateJwt.getEmailWithDecodeToken(token);
     }
 
     protected String getToken(HttpServletRequest request) {
