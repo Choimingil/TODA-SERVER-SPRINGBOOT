@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Component("notificationService")
@@ -39,6 +40,9 @@ public class NotificationService extends AbstractService implements BaseService 
     @Transactional
     public void saveFcmToken(long userID, int status, String fcm, String allowable){
         notificationRepository.deleteByUserIDAndStatus(userID,0);
+        List<Notification> sameFcmNotificationList = notificationRepository.findByFcm(fcm);
+        for(Notification notification : sameFcmNotificationList) notificationRepository.delete(notification);
+
         notificationRepository.save(Notification.builder()
                 .userID(userID)
                 .fcm(fcm)
@@ -50,16 +54,14 @@ public class NotificationService extends AbstractService implements BaseService 
     }
 
     public Notification getNotification(long userID, String fcm){
-        Notification notification = notificationRepository.findByUserIDAndFcmAndStatusNot(userID,fcm,0);
-        if(notification == null){
-            // 알림 토큰 추가 오류 대비 토큰 추가 작업 진행
-            if(fcm != null){
-                saveFcmToken(userID,100,fcm,"Y");
-                saveFcmToken(userID,200,fcm,"Y");
-            }
+        List<Notification> notificationList = notificationRepository.findByUserIDAndFcmAndStatusNot(userID,fcm,0);
+        if(notificationList.isEmpty()){
+            // IOS 알림 토큰 추가 오류 대비 토큰 추가 작업 진행
+            if(fcm != null) saveFcmToken(userID,100,fcm,"Y");
             else throw new NoArgException(NoArgException.of.NULL_PARAM_EXCEPTION);
         }
-        return notification;
+
+        return notificationList.get(0);
     }
 
     public List<FcmByDevice> getFcmByDevice(long userID){
