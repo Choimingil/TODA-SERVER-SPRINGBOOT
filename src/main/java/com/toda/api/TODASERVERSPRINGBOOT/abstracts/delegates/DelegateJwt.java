@@ -47,13 +47,6 @@ public final class DelegateJwt extends AbstractUtil implements BaseJwt, Initiali
     }
 
     @Override
-    public long getUserID(String token) {
-        Claims claims = getClaims(token);
-        if(claims == null) throw new NoArgException(NoArgException.of.NULL_PARAM_EXCEPTION);
-        return Long.parseLong(String.valueOf(claims.get(TokenFields.USER_ID.value)));
-    }
-
-    @Override
     public Claims getClaims(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
     }
@@ -137,25 +130,17 @@ public final class DelegateJwt extends AbstractUtil implements BaseJwt, Initiali
      * @return
      */
     private Authentication getAuthentication(String token){
-        Claims claims = Jwts
-                .parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-
         // claim을 이용하여 authorities 생성
         Collection<? extends GrantedAuthority> authorities =
-//                Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
                 Arrays.stream("ROLE_USER".split(","))
                         .map(SimpleGrantedAuthority::new)
                         .distinct()
                         .collect(Collectors.toList());
 
         // claim과 authorities 이용하여 User 객체 생성
+        String email = getEmailWithDecodeToken(token);
         org.springframework.security.core.userdetails.User principal =
-//                new org.springframework.security.core.userdetails.User(claims.getSubject(), "", authorities);
-                new org.springframework.security.core.userdetails.User(String.valueOf(claims.get(TokenFields.EMAIL.value)), "", authorities);
+                new org.springframework.security.core.userdetails.User(email, "", authorities);
 
         // 최종적으로 Authentication 객체 리턴
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);

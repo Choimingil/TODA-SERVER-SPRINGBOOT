@@ -7,26 +7,11 @@ import org.springframework.security.core.Authentication;
 
 public interface BaseJwt {
     /**
-     * 토큰을 유저 아이디로 변환
-     * @param token
-     * @return
-     */
-    long getUserID(String token);
-
-    /**
      * Claims 생성
      * @param token
      * @return
      */
     Claims getClaims(String token);
-
-//    /**
-//     * Claims 객체에서 Subject 추출
-//     * Subject : Email
-//     * @param request
-//     * @return
-//     */
-//    String getSubject(HttpServletRequest request);
 
     /**
      * token 생성
