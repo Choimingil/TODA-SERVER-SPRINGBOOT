@@ -54,10 +54,10 @@ public class NotificationController extends AbstractController implements BaseCo
             BindingResult bindingResult
     ){
         long userID = getUserID(token);
-        int status = saveFcmToken.getType()==1 ? 100 : 200;
+        int type = saveFcmToken.getType()==0 ? 1 : 2;
+        int status = type==2 ? 200 : 100;
         notificationService.saveFcmToken(userID,status,saveFcmToken.getToken(),saveFcmToken.getIsAllowed());
-        return new SuccessResponse.Builder(SuccessResponse.of.SAVE_FCM_TOKEN_SUCCESS)
-                .build().getResponse();
+        return new SuccessResponse.Builder(SuccessResponse.of.SAVE_FCM_TOKEN_SUCCESS).build().getResponse();
     }
 
     ///7-5. 알림 허용 여부 확인 API(3개)
