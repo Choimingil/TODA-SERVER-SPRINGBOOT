@@ -30,7 +30,7 @@ public final class UserRedisInterceptor extends AbstractInterceptor implements H
             @NotNull Object handler
     ) throws Exception {
         if(haveValidHeader(request)){
-            String email = decodeToken(request).getEmail();
+            String email = getEmailWithDecodeToken(request);
             UserDetail userDetail = delegateUserAuth.getUserInfo(email);
             if(!userDetail.getUser().getEmail().equals(email)) throw new WrongArgException(WrongArgException.of.WRONG_TOKEN_DATA_EXCEPTION);
         }

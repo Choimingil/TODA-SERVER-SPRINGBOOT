@@ -77,11 +77,11 @@ public class AuthController extends AbstractController implements BaseController
     public Map<String,?> decodeTokenData(
             @RequestHeader(DelegateJwt.HEADER_NAME) String token
     ) {
-        Map<String,?> checkTokenResult = authService.getTokenData(token);
+        UserDetail userDetail = getUserInfo(token);
         return new SuccessResponse.Builder(SuccessResponse.of.DECODE_TOKEN_SUCCESS)
-                .add("id",checkTokenResult.get("id"))
-                .add("pw",checkTokenResult.get("pw"))
-                .add("appPW",checkTokenResult.get("appPW"))
+                .add("id",userDetail.getUser().getUserID())
+                .add("pw",userDetail.getUser().getPassword())
+                .add("appPW",userDetail.getUser().getAppPassword())
                 .build().getResponse();
     }
 
@@ -108,19 +108,20 @@ public class AuthController extends AbstractController implements BaseController
     @SetMdcBody
     public Map<String,?> checkToken(
             @RequestHeader(DelegateJwt.HEADER_NAME) String token,
-            @RequestBody @Nullable AppPassword appPassword,
+            @RequestBody @Nullable AppPassword body,
             BindingResult bindingResult
     ) {
-        Map<String,?> checkTokenResult = authService.getTokenData(token);
+        UserDetail userDetail = getUserInfo(token);
+        int actualAppPw = userDetail.getUser().getAppPassword();
 
-        if(appPassword == null){
-            if((int) checkTokenResult.get("appPw") == 10000)
+        if(body == null){
+            if(actualAppPw == 10000)
                 return new SuccessResponse.Builder(SuccessResponse.of.CHECK_TOKEN_SUCCESS).build().getResponse();
             else throw new WrongArgException(WrongArgException.of.WRONG_APP_PASSWORD_EXCEPTION);
         }
         else{
-            int appPw = Integer.parseInt(appPassword.getAppPW());
-            if((int) checkTokenResult.get("appPw") == 10000 || (int) checkTokenResult.get("appPw") == appPw)
+            int expectedAppPw = Integer.parseInt(body.getAppPW());
+            if(actualAppPw == 10000 || actualAppPw == expectedAppPw)
                 return new SuccessResponse.Builder(SuccessResponse.of.CHECK_TOKEN_SUCCESS).build().getResponse();
             else throw new WrongArgException(WrongArgException.of.WRONG_APP_PASSWORD_EXCEPTION);
         }

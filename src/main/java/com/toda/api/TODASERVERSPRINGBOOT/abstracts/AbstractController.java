@@ -19,7 +19,9 @@ public abstract class AbstractController extends AbstractUtil implements BaseCon
         this.delegateUserAuth = delegateUserAuth;
     }
     protected long getUserID(String token) {
-        return delegateJwt.getUserID(token);
+        String email = delegateJwt.getEmailWithDecodeToken(token);
+        UserDetail userDetail = delegateUserAuth.getUserInfo(email);
+        return userDetail.getUser().getUserID();
     }
     protected UserDetail getUserInfo(String token){
         return delegateUserAuth.getUserInfo(token);

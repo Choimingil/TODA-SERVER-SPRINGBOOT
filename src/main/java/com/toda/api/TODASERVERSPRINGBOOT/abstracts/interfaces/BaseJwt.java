@@ -1,34 +1,17 @@
 package com.toda.api.TODASERVERSPRINGBOOT.abstracts.interfaces;
 
 import com.toda.api.TODASERVERSPRINGBOOT.entities.mappings.UserDetail;
-import com.toda.api.TODASERVERSPRINGBOOT.models.dtos.JwtHeader;
-import com.toda.api.TODASERVERSPRINGBOOT.repositories.UserRepository;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;
 
 public interface BaseJwt {
     /**
-     * 토큰을 유저 아이디로 변환
-     * @param token
-     * @return
-     */
-    long getUserID(String token);
-
-    /**
      * Claims 생성
      * @param token
      * @return
      */
     Claims getClaims(String token);
-
-//    /**
-//     * Claims 객체에서 Subject 추출
-//     * Subject : Email
-//     * @param request
-//     * @return
-//     */
-//    String getSubject(HttpServletRequest request);
 
     /**
      * token 생성
@@ -38,11 +21,11 @@ public interface BaseJwt {
     String getToken(HttpServletRequest request);
 
     /**
-     * 토큰 디코딩
+     * 토큰 디코딩 후 이메일 정보 가져오기
      * @param token
      * @return
      */
-    JwtHeader decodeToken(String token);
+    String getEmailWithDecodeToken(String token);
 
     /**
      * 토큰 생성 메서드

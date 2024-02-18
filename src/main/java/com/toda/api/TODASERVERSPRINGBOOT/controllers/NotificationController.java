@@ -68,20 +68,7 @@ public class NotificationController extends AbstractController implements BaseCo
     ){
         long userID = getUserID(token);
         Notification notification = notificationService.getNotification(userID,fcm);
-        if(notification == null){
-            // IOS 알림 토큰 추가 오류 대비 토큰 추가 작업 진행
-            if(fcm != null) notificationService.saveFcmToken(userID,100,fcm,"Y");
-            else throw new NoArgException(NoArgException.of.NULL_PARAM_EXCEPTION);
-            
-            return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
-                    .add("result", FcmAllowedResponse.builder()
-                            .isBasicAllowed(true)
-                            .isRemindAllowed(true)
-                            .isEventAllowed(true)
-                            .build())
-                    .build().getResponse();
-        }
-        else return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
+        return new SuccessResponse.Builder(SuccessResponse.of.GET_SUCCESS)
                 .add("result", FcmAllowedResponse.builder()
                         .isBasicAllowed(notification.getIsAllowed().equals("Y"))
                         .isRemindAllowed(notification.getIsRemindAllowed().equals("Y"))

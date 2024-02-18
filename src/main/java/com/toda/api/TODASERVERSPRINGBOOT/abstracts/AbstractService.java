@@ -51,7 +51,9 @@ public abstract class AbstractService extends AbstractUtil implements BaseServic
     }
 
     protected long getUserID(String token) {
-        return delegateJwt.getUserID(token);
+        String email = delegateJwt.getEmailWithDecodeToken(token);
+        UserDetail userDetail = delegateUserAuth.getUserInfo(email);
+        return userDetail.getUser().getUserID();
     }
     protected String createToken(Authentication authentication, UserDetail userDetail) {
         return delegateJwt.createToken(authentication,userDetail);
