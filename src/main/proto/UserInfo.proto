@@ -1,5 +1,5 @@
 syntax = "proto3";
-option java_package = "com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers";
+option java_package = "com.fineapple.toda.api.models.protobuffers";
 option java_outer_classname = "UserInfoProto";
 
 message UserInfo {

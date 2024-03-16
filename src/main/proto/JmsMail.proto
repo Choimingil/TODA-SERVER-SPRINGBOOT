@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 option java_outer_classname = "JmsMailProto";
-package com.toda.api.TODASERVERSPRINGBOOT.models.protobuffers;
+package com.fineapple.toda.api.models.protobuffers;
 
 message JmsMailRequest {
   string to = 1;
